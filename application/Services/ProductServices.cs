@@ -90,8 +90,8 @@ public class ProductServices(
     {
         var products = (await unitOfWork.ProductRepository
             .GetProducts(pageNum, pageSize));
-        List<ProductDto> productDtos =  products.Select((de) => de.ToDto(config.getKey("url_file")))
-                .ToList();
+        List<ProductDto> productDtos = products.Select((de) => de.ToDto(config.getKey("url_file")))
+            .ToList();
 
         return new Result<List<ProductDto>>(
             data: productDtos,
@@ -198,6 +198,25 @@ public class ProductServices(
                     statusCode: isValidate.StatusCode
                 );
             }
+
+            //this for production for keep the product under 40 product at the vps
+            int productCount = await unitOfWork.ProductRepository.GetProduct();
+            if (productCount > 40)
+            {
+                var productsList = (await unitOfWork.ProductRepository.GetProducts(40))?.ToList();
+                if (productsList is not null && productsList?.Count() > 0)
+                {
+                    var productImages = productsList?.Select(s => s.ProductImages?.Select(p => p.Path));
+                    var productImagesHolder = productImages?.SelectMany(value => value)?.ToList();
+                    if (productImagesHolder is not null)
+                    {
+                        fileServices.DeleteFile(productImagesHolder);
+                    }
+                    unitOfWork.ProductRepository.Delete(productsList);
+                    
+                }
+            }
+            //end
 
             bool isExistCurrency = await unitOfWork.CurrencyRepository.isExist(productDto.Symbol);
 

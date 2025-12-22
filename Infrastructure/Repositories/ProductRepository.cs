@@ -47,6 +47,11 @@ public class ProductRepository(
         context.Products.Remove(product);
     }
 
+    public void Delete(List<Product> products)
+    {
+       context.Products.RemoveRange(products); 
+    }
+
     public async Task<Product?> GetProduct(Guid id)
     {
         return await context.Products
@@ -69,6 +74,11 @@ public class ProductRepository(
             .Include(pro => pro.ProductVariants)
             .AsSplitQuery()
             .FirstOrDefaultAsync(p => p.Id == id && p.StoreId == storeId);
+    }
+
+    public Task<int> GetProduct()
+    {
+        return context.Products.CountAsync();
     }
 
     public async Task<int?> GetProductPages()
@@ -159,6 +169,15 @@ public class ProductRepository(
             Console.WriteLine(ex.Message);
             return new List<Product>();
         }
+    }
+
+    public async Task<IEnumerable<Product>> GetProducts(int randomNumber)
+    {
+        return await context
+            .Products
+            .OrderBy(x => Guid.NewGuid())
+            .Take(randomNumber)
+            .ToListAsync();
     }
 
     public async Task<IEnumerable<Product>> GetProductsByCategory(
