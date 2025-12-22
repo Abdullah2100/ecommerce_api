@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "QwTpomD1e/0=",
+  "dgSpecHash": "w8ElB6+FBYI=",
   "success": true,
-  "projectFilePath": "/home/abdullah/Desktop/ecommerce_full_stack-jetpack-compose-asp-/api/api.csproj",
+  "projectFilePath": "/home/abdullah/Desktop/api/api.csproj",
   "expectedPackageFiles": [
     "/home/abdullah/.nuget/packages/communitytoolkit.highperformance/8.3.0/communitytoolkit.highperformance.8.3.0.nupkg.sha512",
     "/home/abdullah/.nuget/packages/firebaseadmin/3.2.0/firebaseadmin.3.2.0.nupkg.sha512",
@@ -148,25 +148,22 @@
       "code": "NU1510",
       "level": "Warning",
       "message": "PackageReference Microsoft.AspNetCore.SignalR will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.",
-      "projectPath": "/home/abdullah/Desktop/ecommerce_full_stack-jetpack-compose-asp-/api/api.csproj",
+      "projectPath": "/home/abdullah/Desktop/api/api.csproj",
       "warningLevel": 1,
-      "filePath": "/home/abdullah/Desktop/ecommerce_full_stack-jetpack-compose-asp-/api/api.csproj",
+      "filePath": "/home/abdullah/Desktop/api/api.csproj",
       "libraryId": "Microsoft.AspNetCore.SignalR",
       "targetGraphs": [
         "net10.0"
       ]
     },
     {
-      "code": "NU1903",
+      "code": "NU1900",
       "level": "Warning",
-      "message": "Package 'Microsoft.Build' 17.10.4 has a known high severity vulnerability, https://github.com/advisories/GHSA-w3q9-fxm7-j8fq",
-      "projectPath": "/home/abdullah/Desktop/ecommerce_full_stack-jetpack-compose-asp-/api/api.csproj",
+      "message": "Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.",
+      "projectPath": "/home/abdullah/Desktop/api/api.csproj",
       "warningLevel": 1,
-      "filePath": "/home/abdullah/Desktop/ecommerce_full_stack-jetpack-compose-asp-/api/api.csproj",
-      "libraryId": "Microsoft.Build",
-      "targetGraphs": [
-        "net10.0"
-      ]
+      "filePath": "/home/abdullah/Desktop/api/api.csproj",
+      "targetGraphs": []
     }
   ]
 }

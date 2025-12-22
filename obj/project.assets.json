@@ -6503,11 +6503,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/abdullah/Desktop/ecommerce_full_stack-jetpack-compose-asp-/api/api.csproj",
+      "projectUniqueName": "/home/abdullah/Desktop/api/api.csproj",
       "projectName": "api",
-      "projectPath": "/home/abdullah/Desktop/ecommerce_full_stack-jetpack-compose-asp-/api/api.csproj",
+      "projectPath": "/home/abdullah/Desktop/api/api.csproj",
       "packagesPath": "/home/abdullah/.nuget/packages/",
-      "outputPath": "/home/abdullah/Desktop/ecommerce_full_stack-jetpack-compose-asp-/api/obj/",
+      "outputPath": "/home/abdullah/Desktop/api/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/abdullah/.nuget/NuGet/NuGet.Config"
@@ -7046,14 +7046,10 @@
       ]
     },
     {
-      "code": "NU1903",
+      "code": "NU1900",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Package 'Microsoft.Build' 17.10.4 has a known high severity vulnerability, https://github.com/advisories/GHSA-w3q9-fxm7-j8fq",
-      "libraryId": "Microsoft.Build",
-      "targetGraphs": [
-        "net10.0"
-      ]
+      "message": "Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json."
     }
   ]
 }

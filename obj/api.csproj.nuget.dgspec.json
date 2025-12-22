@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/abdullah/Desktop/ecommerce_full_stack-jetpack-compose-asp-/api/api.csproj": {}
+    "/home/abdullah/Desktop/api/api.csproj": {}
   },
   "projects": {
-    "/home/abdullah/Desktop/ecommerce_full_stack-jetpack-compose-asp-/api/api.csproj": {
+    "/home/abdullah/Desktop/api/api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/abdullah/Desktop/ecommerce_full_stack-jetpack-compose-asp-/api/api.csproj",
+        "projectUniqueName": "/home/abdullah/Desktop/api/api.csproj",
         "projectName": "api",
-        "projectPath": "/home/abdullah/Desktop/ecommerce_full_stack-jetpack-compose-asp-/api/api.csproj",
+        "projectPath": "/home/abdullah/Desktop/api/api.csproj",
         "packagesPath": "/home/abdullah/.nuget/packages/",
-        "outputPath": "/home/abdullah/Desktop/ecommerce_full_stack-jetpack-compose-asp-/api/obj/",
+        "outputPath": "/home/abdullah/Desktop/api/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/abdullah/.nuget/NuGet/NuGet.Config"
