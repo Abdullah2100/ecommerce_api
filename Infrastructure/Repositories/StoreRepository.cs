@@ -63,6 +63,15 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
             .ToListAsync();
         return store;
     }
+ public async Task<List<Store>> GetStores(string prefix, int length)
+    {
+        return await context
+            .Stores
+            .Where(x => x.Name.StartsWith(prefix))
+            .Take(length)
+            .ToListAsync();
+    }
+
 
     public async Task<List<Store>> GetStores(int page, int length)
     {
