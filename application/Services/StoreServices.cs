@@ -24,7 +24,7 @@ public class StoreServices(
 
     public async Task<Result<List<StoreDto>?>> GetStores(Guid adminId, string prefix, int pageSize)
     {
-        User? user = await unitOfWork.UserRepository
+       /* User? user = await unitOfWork.UserRepository
             .GetUser(adminId);
 
         var isValide = user.IsValidateFunc(true);
@@ -38,16 +38,18 @@ public class StoreServices(
                 statusCode: isValide.StatusCode
             );
         }
-        
+        */
 
-        List<StoreDto> stores = (await unitOfWork.StoreRepository
-                .GetStores(prefix, pageSize)
-            ).Select(st => st.ToDto(config.getKey("url_file")))
+
+       var stores = (await unitOfWork.StoreRepository
+               .GetStores(prefix, pageSize)
+           );
+        List<StoreDto> storeToDto = stores==null?new List<StoreDto>() :stores.Select(st => st.ToDto(config.getKey("url_file")))
             .ToList();
         
         return new Result<List<StoreDto>?>
         (
-            data: stores,
+            data: storeToDto,
             message: "",
             isSuccessful: true,
             statusCode: 200
