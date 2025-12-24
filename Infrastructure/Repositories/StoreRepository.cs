@@ -66,15 +66,25 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
  public async Task<List<Store>> GetStores(string prefix, int length)
     {
         
-        return await context
+      var stores =  await context
             .Stores
-            .Include(st => st.user)
-            .Include(st => st.SubCategories)
+            .Include(st=>st.user)
             .AsSplitQuery()
+            .AsNoTracking()
             .Where(x => x.Name.StartsWith(prefix))
-            .OrderBy(x=> Guid.NewGuid())
             .Take(length)
             .ToListAsync();
+        
+        foreach (var store in stores)
+        {
+            store.Addresses = await context
+                .Address
+                .AsNoTracking()
+                .Where(ad => ad.OwnerId == store.Id)
+                .ToListAsync();
+        }
+
+        return stores; 
     }
 
 
