@@ -227,7 +227,7 @@ public class StoreController(
     }
     
     //this or admin page to get name of store while typing 
-    [HttpGet("name/{prefix:alpha}")]
+    [HttpGet("name/{prefix:regex(^[[\\p{{L}}]]+$)}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
