@@ -613,6 +613,9 @@ public class ProductServices(
                 fileServices.DeleteFile(image.Path);
             }
 
+        if(product.Thumbnail is not null)
+            fileServices.DeleteFile(product.Thumbnail);
+
         return new Result<bool>
         (
             data: true,
