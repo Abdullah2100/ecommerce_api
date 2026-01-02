@@ -14,11 +14,11 @@ public class ProductVariantRepository(AppDbContext context) : IProductVariantRep
             .FirstOrDefaultAsync(or => or.ProductId == productId && or.Id == id);
     }
 
-    public void  AddProductVariants(ICollection<ProductVariant> productVariants)
+    public async Task  AddProductVariants(ICollection<ProductVariant> productVariants)
     {
         for (var i = 0; i < productVariants.Count; i++)
         {
-           context.ProductVariants.Add(productVariants.ElementAt(i));
+          await context.ProductVariants.AddAsync(productVariants.ElementAt(i));
         }
 
     }

@@ -519,6 +519,11 @@ public class ProductServices(
             );
         }
 
+        if (productVariants is not null)
+        {
+          await  unitOfWork.ProductVariantRepository.AddProductVariants(productVariants);
+        }
+
         //delete the previs images 
 
 
@@ -528,7 +533,6 @@ public class ProductServices(
         product.Price = productDto.Price ?? product.Price;
         product.UpdatedAt = DateTime.Now;
         product.Thumbnail = savedThumbnail ?? product.Thumbnail;
-        product.ProductVariants = productVariants;
         product.ProductImages = savedImage;
         product.Symbol = productDto.Symbol ?? product.Symbol;
 
