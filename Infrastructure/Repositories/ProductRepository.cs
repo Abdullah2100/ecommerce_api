@@ -31,12 +31,7 @@ public class ProductRepository(
 
     public void Update(Product entity)
     {
-        var result = true;
-
-        var product = context.Products.Find(entity.Id);
-        if (product == null) throw new ArgumentNullException();
-
-        context.Products.Update(entity);
+            context.Products.Update(entity);
     }
 
     public void Delete(Guid id)
