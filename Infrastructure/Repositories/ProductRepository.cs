@@ -31,7 +31,19 @@ public class ProductRepository(
 
     public void Update(Product entity)
     {
-            context.Products.Update(entity);
+        var product = new Product()
+        {
+            Id = entity.Id,
+            Name = entity.Name,
+            Description = entity.Description,
+            SubcategoryId = entity.SubcategoryId,
+            Price = entity.Price,
+            UpdatedAt = entity.UpdatedAt,
+            Thumbnail = entity.Thumbnail,
+            Symbol = entity.Symbol,
+            StoreId = entity.StoreId
+        };
+        context.Products.Update(product);
     }
 
     public void Delete(Guid id)
@@ -44,7 +56,7 @@ public class ProductRepository(
 
     public void Delete(List<Product> products)
     {
-       context.Products.RemoveRange(products); 
+        context.Products.RemoveRange(products);
     }
 
     public async Task<Product?> GetProduct(Guid id)

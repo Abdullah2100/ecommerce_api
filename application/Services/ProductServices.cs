@@ -321,7 +321,7 @@ public class ProductServices(
             unitOfWork.ProductRepository.Add(product);
             unitOfWork.ProductImageRepository.AddProductImage(images);
             if (productVariants is not null)
-                unitOfWork.ProductVariantRepository.AddProductVariants(productVariants);
+                unitOfWork.ProductVariantRepository.SaveProductVariants(productVariants);
             int result = await unitOfWork.SaveChanges();
 
             if (result == 0)
@@ -443,8 +443,8 @@ public class ProductServices(
         //delete preview productvarients
         if (productDto.DeletedProductVariants is not null)
         {
-            unitOfWork.ProductVariantRepository.DeleteProductVariant(productDto.DeletedProductVariants,
-                productDto.Id);
+           await Task.Run(()=>unitOfWork.ProductVariantRepository.DeleteProductVariant(productDto.DeletedProductVariants,
+                productDto.Id));
         }
 
         string? savedThumbnail = null;
@@ -521,7 +521,7 @@ public class ProductServices(
 
         if (productVariants is not null)
         {
-          await  unitOfWork.ProductVariantRepository.AddProductVariants(productVariants);
+           await unitOfWork.ProductVariantRepository.SaveProductVariants(productVariants);
         }
 
         //delete the previs images 
