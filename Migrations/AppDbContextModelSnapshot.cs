@@ -539,6 +539,9 @@ namespace api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("Timestamp");
 
+                    b.Property<string>("DeviceToken")
+                        .HasColumnType("text");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
@@ -566,10 +569,6 @@ namespace api.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("Timestamp");
-
-                    b.Property<string>("deviceToken")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
