@@ -12,8 +12,8 @@ using api.application;
 namespace api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251215070936_trigger.sql")]
-    partial class triggersql
+    [Migration("20260110063757_intial")]
+    partial class intial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -418,8 +418,8 @@ namespace api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<decimal>("Percentage")
-                        .HasColumnType("numeric");
+                    b.Property<int>("Percentage")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uuid");
@@ -542,6 +542,9 @@ namespace api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("Timestamp");
 
+                    b.Property<string>("DeviceToken")
+                        .HasColumnType("text");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
@@ -569,10 +572,6 @@ namespace api.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("Timestamp");
-
-                    b.Property<string>("deviceToken")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -616,7 +615,7 @@ namespace api.Migrations
                     b.HasOne("api.domain.entity.Store", "Store")
                         .WithMany("Banners")
                         .HasForeignKey("StoreId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Store");
@@ -627,7 +626,7 @@ namespace api.Migrations
                     b.HasOne("api.domain.entity.User", "User")
                         .WithMany("Categories")
                         .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -642,7 +641,7 @@ namespace api.Migrations
                     b.HasOne("api.domain.entity.User", "User")
                         .WithOne("Delivery")
                         .HasForeignKey("api.domain.entity.Delivery", "UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Address");
@@ -724,7 +723,7 @@ namespace api.Migrations
                     b.HasOne("api.domain.entity.SubCategory", "SubCategory")
                         .WithMany("Products")
                         .HasForeignKey("SubcategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Store");
@@ -754,7 +753,7 @@ namespace api.Migrations
                     b.HasOne("api.domain.entity.Variant", "Variant")
                         .WithMany("ProductVariants")
                         .HasForeignKey("VariantId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Product");
@@ -767,7 +766,7 @@ namespace api.Migrations
                     b.HasOne("api.domain.entity.User", "user")
                         .WithOne("Store")
                         .HasForeignKey("api.domain.entity.Store", "UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("user");
@@ -778,13 +777,13 @@ namespace api.Migrations
                     b.HasOne("api.domain.entity.Category", "Category")
                         .WithMany("SubCategories")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("api.domain.entity.Store", "Store")
                         .WithMany("SubCategories")
                         .HasForeignKey("StoreId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Category");
