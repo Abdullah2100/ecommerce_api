@@ -18,6 +18,8 @@ public class Order
     public decimal DistanceToUser { get; set; } = 0;
   
     public decimal DistanceFee { get; set; } = 0;
+    public bool IsFail {get; set;} = false;
+    public Guid PaymentTypeId { get; set; }
     
     public Guid? DeliveryId { get; set; } = null;
 
@@ -27,6 +29,7 @@ public class Order
     [Column(TypeName = "Timestamp")]
     public DateTime? UpdatedAt { get; set; } = null;
     
+    public PaymentType PaymentType { get; set; }
     public User User { get; set; }
     public Delivery? DeliveredBy { get; set; } = null;
     public ICollection<OrderItem> Items { get; set; }=new List<OrderItem>();
