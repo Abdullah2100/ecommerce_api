@@ -1,8 +1,7 @@
 namespace api.domain.entity;
 
-public class PaymentType
+public class PaymentType:GeneralShredInfo
 {
-   public Guid Id { get; set; }
    public string Name { get; set; }
    public bool IsHashCheckOperation { get; set; }
    public string Thumbnail { get; set; }
