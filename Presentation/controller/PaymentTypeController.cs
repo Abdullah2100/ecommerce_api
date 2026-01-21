@@ -83,7 +83,7 @@ public class PaymentTypeController(
         };
     }
 
-    [HttpGet("{storeId:guid}/{subcategoryId:guid}/{pageNumber:int}")]
+    [HttpGet("{pageNumber}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetProducts(sbyte pageNumber)
     {
