@@ -55,6 +55,7 @@ nunit-agent.log
 
 # Project-specific / secrets
 appsettings.Development.json
+appsettings.Development.json
 appsettings.Local.json
 .env
 
