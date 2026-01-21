@@ -16,7 +16,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Stripe;
-
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
@@ -57,6 +56,7 @@ builder.Services.AddTransient<IOrderItemServices, OrderItemServices>();
 builder.Services.AddTransient<IRefreshTokenServices, RefreshTokenServices>();
 builder.Services.AddTransient<IAnalyseServices, AnalyseServices>();
 builder.Services.AddTransient<ICurrencyServices, CurrencyServices>();
+builder.Services.AddTransient<IPaymentTypeServices,PaymentTypeServices>();
 
 
 
@@ -115,7 +115,13 @@ var connectionUrl = configuration["ConnectionStrings:connection_url"];
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionUrl));
 
+
+//stripe services
+builder.Services.AddSingleton(new StripeClient(configuration["strip:publishable_key"]));
+
 var app = builder.Build();
+StripeConfiguration.ApiKey = builder.Configuration["strip:publishable_key"];
+
 
 if (app.Environment.IsDevelopment())
 {

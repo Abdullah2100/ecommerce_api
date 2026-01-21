@@ -159,7 +159,7 @@ public class OrderRepository(AppDbContext context)
         return await context
             .OrderItems
             .AsNoTracking()
-            .AnyAsync(i => i.OrderId == id && i.Status == enOrderItemStatus.ReceivedByDelivery
+            .AnyAsync(i => i.OrderId == id && i.Status == EnOrderItemStatus.ReceivedByDelivery
             );
     }
 
@@ -172,7 +172,7 @@ public class OrderRepository(AppDbContext context)
         {
             var product = await context.Products.FindAsync(item.ProductId);
             var currencies = await context.Currencies.ToListAsync();
-            decimal varientPrice = 1;
+            int variantPrice = 0;
             //itrate throw every productvarientid
             for (var i = 0; i < item.ProductVariant?.Count; i++)
             {
@@ -187,7 +187,8 @@ public class OrderRepository(AppDbContext context)
                     break;
                 }
 
-                varientPrice = varientPrice * productVariantPrice.Percentage;
+                //varientPrice = varientPrice * productVariantPrice.Percentage;
+                variantPrice +=  productVariantPrice?.Percentage ?? product!.Price;
             };
 
             if (isAmbiguous == true)
@@ -201,9 +202,8 @@ public class OrderRepository(AppDbContext context)
                 break;
             }
 
-            realPrice += ConvertPriceFromCurrencyToAnother(((varientPrice * product.Price) * item.Quantity),product.Symbol,symbol,currencies);
+            realPrice += ConvertPriceFromCurrencyToAnother(((variantPrice * product.Price) * item.Quantity),product.Symbol,symbol,currencies);
         }
-
 
         if (isAmbiguous)
         {
