@@ -19,7 +19,7 @@ public class PaymentTypeController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> CreateProduct
+    public async Task<IActionResult> CreatePaymentType
     (
         [FromForm] CreatePaymentTypeDto paymentTypeDto
     )
@@ -54,7 +54,7 @@ public class PaymentTypeController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> UpdateProduct
+    public async Task<IActionResult> UpdatePaymentType
     (
         [FromForm] UpdatePaymentTypeDto paymentTypeDto
     )
@@ -85,7 +85,7 @@ public class PaymentTypeController(
 
     [HttpGet("{pageNumber}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetProducts(sbyte pageNumber)
+    public async Task<IActionResult> GetProducts(int pageNumber)
     {
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
@@ -98,7 +98,5 @@ public class PaymentTypeController(
             _ => StatusCode(result.StatusCode, result.Message)
         };
     }
-
-
       
 }

@@ -71,7 +71,7 @@ public class PaymentTypeServices(
         (
             data: paymentDto,
             message: "",
-            isSuccessful: false,
+            isSuccessful: true,
             statusCode: 201
         ); 
     }
@@ -129,6 +129,7 @@ public class PaymentTypeServices(
        
         if (result == 0)
         {
+            fileServices.DeleteFile(thembnail??"");
             return new Result<PaymentTypeDto?>
             (
                 data: null,
@@ -143,12 +144,12 @@ public class PaymentTypeServices(
         (
             data: paymentDto,
             message: "",
-            isSuccessful: false,
+            isSuccessful: true,
             statusCode: 200
         ); 
     }
 
-    public async Task<Result<List<PaymentTypeDto>?>> GetPaymentTypes(sbyte pageNum,sbyte pageSie=25)
+    public async Task<Result<List<PaymentTypeDto>?>> GetPaymentTypes(int pageNum, int pageSie = 25)
     {
         var paymentTypes = await unitOfWork.PaymentTypeRepository.GetPaymentTypes(pageNum, pageSie);
 
@@ -157,7 +158,7 @@ public class PaymentTypeServices(
         (
             data: paymentTypesToDtos,
             message: "",
-            isSuccessful: false,
+            isSuccessful: true,
             statusCode: 200
         ); 
     }

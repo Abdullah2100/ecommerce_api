@@ -2,7 +2,6 @@ using api.Presentation.dto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
-using Stripe.Checkout;
 
 namespace api.Presentation.controller;
 

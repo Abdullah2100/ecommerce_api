@@ -41,7 +41,7 @@ namespace api.Presentation.dto
     {
         [Required] public decimal Longitude { get; set; }
         [Required] public decimal Latitude { get; set; }
-        [Required] public short TotalPrice { get; set; }
+        [Required] public long TotalPrice { get; set; }
         public required string Symbol { get; set; }
 
         [Required] public List<CreateOrderItemDto> Items { get; set; }

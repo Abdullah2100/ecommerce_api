@@ -56,6 +56,7 @@ builder.Services.AddTransient<IOrderItemServices, OrderItemServices>();
 builder.Services.AddTransient<IRefreshTokenServices, RefreshTokenServices>();
 builder.Services.AddTransient<IAnalyseServices, AnalyseServices>();
 builder.Services.AddTransient<ICurrencyServices, CurrencyServices>();
+builder.Services.AddTransient<IPaymentTypeServices,PaymentTypeServices>();
 
 
 
