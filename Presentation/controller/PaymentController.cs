@@ -15,7 +15,7 @@ public class PaymentController : ControllerBase
     {
         var options = new PaymentIntentCreateOptions
         {
-            Amount = (long)Math.Ceiling(paymentRequirementData.Amount),
+            Amount = paymentRequirementData.Amount*100,
             Currency = "usd",
             AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
             {

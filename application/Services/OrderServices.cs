@@ -57,6 +57,36 @@ public class OrderServices(
             );
         }
 
+        PaymentType? paymentType = (await unitOfWork.PaymentTypeRepository.GetPaymentTypeGetPayment(orderDto.PaymentTypeId));
+       
+        if (paymentType is null)
+        {
+            return new Result<OrderDto?>
+            (
+                data: null,
+                message: "payment type is not exist ",
+                isSuccessful: false,
+                statusCode: 400
+            ); 
+        }
+        
+        
+        // to continue the  payment if it is not cash
+
+        if (paymentType?.Name?.ToLower() != "Cash")
+        {
+            var stripPayment = new PaymentServices(new StripPaymentServices());
+            var isPassed = await stripPayment.IsValidatePayment(orderDto.PaymentId??"");
+           if(!isPassed)
+            return new Result<OrderDto?>
+            (
+                data: null,
+                message: "payment  is not successfully",
+                isSuccessful: false,
+                statusCode: 400
+            ); 
+        }
+
 
         //  this for production is used to keep order under 40 order on vps
         int ordersCount = await unitOfWork.OrderRepository.GetOrders();
@@ -75,6 +105,7 @@ public class OrderServices(
         Order? order = new Order
         {
             Id = id,
+            PaymentTypeId = orderDto.PaymentTypeId,
             Longitude = orderDto.Longitude,
             Latitude = orderDto.Latitude,
             UserId = userId,

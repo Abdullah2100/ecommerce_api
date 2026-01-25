@@ -58,6 +58,9 @@ builder.Services.AddTransient<IAnalyseServices, AnalyseServices>();
 builder.Services.AddTransient<ICurrencyServices, CurrencyServices>();
 builder.Services.AddTransient<IPaymentTypeServices,PaymentTypeServices>();
 
+//payment 
+builder.Services.AddTransient<IPaymentServices,StripPaymentServices>();
+
 
 
  var fireBaseConfig = Path.Combine(

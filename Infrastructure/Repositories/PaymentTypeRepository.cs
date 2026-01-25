@@ -35,4 +35,9 @@ public class PaymentTypeRepository(AppDbContext context):IPaymentTypeRepository
         return await context.PaymentTypes.AsNoTracking().AnyAsync(x => x.Name == name && x.Id != id);
 
     }
+
+    public async Task<bool> IsExistPaymentType(Guid id)
+    {
+        return await context.PaymentTypes.AsNoTracking().AnyAsync(x => x.Id == id);
+    }
 }

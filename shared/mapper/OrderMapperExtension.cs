@@ -19,6 +19,7 @@ public static class OrderMapperExtension
                 Status = order.Status.ToOrderStatusName(),
                 TotalPrice = order.TotalPrice,
                 Symbol = order.Symbol,
+                IsAllreadyPayed = order.PaymentType.Name!="Cash",
                 UserPhone = order.User.Phone,
                 OrderItems = order
                     .Items
@@ -39,6 +40,7 @@ public static class OrderMapperExtension
                 Status = order.Status,
                 TotalPrice = order.TotalPrice,
                 UserPhone = order.User.Phone,
+                IsAllreadyPayed = order.PaymentType.Name!="Cash",
                 OrderItems = order
                     .Items
                     .Select(it=>it.ToDeliveryOrderItemDto(url))
