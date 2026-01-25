@@ -17,6 +17,7 @@ public class OrderRepository(AppDbContext context)
     )
     {
         var orders = await context.Orders
+            .Include(o=>o.PaymentType)
             .Include(o => o.User)
             .Include(o => o.Items)
             .AsSplitQuery()
@@ -43,6 +44,7 @@ public class OrderRepository(AppDbContext context)
     public async Task<IEnumerable<Order>> GetOrders(int page, int length)
     {
         var orders = await context.Orders
+            .Include(o=>o.PaymentType)
             .Include(o => o.User)
             .Include(o => o.Items)
             .AsSplitQuery()
@@ -96,6 +98,7 @@ public class OrderRepository(AppDbContext context)
     {
         return await context
             .Orders
+            .Include(o=>o.PaymentType)
             .OrderBy(x => Guid.NewGuid())
             .Take(randomNumber)
             .ToListAsync();
@@ -104,6 +107,7 @@ public class OrderRepository(AppDbContext context)
     public async Task<Order?> GetOrder(Guid id)
     {
         var order = await context.Orders
+            .Include(o=>o.PaymentType)
             .Include(o => o.User)
             .Include(o => o.Items)
             .AsSplitQuery()
@@ -125,6 +129,7 @@ public class OrderRepository(AppDbContext context)
     public async Task<Order?> GetOrder(Guid id, Guid userId)
     {
         var order = await context.Orders
+            .Include(o=>o.PaymentType)
             .Include(o => o.User)
             .Include(o => o.Items)
             .AsSplitQuery()
@@ -202,7 +207,7 @@ public class OrderRepository(AppDbContext context)
                 break;
             }
 
-            realPrice += ConvertPriceFromCurrencyToAnother(((variantPrice * product.Price) * item.Quantity),product.Symbol,symbol,currencies);
+            realPrice += ConvertPriceFromCurrencyToAnother(((variantPrice!=0 ?variantPrice : product.Price) * item.Quantity),product.Symbol,symbol,currencies);
         }
 
         if (isAmbiguous)
@@ -217,6 +222,7 @@ public class OrderRepository(AppDbContext context)
     {
         var orders =
             await context.Orders
+                .Include(o=>o.PaymentType)
                 .Include(o => o.Items)
                 .Include(o => o.User)
                 .AsSplitQuery()
@@ -272,6 +278,7 @@ public class OrderRepository(AppDbContext context)
     public async Task<IEnumerable<Order>> GetOrderBelongToDelivery(Guid deliveryId, int pageNum, int pageSize)
     {
         var orders = await context.Orders
+            .Include(o=>o.PaymentType)
             .Include(o => o.User)
             .Include(o => o.Items)
             .AsSplitQuery()
@@ -379,7 +386,7 @@ public class OrderRepository(AppDbContext context)
 
     public async Task<bool> IsSavedDistanceToOrder(Guid id)
     {
-        var result = (await isSavedDistance(id) == true ? 1 : 0);
+        var result = (await IsSavedDistance(id) == true ? 1 : 0);
         if (result == 0)
         {
             Delete(id);
@@ -389,7 +396,7 @@ public class OrderRepository(AppDbContext context)
         return true;
     }
 
-    private async Task<bool> isSavedDistance(Guid orderId)
+    private async Task<bool> IsSavedDistance(Guid orderId)
     {
         try
         {

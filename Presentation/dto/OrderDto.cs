@@ -8,7 +8,7 @@ namespace api.Presentation.dto
         public decimal Longitude { get; set; }
         public decimal Latitude { get; set; }
         public long TotalPrice { get; set; }
-        
+        public bool IsAllreadyPayed { get; set; }
         public string Symbol { get; set; }
         public int DeliveryFee { get; set; }
         public String Name { get; set; }
@@ -30,6 +30,7 @@ namespace api.Presentation.dto
         public long TotalPrice { get; set; }
         
         public string Symbol { get; set; }
+        public bool IsAllreadyPayed { get; set; }
         public  int DeliveryFee { get; set; }
         public String Name { get; set; }
         public String UserPhone { get; set; }
@@ -43,7 +44,8 @@ namespace api.Presentation.dto
         [Required] public decimal Latitude { get; set; }
         [Required] public long TotalPrice { get; set; }
         public required string Symbol { get; set; }
-
+        public Guid PaymentTypeId { get; set; }
+        public String? PaymentId { get; set; } = null;
         [Required] public List<CreateOrderItemDto> Items { get; set; }
     }
 

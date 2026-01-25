@@ -4,6 +4,6 @@ namespace api.Presentation.dto;
 
 public class PaymentRequirementData
 {
-    public decimal Amount{ get; set; }
+    public long Amount{ get; set; }
    [Required]  public string Currency{ get; set; }
 }
