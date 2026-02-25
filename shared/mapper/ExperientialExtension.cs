@@ -5,20 +5,26 @@ namespace api.shared.mapper;
 
 public static class ExperientialExtension
 {
-    public static VariantDto ToDto(this Variant variant)
+    extension(Variant variant)
     {
-        return new VariantDto
+        public VariantDto ToDto()
         {
-            Id = variant.Id,
-            Name = variant.Name,
+            return new VariantDto
+            {
+                Id = variant.Id,
+                Name = variant.Name,
 
-        };
+            };
+        }
     }
 
-    public static bool IsEmpty(this UpdateVariantDto dto)
+    extension(UpdateVariantDto dto)
     {
-        return string.IsNullOrWhiteSpace(dto.Name?.Trim());
+        public bool IsEmpty()
+        {
+            return string.IsNullOrWhiteSpace(dto.Name?.Trim());
 
+        }
     }
 }
     

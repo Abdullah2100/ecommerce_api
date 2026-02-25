@@ -6,24 +6,21 @@ namespace api.shared.mapper;
 
 public static class SubCategoryMapperExtensions
 {
-    extension(SubCategory subCategory)
+    public static SubCategoryDto ToDto(this SubCategory subCategory)
     {
+        if (subCategory == null)
+            throw new ArgumentNullException(nameof(subCategory));
 
-        public  SubCategoryDto ToDto()
+        return new SubCategoryDto
         {
-            if (subCategory == null)
-                throw new ArgumentNullException(nameof(subCategory));
-
-            return new SubCategoryDto
-            {
-                Id = subCategory.Id,
-                Name = subCategory.Name,
-                CategoryId = subCategory.CategoryId,
-                StoreId = subCategory.StoreId
-            };
-        }
+            Id = subCategory.Id,
+            Name = subCategory.Name,
+            CategoryId = subCategory.CategoryId,
+            StoreId = subCategory.StoreId
+        };
     }
 
+    
     extension(UpdateSubCategoryDto dto)
     {
         public  bool IsEmpty()

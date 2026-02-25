@@ -1,29 +1,33 @@
 using api.domain.entity;
 using api.Presentation.dto;
 
+namespace api.shared.mapper;
+
 public static class ProductVariantExperientialExtension
 {
-    public static ProductVariantDto ToProductVariantDto(this ProductVariant productVariant)
+    extension(ProductVariant productVariant)
     {
-        return new ProductVariantDto
+        public ProductVariantDto ToProductVariantDto()
         {
-            ProductId = productVariant.ProductId,
-            Name = productVariant.Name,
-            Percentage = productVariant.Percentage,
-            VariantId = productVariant.VariantId,
-            Id = productVariant.Id
-        };
-    }
-    
-    public static AdminProductVariantDto ToAdminProductVariantDto(this ProductVariant productVariant)
-    {
-        return new AdminProductVariantDto()
+            return new ProductVariantDto
+            {
+                ProductId = productVariant.ProductId,
+                Name = productVariant.Name,
+                Percentage = productVariant.Percentage,
+                VariantId = productVariant.VariantId,
+                Id = productVariant.Id
+            };
+        }
+
+        public AdminProductVariantDto ToAdminProductVariantDto()
         {
-            Name = productVariant.Name,
-            Percentage = productVariant.Percentage,
-            VariantName = productVariant?.Variant?.Name??""
+            return new AdminProductVariantDto()
+            {
+                Name = productVariant.Name,
+                Percentage = productVariant.Percentage,
+                VariantName = productVariant?.Variant?.Name??""
             
-        };
+            };
+        }
     }
-    
 }

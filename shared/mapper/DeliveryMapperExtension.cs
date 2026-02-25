@@ -6,45 +6,51 @@ namespace api.shared.mapper;
 
 public static class DeliveryMapperExtension
 {
-    public static DeliveryDto ToDto(this Delivery delivery, string url)
+    extension(Delivery delivery)
     {
-        return new DeliveryDto
+        public DeliveryDto ToDto(string url)
         {
-            Id = delivery.Id,
-            UserId = delivery.UserId,
-            UpdatedAt = delivery.UpdatedAt,
-            Address = delivery?.Address?.ToDeliveryDto(),
-            Analyse = null,
-            Thumbnail = string.IsNullOrEmpty(delivery?.Thumbnail) ? null : url + delivery.Thumbnail,
-            User = delivery?.User.ToDeliveryInfoDto(url),
-            IsAvailable = delivery?.IsAvailable ?? false
-        };
+            return new DeliveryDto
+            {
+                Id = delivery.Id,
+                UserId = delivery.UserId,
+                UpdatedAt = delivery.UpdatedAt,
+                Address = delivery?.Address?.ToDeliveryDto(),
+                Analyse = null,
+                Thumbnail = string.IsNullOrEmpty(delivery?.Thumbnail) ? null : url + delivery.Thumbnail,
+                User = delivery?.User.ToDeliveryInfoDto(url),
+                IsAvailable = delivery?.IsAvailable ?? false
+            };
+        }
     }
 
-    public static Result<DeliveryDto>? IsValidated(this Delivery? delivery)
+    extension(Delivery? delivery)
     {
-        if (delivery is null)
+        public Result<DeliveryDto>? IsValidated()
         {
-            return new Result<DeliveryDto>
-            (
-                data: null,
-                message: "delivery not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
-        }
+            if (delivery is null)
+            {
+                return new Result<DeliveryDto>
+                (
+                    data: null,
+                    message: "delivery not found",
+                    isSuccessful: false,
+                    statusCode: 404
+                );
+            }
 
-        if (delivery.IsBlocked)
-        {
-            return new Result<DeliveryDto>
-            (
-                data: null,
-                message: "delivery is blocked",
-                isSuccessful: false,
-                statusCode: 404
-            );
-        }
+            if (delivery.IsBlocked)
+            {
+                return new Result<DeliveryDto>
+                (
+                    data: null,
+                    message: "delivery is blocked",
+                    isSuccessful: false,
+                    statusCode: 404
+                );
+            }
 
-        return null;
+            return null;
+        }
     }
 }

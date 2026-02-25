@@ -27,11 +27,11 @@ public class AnalyseRepository(
                         {
                             info = new AnalyzesOrderDto
                             {
-                                totalFee = (decimal?)reader["totalFee"],
-                                totalOrders = (long?)reader["totalOrder"],
-                                totalDeliveryDistance = (decimal?)reader["totalDeliveryDistance"],
-                                usersCount = (long)reader["userCount"],
-                                productCount = (long)reader["productcount"],
+                                TotalFee = (decimal?)reader["totalFee"],
+                                TotalOrders = (long?)reader["totalOrder"],
+                                TotalDeliveryDistance = (decimal?)reader["totalDeliveryDistance"],
+                                UsersCount = (long)reader["userCount"],
+                                ProductCount = (long)reader["productcount"],
                             };
                         }
                     }

@@ -5,18 +5,18 @@ namespace api.shared.mapper;
 
 public static class BannerMapperExtension
 {
-    public static BannerDto ToDto(this Banner banner,string url)
+    extension(Banner banner)
     {
-        return new BannerDto
+        public BannerDto ToDto(string url)
         {
-            CreatedAt = banner.CreatedAt,
-            EndAt = banner.EndAt,
-            Id = banner.Id,
-            Image = string.IsNullOrEmpty(banner.Image) ? "" :url+ banner.Image,
-            StoreId = banner.StoreId,
-        };
+            return new BannerDto
+            {
+                CreatedAt = banner.CreatedAt,
+                EndAt = banner.EndAt,
+                Id = banner.Id,
+                Image = string.IsNullOrEmpty(banner.Image) ? "" : url + banner.Image,
+                StoreId = banner.StoreId,
+            };
+        }
     }
-
-    
-    
 }

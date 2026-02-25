@@ -5,14 +5,17 @@ namespace api.shared.mapper;
 
 public static class OrderProductMapperExtension
 {
-    public static OrderProductDto ToOrderProductDto(this OrderItem orderItem,string url)
+    extension(OrderItem orderItem)
     {
-        return new OrderProductDto
+        public OrderProductDto ToOrderProductDto(string url)
         {
-            Id = orderItem.ProductId,
-            Name = orderItem.Product.Name,
-            Thumbnail=url+orderItem.Product.Thumbnail
+            return new OrderProductDto
+            {
+                Id = orderItem.ProductId,
+                Name = orderItem.Product.Name,
+                Thumbnail=url+orderItem.Product.Thumbnail
 
-        };
+            };
+        }
     }
 }

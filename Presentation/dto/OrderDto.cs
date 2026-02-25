@@ -7,8 +7,11 @@ namespace api.Presentation.dto
         public Guid Id { get; set; }
         public decimal Longitude { get; set; }
         public decimal Latitude { get; set; }
+
         public long TotalPrice { get; set; }
-        public bool IsAllreadyPayed { get; set; }
+
+        //this form api to  let user know is order paid or not 
+        public bool IsAlreadyPayed { get; set; }
         public string Symbol { get; set; }
         public int DeliveryFee { get; set; }
         public String Name { get; set; }
@@ -22,16 +25,19 @@ namespace api.Presentation.dto
         public List<OrderDto>? Orders { get; set; }
         public int pageNum { get; set; } = 1;
     }
+
     public class DeliveryOrderDto
     {
         public Guid Id { get; set; }
         public decimal Longitude { get; set; }
         public decimal Latitude { get; set; }
         public long TotalPrice { get; set; }
-        
+
         public string Symbol { get; set; }
+
+        //this form api to  let  delivery is order paid or not 
         public bool IsAllreadyPayed { get; set; }
-        public  int DeliveryFee { get; set; }
+        public int DeliveryFee { get; set; }
         public String Name { get; set; }
         public String UserPhone { get; set; }
         public int Status { get; set; }
@@ -40,6 +46,7 @@ namespace api.Presentation.dto
 
     public class CreateOrderDto
     {
+        public Guid paymentId { get; set; }
         [Required] public decimal Longitude { get; set; }
         [Required] public decimal Latitude { get; set; }
         [Required] public long TotalPrice { get; set; }
@@ -58,23 +65,22 @@ namespace api.Presentation.dto
     public class UpdateOrderStatusDto
     {
         public Guid Id { get; set; }
-        public int Status { get; set; } 
+        public int Status { get; set; }
     }
-    
+
     public class UpdateOrderStatusEventDto
     {
         public Guid Id { get; set; }
-        public string Status { get; set; } 
+        public string Status { get; set; }
     }
 
 
     public class AnalyzesOrderDto
     {
-        public decimal? totalFee { get; set; }
-        public long? totalOrders { get; set; }
-        public decimal? totalDeliveryDistance {get;set;}
-        public long? usersCount { get; set; }
-        public long? productCount { get; set; }
+        public decimal? TotalFee { get; set; }
+        public long? TotalOrders { get; set; }
+        public decimal? TotalDeliveryDistance { get; set; }
+        public long? UsersCount { get; set; }
+        public long? ProductCount { get; set; }
     }
-    
 }
