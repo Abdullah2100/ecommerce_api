@@ -5,29 +5,35 @@ namespace api.shared.mapper;
 
 public static class StoreMapperExtention
 {
-    public static StoreDto ToDto(this Store store, string url)
+    extension(Store store)
     {
-        return new StoreDto
+        public StoreDto ToDto(string url)
         {
-            Id = store.Id,
-            IsBlocked = store.IsBlock,
-            Longitude = store.Addresses?.FirstOrDefault()?.Longitude,
-            Latitude = store.Addresses?.FirstOrDefault()?.Latitude,
-            Name = store.Name,
-            SmallImage = string.IsNullOrEmpty(store.SmallImage) ? "" : url + store.SmallImage,
-            WallpaperImage = string.IsNullOrEmpty(store.WallpaperImage) ? "" : url + store.WallpaperImage,
-            UpdatedAtAt = store.UpdatedAt,
-            UserId = store.UserId,
-            UserName = store.user.Name,
-        };
+            return new StoreDto
+            {
+                Id = store.Id,
+                IsBlocked = store.IsBlock,
+                Longitude = store.Addresses?.FirstOrDefault()?.Longitude,
+                Latitude = store.Addresses?.FirstOrDefault()?.Latitude,
+                Name = store.Name,
+                SmallImage = string.IsNullOrEmpty(store.SmallImage) ? "" : url + store.SmallImage,
+                WallpaperImage = string.IsNullOrEmpty(store.WallpaperImage) ? "" : url + store.WallpaperImage,
+                UpdatedAtAt = store.UpdatedAt,
+                UserId = store.UserId,
+                UserName = store.user.Name,
+            };
+        }
     }
     
-    public static bool IsEmpty(this UpdateStoreDto dto)
+    extension(UpdateStoreDto dto)
     {
-        return string.IsNullOrWhiteSpace(dto.Name) &&
-               dto.WallpaperImage == null &&
-               dto.SmallImage == null &&
-               dto.Longitude == null &&
-               dto.Latitude == null;
+        public bool IsEmpty()
+        {
+            return string.IsNullOrWhiteSpace(dto.Name) &&
+                   dto.WallpaperImage == null &&
+                   dto.SmallImage == null &&
+                   dto.Longitude == null &&
+                   dto.Latitude == null;
+        }
     }
 }

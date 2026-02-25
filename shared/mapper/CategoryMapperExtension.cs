@@ -5,19 +5,25 @@ namespace api.shared.mapper;
 
 public static class CategoryMapperExtension
 {
-    public static CategoryDto ToDto(this Category category, string url)
+    extension(Category category)
     {
-        return new CategoryDto
+        public CategoryDto ToDto(string url)
         {
-            Id = category.Id,
-            Image = string.IsNullOrEmpty(category.Image) ? "" : url + category.Image,
-            Name = category.Name
-        };
+            return new CategoryDto
+            {
+                Id = category.Id,
+                Image = string.IsNullOrEmpty(category.Image) ? "" : url + category.Image,
+                Name = category.Name
+            };
+        }
     }
 
-    public static bool IsEmpty(this UpdateCategoryDto category)
+    extension(UpdateCategoryDto category)
     {
-        return string.IsNullOrWhiteSpace(category.Name) &&
-               category.Image == null;
+        public bool IsEmpty()
+        {
+            return string.IsNullOrWhiteSpace(category.Name) &&
+                   category.Image == null;
+        }
     }
 }

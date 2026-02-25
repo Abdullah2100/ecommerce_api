@@ -2,16 +2,19 @@ namespace api.shared.mapper;
 
 public static class OrderStatusMapperExtension
 {
-    public static string ToOrderStatusName(this int orderStatus)
+    extension(int orderStatus)
     {
-        return orderStatus switch
+        public string ToOrderStatusName()
         {
-            0 => "Rejected",
-            1 => "Inprogress",
-            2 => "Accepted",
-            3 => "In away",
-            4 => "Received",
-            _ => "Completed",
-        };
+            return orderStatus switch
+            {
+                0 => "Rejected",
+                1 => "Inprogress",
+                2 => "Accepted",
+                3 => "In away",
+                4 => "Received",
+                _ => "Completed",
+            };
+        }
     }
 }

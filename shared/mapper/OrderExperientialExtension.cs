@@ -5,14 +5,17 @@ namespace api.shared.mapper;
 
 public static class OrderExperientialExtension
 {
-    public static OrderVariantDto ToOrderVarientDto(this OrderProductsVariant orderProductsVariant)
+    extension(OrderProductsVariant orderProductsVariant)
     {
-        return new OrderVariantDto
+        public OrderVariantDto ToOrderVariantDto()
         {
-            Name = orderProductsVariant.ProductVariant.Product.Name,
-            VarientName = orderProductsVariant.ProductVariant.Variant.Name,
+            return new OrderVariantDto
+            {
+                Name = orderProductsVariant.ProductVariant?.Product?.Name,
+                VarientName = orderProductsVariant.ProductVariant?.Variant?.Name,
 
-        };
+            };
+        }
     }
-    
+
 }
