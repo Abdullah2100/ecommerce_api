@@ -3,13 +3,11 @@ using api.util;
 
 namespace api.application.Services
 {
-
-
     public class FileServices(IWebHostEnvironment host) : IFileServices
     {
         private static readonly string LocalPath = "images";
 
-        private static string GetFileExtention(IFormFile filename)=> Path.GetExtension(filename.FileName);
+        private static string GetFileExtention(IFormFile filename) => Path.GetExtension(filename.FileName);
 
         private static bool CreateDirectory(string dir)
         {
@@ -38,6 +36,7 @@ namespace api.application.Services
                         return null;
                     }
                 }
+                
 
                 var fileFullName = Path.Combine(filePath, ClsUtil.GenerateGuid() + GetFileExtention(file));
 
@@ -46,24 +45,19 @@ namespace api.application.Services
                     await file.CopyToAsync(stream);
                 }
 
-                switch (fileFullName.Contains("//"))
-                {
-                    case true: return fileFullName.Replace(host.ContentRootPath + "//images", "");
-                    default: return fileFullName.Replace(host.ContentRootPath + "/images", "");
-                }
+                return fileFullName.Split("images")[1];
             }
             catch (Exception ex)
             {
                 Console.WriteLine("this the error from saving image to local" + ex.Message);
                 return null;
             }
-
         }
 
         public async Task<List<string>?> SaveFile(List<IFormFile> file, EnImageType type)
         {
             List<string> images = new List<string>();
-            for (int i=0;i<file.Count;i++)
+            for (int i = 0; i < file.Count; i++)
             {
                 string? path = await SaveFile(file[i], type);
                 if (path is null)
@@ -78,13 +72,13 @@ namespace api.application.Services
             return images;
         }
 
-       
+
         public bool DeleteFile(string filePath)
         {
             try
             {
-                var newFilPath =ClsUtil.RemoveAdditionalPath(filePath);
-                string fileRealPath = Path.Combine(host.ContentRootPath,"images/", newFilPath);
+                var newFilPath = ClsUtil.RemoveAdditionalPath(filePath);
+                string fileRealPath = Path.Combine(host.ContentRootPath, "images/", newFilPath);
                 if (File.Exists(fileRealPath))
                 {
                     File.Delete(fileRealPath);
@@ -118,5 +112,4 @@ namespace api.application.Services
             }
         }
     }
-    
 }

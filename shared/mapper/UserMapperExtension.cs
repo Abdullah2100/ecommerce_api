@@ -116,7 +116,7 @@ public static class UserMapperExtension
                 }
                 default:
                 {
-                    if (user is { IsUser: true, IsBlocked: true })
+                    if (user is { IsUser: false , IsBlocked: true })
                     {
                         return new Result<AuthDto?>
                         (
