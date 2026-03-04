@@ -111,6 +111,7 @@ public class DeliveryServices(
         );
     }
 
+
     public async Task<Result<DeliveryDto?>> CreateDelivery(
         Guid userId,
         CreateDeliveryDto deliveryDto
@@ -120,11 +121,11 @@ public class DeliveryServices(
             .GetUser(userId);
 
 
-        var admin = user.IsValidateFunc(isAdmin: true);
+        var admin = user.IsValidateFunc();
         var store = user.IsValidateFunc(isAdmin: false, isStore: true);
 
 
-        if (admin is not null && user?.IsUser == false || store != null)
+        if ((admin is not null && user?.IsUser == false) || store != null)
         {
             return new Result<DeliveryDto?>
             (
@@ -193,6 +194,7 @@ public class DeliveryServices(
         }
 
         delivery = await unitOfWork.DeliveryRepository.GetDelivery(id);
+
         if (delivery is null)
         {
             return new Result<DeliveryDto?>
@@ -264,12 +266,13 @@ public class DeliveryServices(
         );
     }
 
+
     public async Task<Result<DeliveryDto?>> GetDelivery(Guid id)
     {
         Delivery? delivery = await unitOfWork.DeliveryRepository
             .GetDelivery(id);
 
-        var isValid = delivery.IsValidated(); 
+        var isValid = delivery.IsValidated();
 
         if (isValid is not null)
         {
@@ -278,7 +281,7 @@ public class DeliveryServices(
                 data: null,
                 message: isValid.Message,
                 isSuccessful: false,
-                statusCode: isValid.StatusCode 
+                statusCode: isValid.StatusCode
             );
         }
 
@@ -380,6 +383,7 @@ public class DeliveryServices(
         );
     }
 
+
     public async Task<Result<DeliveryDto>> UpdateDelivery(UpdateDeliveryDto deliveryDto, Guid id)
     {
         Delivery? delivery = await unitOfWork.DeliveryRepository
@@ -419,10 +423,9 @@ public class DeliveryServices(
         }
 
 
-        
         var userUpdateData = new UpdateUserInfoDto
         {
-            Name = deliveryDto.Name ,
+            Name = deliveryDto.Name,
             Phone = deliveryDto.Phone,
             Thumbnail = deliveryDto.Thumbnail,
             Password = deliveryDto.Password,
@@ -445,9 +448,9 @@ public class DeliveryServices(
 
         if (userUpdateData.IsUpdateAnyFeild() is true)
         {
-            await userServices.UpdateUser(userUpdateData, delivery!.UserId,true);
+            await userServices.UpdateUser(userUpdateData, delivery!.UserId, true);
         }
-        
+
         var result = await unitOfWork.SaveChanges();
 
 
@@ -484,4 +487,5 @@ public class DeliveryServices(
             statusCode: 200
         );
     }
+    
 }
