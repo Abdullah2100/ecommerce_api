@@ -1,4 +1,4 @@
-using ecommerc_dotnet.midleware.ConfigImplment;
+using api.Infrastructure;
 
 namespace api.application;
 
@@ -7,7 +7,7 @@ public class ConfigurationImplement(IConfiguration configurationService) : IConf
 
         private readonly IConfiguration? _configurationService = configurationService;
 
-        public string getKey(string key)
+        public string GetKey(string key)
         {
             string result = "";
             if (_configurationService !=  null)

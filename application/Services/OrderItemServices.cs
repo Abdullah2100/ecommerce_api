@@ -5,7 +5,6 @@ using api.Infrastructure;
 using api.Presentation.dto;
 using api.shared.mapper;
 using api.shared.signalr;
-using ecommerc_dotnet.midleware.ConfigImplment;
 using Microsoft.AspNetCore.SignalR;
 
 namespace api.application.Services;
@@ -38,7 +37,7 @@ public class OrderItemServices(
 
         List<OrderItemDto> orderItems = (await unitOfWork.OrderItemRepository
                 .GetOrderItems(storeId: user.Store.Id, pageNum: pageNum, pageSize: pageSize))
-            .Select(p => p.ToOrderItemDto(config.getKey("url_file")))
+            .Select(p => p.ToOrderItemDto(config.GetKey("url_file")))
             .ToList();
 
         return new Result<List<OrderItemDto>>

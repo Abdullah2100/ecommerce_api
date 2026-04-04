@@ -13,7 +13,7 @@ namespace api.Presentation.controller;
 public class SubCategoryController(
     ISubCategoryServices subCategoryServices,
     IAuthenticationService authenticationService
-    ) : ControllerBase
+) : ControllerBase
 {
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -79,14 +79,14 @@ public class SubCategoryController(
     }
 
 
-    [HttpDelete("{subCategoryId}")]
+    [HttpDelete()]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteSubCategory
     (
-        Guid subCategoryId
+        [FromQuery] Guid subCategoryId
     )
     {
         StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
@@ -116,10 +116,10 @@ public class SubCategoryController(
     }
 
 
-    [HttpGet("all/{page:int}")]
+    [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> GetSubCategory(int page)
+    public async Task<IActionResult> GetSubCategory([FromQuery()] int page)
     {
         StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
         Claim? id = authenticationService.GetPayloadFromToken("id",
@@ -146,10 +146,11 @@ public class SubCategoryController(
     }
 
 
-    [HttpGet("{storeId}/{page:int}")]
+    [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> GetSubCategories(Guid storeId, int page)
+    public async Task<IActionResult> GetSubCategories(
+        [FromQuery()] Guid storeId, [FromQuery()] int page)
     {
         var result = await subCategoryServices.GetSubCategories(
             storeId, page, 25);

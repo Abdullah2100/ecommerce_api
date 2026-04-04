@@ -10,11 +10,11 @@ public class RefreshTokenController(
     IAuthenticationService authenticationService,
     IRefreshTokenServices refreshTokenServices): ControllerBase
 {
-    [HttpPost("{token}")]
+    [HttpPost()]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> CreateBanner(string token)
+    public async Task<IActionResult> CreateBanner([FromQuery]string token)
     {
         Claim? id = authenticationService.GetPayloadFromToken("id",
             token.Replace("Bearer ", ""));

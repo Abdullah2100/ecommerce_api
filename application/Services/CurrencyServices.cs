@@ -5,7 +5,6 @@ using api.Presentation.dto;
 using api.application.Result;
 using api.shared.mapper;
 using api.util;
-using ecommerc_dotnet.midleware.ConfigImplment;
 
 namespace api.application.Services;
 

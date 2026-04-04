@@ -10,7 +10,7 @@ namespace api.Presentation.controller;
 [Route("api/payment")]
 public class PaymentController : ControllerBase
 {
-    [HttpPost("createCheckout")]
+    [HttpPost("")]
     public async Task<IActionResult> CreateSession([FromBody]PaymentRequirementData paymentRequirementData)
     {
         var options = new PaymentIntentCreateOptions

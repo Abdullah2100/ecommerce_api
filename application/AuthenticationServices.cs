@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using api.application.Interface;
+using api.Infrastructure;
 using api.util;
-using ecommerc_dotnet.midleware.ConfigImplment;
 using Microsoft.IdentityModel.Tokens;
 
 namespace api.application
@@ -67,9 +67,9 @@ namespace api.application
         public string GenerateToken(Guid id, string email, EnTokenMode tokenType)
         {
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-            string key = config.getKey("credentials:key");
-            string issuer = config.getKey("credentials:Issuer");
-            string audience = config.getKey("credentials:Audience");
+            string key = config.GetKey("credentials:key");
+            string issuer = config.GetKey("credentials:Issuer");
+            string audience = config.GetKey("credentials:Audience");
 
             List<Claim> claims = new List<Claim>()
             {

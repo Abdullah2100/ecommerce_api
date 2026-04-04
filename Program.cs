@@ -8,7 +8,6 @@ using api.Infrastructure;
 using api.Infrastructure.Repositories;
 using api.shared.midleware;
 using api.shared.signalr;
-using ecommerc_dotnet.midleware.ConfigImplment;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

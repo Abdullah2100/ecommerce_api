@@ -6,7 +6,6 @@ using api.Presentation.dto;
 using api.shared.mapper;
 using api.shared.signalr;
 using api.util;
-using ecommerc_dotnet.midleware.ConfigImplment;
 using Microsoft.AspNetCore.SignalR;
 
 namespace api.application.Services;
@@ -106,7 +105,7 @@ public class BannerSerivces(
 
         return new Result<BannerDto?>
         (
-            data: banner.ToDto(config.getKey("url_file")),
+            data: banner.ToDto(config.GetKey("url_file")),
             message: "",
             isSuccessful: true,
             statusCode: 201
@@ -207,7 +206,7 @@ public class BannerSerivces(
 
         List<BannerDto> banners = (await unitOfWork.BannerRepository
                 .GetBanners(pageNumber, pageSize))
-            .Select(ba => ba.ToDto(config.getKey("url_file")))
+            .Select(ba => ba.ToDto(config.GetKey("url_file")))
             .ToList();
 
         return new Result<List<BannerDto>>
@@ -227,7 +226,7 @@ public class BannerSerivces(
     {
         List<BannerDto> banners = (await unitOfWork.BannerRepository
                 .GetBanners(storeId, pageNumber, pageSize))
-            .Select(ba => ba.ToDto(config.getKey("url_file")))
+            .Select(ba => ba.ToDto(config.GetKey("url_file")))
             .ToList();
 
         return new Result<List<BannerDto>>
@@ -245,7 +244,7 @@ public class BannerSerivces(
     {
         List<BannerDto> banners = (await unitOfWork.BannerRepository
                 .GetBanners(randomLenght))
-            .Select(ba => ba.ToDto(config.getKey("url_file")))
+            .Select(ba => ba.ToDto(config.GetKey("url_file")))
             .ToList();
 
         return new Result<List<BannerDto>>

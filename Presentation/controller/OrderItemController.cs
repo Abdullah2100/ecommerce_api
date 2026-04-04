@@ -56,7 +56,7 @@ public class OrderItemController(
         };
     }
 
-    [HttpPut("statsu")]
+    [HttpPut("status")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

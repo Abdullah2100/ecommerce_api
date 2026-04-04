@@ -6,7 +6,6 @@ using api.Presentation.dto;
 using api.shared.mapper;
 using api.shared.signalr;
 using api.util;
-using ecommerc_dotnet.midleware.ConfigImplment;
 using Microsoft.AspNetCore.SignalR;
 
 namespace api.application.Services;
@@ -44,7 +43,7 @@ public class StoreServices(
        var stores = (await unitOfWork.StoreRepository
                .GetStores(prefix, pageSize)
            );
-        List<StoreDto> storeToDto = stores==null?new List<StoreDto>() :stores.Select(st => st.ToDto(config.getKey("url_file")))
+        List<StoreDto> storeToDto = stores==null?new List<StoreDto>() :stores.Select(st => st.ToDto(config.GetKey("url_file")))
             .ToList();
         
         return new Result<List<StoreDto>?>
@@ -169,7 +168,7 @@ public class StoreServices(
 
         return new Result<StoreDto?>
         (
-            data: storeData?.ToDto(config.getKey("url_file")),
+            data: storeData?.ToDto(config.GetKey("url_file")),
             message: "",
             isSuccessful: true,
             statusCode: 201
@@ -301,7 +300,7 @@ public class StoreServices(
 
         return new Result<StoreDto?>
         (
-            data: store?.ToDto(config.getKey("url_file")),
+            data: store?.ToDto(config.GetKey("url_file")),
             message: "error while update store Data",
             isSuccessful: true,
             statusCode: 200
@@ -350,7 +349,7 @@ public class StoreServices(
 
         return new Result<StoreDto?>
         (
-            data: store.ToDto(config.getKey("url_file")),
+            data: store.ToDto(config.GetKey("url_file")),
             message: "",
             isSuccessful: true,
             statusCode: 200
@@ -373,7 +372,7 @@ public class StoreServices(
 
         return new Result<StoreDto?>
         (
-            data: store.ToDto(config.getKey("url_file")),
+            data: store.ToDto(config.GetKey("url_file")),
             message: "",
             isSuccessful: true,
             statusCode: 200
@@ -400,7 +399,7 @@ public class StoreServices(
 
         List<StoreDto> stores = (await unitOfWork.StoreRepository
                 .GetStores(pageNumber, pageSize)
-            ).Select(st => st.ToDto(config.getKey("url_file")))
+            ).Select(st => st.ToDto(config.GetKey("url_file")))
             .ToList();
 
         return new Result<List<StoreDto>?>

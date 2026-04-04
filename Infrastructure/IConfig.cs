@@ -1,7 +1,7 @@
-namespace ecommerc_dotnet.midleware.ConfigImplment;
+namespace api.Infrastructure;
 
 public interface IConfig
 { 
-    public  string getKey(string key);
+    public  string GetKey(string key);
     
 }

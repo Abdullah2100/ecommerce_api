@@ -103,7 +103,7 @@ public class BannerController(
     }
 
     //this method for dashboard only
-    [HttpGet("all/{pageNumber:int}")]
+    [HttpGet("{pageNumber:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

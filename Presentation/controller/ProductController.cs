@@ -15,11 +15,10 @@ public class ProductController(
     IAuthenticationService authenticationService
 ) : ControllerBase
 {
-    
-    [HttpGet("store/{storeId}/{pageNumber:int}")]
+    [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetProducts
-        (Guid storeId, int pageNumber)
+        ([FromQuery] Guid storeId, [FromQuery] int pageNumber)
     {
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
@@ -34,11 +33,11 @@ public class ProductController(
     }
 
 
-    [HttpGet("category/{categoryId}/{pageNumber:int}")]
+    [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetProductsByCategory
     (
-        Guid categoryId, int pageNumber
+        [FromQuery] Guid categoryId, [FromQuery] int pageNumber
     )
     {
         if (pageNumber < 1)
@@ -53,13 +52,13 @@ public class ProductController(
     }
 
 
-    [HttpGet("{storeId:guid}/{subcategoryId:guid}/{pageNumber:int}")]
+    [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetProducts
     (
-        Guid storeId,
-        Guid subcategoryId,
-        int pageNumber
+        [FromQuery] Guid storeId,
+        [FromQuery] Guid subcategoryId,
+        [FromQuery] int pageNumber
     )
     {
         if (pageNumber < 1)
@@ -79,10 +78,10 @@ public class ProductController(
     }
 
 
-    [HttpGet("all/{pageNumber:int}")]
+    [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetProducts
-        (int pageNumber)
+        ([FromQuery] int pageNumber)
     {
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
@@ -97,12 +96,12 @@ public class ProductController(
     }
 
 
-    [HttpGet("{pageNumber:int}")]
+    [HttpGet("")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProductsAdmin
-        (int pageNumber)
+        ([FromQuery] int pageNumber, [FromHeader] string header)
     {
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
@@ -122,9 +121,11 @@ public class ProductController(
             return Unauthorized("هناك مشكلة في التحقق");
         }
 
-        var result = await productServices.GetProductsForAdmin(adminId,
+        var result = await productServices.GetProductsForAdmin(
+            adminId,
             pageNumber,
-            25);
+            25
+        );
 
         return result.IsSuccessful switch
         {
@@ -140,7 +141,6 @@ public class ProductController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProductsPagesNum()
     {
-        
         StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
         Claim? id = authenticationService.GetPayloadFromToken("id",
             authorizationHeader.ToString().Replace("Bearer ", ""));
@@ -156,7 +156,7 @@ public class ProductController(
             return Unauthorized("هناك مشكلة في التحقق");
         }
 
-        var result = await productServices.GetProductsPagesForAdmin(adminId,25);
+        var result = await productServices.GetProductsPagesForAdmin(adminId, 25);
 
         return result.IsSuccessful switch
         {
@@ -166,7 +166,6 @@ public class ProductController(
     }
 
 
-    
     [HttpPost("")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -238,8 +237,7 @@ public class ProductController(
         };
     }
 
-    
-    
+
     [HttpDelete("{storeId:guid}/{productId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -266,7 +264,7 @@ public class ProductController(
             return Unauthorized("هناك مشكلة في التحقق");
         }
 
-        var result = await productServices.DeleteProducts(userId,storeId, productId);
+        var result = await productServices.DeleteProducts(userId, storeId, productId);
 
         return result.IsSuccessful switch
         {

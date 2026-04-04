@@ -9,8 +9,7 @@ public interface IProductServices
     Task<Result<List<ProductDto>>> GetProductsByCategoryId(Guid categryId,int pageNum,int pageSize);
     Task<Result<List<ProductDto>>> GetProducts(Guid storeId,Guid subCategoryId,int pageNum,int pageSize);
     Task<Result<List<ProductDto>>> GetProducts(int pageNum,int pageSize);
-    Task<Result<List<AdminProductsDto>>> GetProductsForAdmin(
-        Guid adminId, int pageNum,int pageSize);
+    Task<Result<List<AdminProductsDto>>> GetProductsForAdmin(Guid adminId, int pageNum, int pageSize);
     
     Task<Result<int>> GetProductsPagesForAdmin(Guid adminId,int lenght);
     Task<Result<ProductDto?>> CreateProducts(Guid userId,CreateProductDto productDto);

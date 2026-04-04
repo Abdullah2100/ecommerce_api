@@ -5,7 +5,6 @@ using api.Presentation.dto;
 using api.Infrastructure;
 using api.shared.mapper;
 using api.util;
-using ecommerc_dotnet.midleware.ConfigImplment;
 
 namespace api.application.Services;
 
@@ -66,7 +65,7 @@ public class PaymentTypeServices(
             ); 
         }
 
-        var paymentDto = paymentType.ToDto(config.getKey("url_file"));
+        var paymentDto = paymentType.ToDto(config.GetKey("url_file"));
         return new Result<PaymentTypeDto?>
         (
             data: paymentDto,
@@ -139,7 +138,7 @@ public class PaymentTypeServices(
             ); 
         }
 
-        var paymentDto = paymentType.ToDto(config.getKey("url_file"));
+        var paymentDto = paymentType.ToDto(config.GetKey("url_file"));
         return new Result<PaymentTypeDto?>
         (
             data: paymentDto,
@@ -153,7 +152,7 @@ public class PaymentTypeServices(
     {
         var paymentTypes = await unitOfWork.PaymentTypeRepository.GetPaymentTypes(pageNum, pageSie);
 
-        var paymentTypesToDtos = paymentTypes.Select(s => s.ToDto(config.getKey("url_file"))).ToList();
+        var paymentTypesToDtos = paymentTypes.Select(s => s.ToDto(config.GetKey("url_file"))).ToList();
         return new Result<List<PaymentTypeDto>?>
         (
             data: paymentTypesToDtos,

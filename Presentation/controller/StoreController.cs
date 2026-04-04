@@ -83,7 +83,7 @@ public class StoreController(
     }
 
 
-    [HttpPatch("status/{storeId:guid}")]
+    [HttpPatch("{storeId:guid}/status")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -110,7 +110,6 @@ public class StoreController(
 
         var result = await storeServices.UpdateStoreStatus(adminId.Value, storeId);
 
-          
 
         return result.IsSuccessful switch
         {
@@ -171,7 +170,7 @@ public class StoreController(
             return Unauthorized("هناك مشكلة في التحقق");
         }
 
-        var result = await storeServices.GetStorePage(adminId,20);
+        var result = await storeServices.GetStorePage(adminId, 20);
 
         return result.IsSuccessful switch
         {
@@ -181,10 +180,10 @@ public class StoreController(
     }
 
 
-    [HttpGet("{storeId:guid}")]
+    [HttpGet()]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetStore(Guid storeId)
+    public async Task<IActionResult> GetStore([FromQuery] Guid storeId)
     {
         var result = await storeServices.GetStoreByStoreId(storeId);
 
@@ -196,11 +195,11 @@ public class StoreController(
     }
 
 
-    [HttpGet("all/{page:int}")]
+    [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetStores(int page = 1)
+    public async Task<IActionResult> GetStores([FromQuery] int page = 1)
     {
         StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
         Claim? id = authenticationService.GetPayloadFromToken("id",
@@ -225,7 +224,7 @@ public class StoreController(
             _ => StatusCode(result.StatusCode, result.Message)
         };
     }
-    
+
     //this or admin page to get name of store while typing 
     [HttpGet("name/{prefix:regex(^[[\\p{{L}}]]+$)}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -256,5 +255,4 @@ public class StoreController(
             _ => StatusCode(result.StatusCode, result.Message)
         };
     }
-
 }

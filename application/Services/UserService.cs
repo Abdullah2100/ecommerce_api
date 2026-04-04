@@ -5,7 +5,6 @@ using api.Infrastructure;
 using api.Presentation.dto;
 using api.shared.mapper;
 using api.util;
-using ecommerc_dotnet.midleware.ConfigImplment;
 
 namespace api.application.Services;
 
@@ -190,7 +189,7 @@ public class UserService(
 
         return new Result<UserInfoDto?>(
             isSuccessful: true,
-            data: user!.ToUserInfoDto(config.getKey("url_file")),
+            data: user!.ToUserInfoDto(config.GetKey("url_file")),
             message: "",
             statusCode: 200
         );
@@ -217,7 +216,7 @@ public class UserService(
 
         List<UserInfoDto> users = (await unitOfWork.UserRepository
                 .GetUsers(page, 25))
-            .Select(u => u.ToUserInfoDto(config.getKey("url_file")))
+            .Select(u => u.ToUserInfoDto(config.GetKey("url_file")))
             .ToList();
 
         return new Result<List<UserInfoDto>?>
@@ -428,7 +427,7 @@ public class UserService(
 
         return new Result<UserInfoDto?>
         (
-            data: user.ToUserInfoDto(config.getKey("url_file")),
+            data: user.ToUserInfoDto(config.GetKey("url_file")),
             message: "",
             isSuccessful: true,
             statusCode: 200

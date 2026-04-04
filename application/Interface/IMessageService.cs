@@ -1,4 +1,4 @@
-namespace api.Infrastructure;
+namespace api.application.Interface;
 
 public interface IMessageService
 {

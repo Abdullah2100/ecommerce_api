@@ -6,7 +6,6 @@ using api.Presentation.dto;
 using api.shared.mapper;
 using api.shared.signalr;
 using api.util;
-using ecommerc_dotnet.midleware.ConfigImplment;
 using Microsoft.AspNetCore.SignalR;
 
 namespace api.application.Services;
@@ -190,7 +189,7 @@ public class OrderServices(
             );
         }
 
-        var dtoOrder = order.ToDto(config.getKey("url_file"));
+        var dtoOrder = order.ToDto(config.GetKey("url_file"));
         await hubContext.Clients.All.SendAsync("createdOrder", dtoOrder);
         await SendNotification(order, 1);
 
@@ -209,7 +208,7 @@ public class OrderServices(
     {
         List<OrderDto> orders = (await unitOfWork.OrderRepository
                 .GetOrders(userId, pageNum, pageSize))
-            .Select(o => o.ToDto(config.getKey("url_file")))
+            .Select(o => o.ToDto(config.GetKey("url_file")))
             .ToList();
 
         return new Result<List<OrderDto>>
@@ -241,7 +240,7 @@ public class OrderServices(
 
         List<OrderDto> orders = (await unitOfWork.OrderRepository
                 .GetOrders(pageNum, pageSize))
-            .Select(o => o.ToDto(config.getKey("url_file")))
+            .Select(o => o.ToDto(config.GetKey("url_file")))
             .ToList();
 
         int orderPages = (int)Math.Ceiling((double)orders.Count / pageSize);
@@ -363,7 +362,7 @@ public class OrderServices(
 
         List<OrderDto> orders = (await unitOfWork.OrderRepository
                 .GetOrderBelongToDelivery(deliveryId, pageNum, pageSize))
-            .Select(o => o.ToDto(config.getKey("url_file")))
+            .Select(o => o.ToDto(config.GetKey("url_file")))
             .ToList();
 
         return new Result<List<OrderDto>>
@@ -393,7 +392,7 @@ public class OrderServices(
 
         List<OrderDto> orders = (await unitOfWork.OrderRepository
                 .GetOrderNoBelongToAnyDelivery(pageNum, pageSize))
-            .Select(o => o.ToDto(config.getKey("url_file")))
+            .Select(o => o.ToDto(config.GetKey("url_file")))
             .ToList();
 
         return new Result<List<OrderDto>>
@@ -545,7 +544,7 @@ public class OrderServices(
             );
         }
 
-        await hubContext.Clients.All.SendAsync("createdOrder", order.ToDto(config.getKey("url_file")));
+        await hubContext.Clients.All.SendAsync("createdOrder", order.ToDto(config.GetKey("url_file")));
 
         return new Result<bool>
         (

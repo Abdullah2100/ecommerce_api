@@ -5,7 +5,6 @@ using api.Infrastructure;
 using api.Presentation.dto;
 using api.shared.mapper;
 using api.util;
-using ecommerc_dotnet.midleware.ConfigImplment;
 
 namespace api.application.Services;
 
@@ -208,7 +207,7 @@ public class DeliveryServices(
 
         return new Result<DeliveryDto?>
         (
-            data: delivery?.ToDto(config.getKey("url_file")),
+            data: delivery?.ToDto(config.GetKey("url_file")),
             message: "",
             isSuccessful: true,
             statusCode: 201
@@ -259,7 +258,7 @@ public class DeliveryServices(
 
         return new Result<DeliveryDto?>
         (
-            data: delivery?.ToDto(config.getKey("url_file")),
+            data: delivery?.ToDto(config.GetKey("url_file")),
             message: "",
             isSuccessful: true,
             statusCode: 201
@@ -285,7 +284,7 @@ public class DeliveryServices(
             );
         }
 
-        var deliveryDto = delivery.ToDto(config.getKey("url_file"));
+        var deliveryDto = delivery.ToDto(config.GetKey("url_file"));
         deliveryDto.Analyse = await unitOfWork.DeliveryRepository.GetDeliveryAnalys(delivery.Id);
 
         return new Result<DeliveryDto?>
@@ -365,7 +364,7 @@ public class DeliveryServices(
 
         List<DeliveryDto>? deliveryDto = (await unitOfWork.DeliveryRepository
                 .GetDeliveriesByBelongTo(id, pageNumber, pageSize))
-            ?.Select((de) => de.ToDto(config.getKey("url_file")))
+            ?.Select((de) => de.ToDto(config.GetKey("url_file")))
             ?.ToList();
 
         if (deliveryDto is not null)
@@ -481,7 +480,7 @@ public class DeliveryServices(
 
         return new Result<DeliveryDto>
         (
-            data: delivery?.ToDto(config.getKey("url_file")),
+            data: delivery?.ToDto(config.GetKey("url_file")),
             message: "",
             isSuccessful: true,
             statusCode: 200

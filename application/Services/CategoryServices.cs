@@ -5,7 +5,6 @@ using api.Infrastructure;
 using api.Presentation.dto;
 using api.shared.mapper;
 using api.util;
-using ecommerc_dotnet.midleware.ConfigImplment;
 
 namespace api.application.Services;
 
@@ -82,7 +81,7 @@ public class CategoryServices(
 
         return new Result<CategoryDto?>
         (
-            data: category?.ToDto(config.getKey("url_file")),
+            data: category?.ToDto(config.GetKey("url_file")),
             message: "",
             isSuccessful: true,
             statusCode: 201
@@ -189,7 +188,7 @@ public class CategoryServices(
 
         return new Result<CategoryDto?>
         (
-            data: category.ToDto(config.getKey("url_file")),
+            data: category.ToDto(config.GetKey("url_file")),
             message: "",
             isSuccessful: true,
             statusCode: 200
@@ -249,7 +248,7 @@ public class CategoryServices(
     public async Task<Result<List<CategoryDto>>> GetCategories(int pageNumber, int pageSize)
     {
         List<CategoryDto> categories = (await unitOfWork.CategoryRepository.GetCategories(pageNumber, pageSize))
-            .Select(ca => ca.ToDto(config.getKey("url_file")))
+            .Select(ca => ca.ToDto(config.GetKey("url_file")))
             .ToList();
         return new Result<List<CategoryDto>>
         (

@@ -13,11 +13,8 @@ namespace api.Presentation.controller;
 public class VariantController(
     IVariantServices variantServices,
     IAuthenticationService authenticationService
-    ) : ControllerBase
+) : ControllerBase
 {
-    
-
-
     [HttpPost("")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -113,11 +110,11 @@ public class VariantController(
     }
 
 
-    [HttpGet("all/{pageNumber:int}")]
+    [HttpGet("{pageNumber:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> GetVariants(int pageNumber = 1)
+    public async Task<IActionResult> GetVariants([FromQuery()] int pageNumber = 1)
     {
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
@@ -129,7 +126,7 @@ public class VariantController(
             _ => StatusCode(result.StatusCode, result.Message)
         };
     }
-    
+
     [HttpGet("pages")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -151,7 +148,7 @@ public class VariantController(
             return Unauthorized("هناك مشكلة في التحقق");
         }
 
-        var result = await variantServices.GetVariantPage(adminId,20);
+        var result = await variantServices.GetVariantPage(adminId, 20);
 
         return result.IsSuccessful switch
         {
@@ -159,6 +156,4 @@ public class VariantController(
             _ => StatusCode(result.StatusCode, result.Message)
         };
     }
-
-
 }

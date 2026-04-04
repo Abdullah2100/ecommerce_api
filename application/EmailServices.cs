@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Mail;
+using api.application.Interface;
 using api.Infrastructure;
-using ecommerc_dotnet.midleware.ConfigImplment;
 using Exception = System.Exception;
 
 namespace api.application;
@@ -12,10 +12,10 @@ public class EmailServices(IConfig config) : IMessageService
     {
         try
         {
-            var serverUrl = config.getKey("smtp_data:url");
-            var userName = config.getKey("smtp_data:username");
-            var password = config.getKey("smtp_data:password");
-            var port = config.getKey("smtp_data:port");
+            var serverUrl = config.GetKey("smtp_data:url");
+            var userName = config.GetKey("smtp_data:username");
+            var password = config.GetKey("smtp_data:password");
+            var port = config.GetKey("smtp_data:port");
 
             var client = new SmtpClient(serverUrl, Convert.ToInt32((port)))
             {

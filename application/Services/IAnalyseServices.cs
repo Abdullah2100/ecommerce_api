@@ -3,7 +3,6 @@ using api.domain.entity;
 using api.Infrastructure;
 using api.Presentation.dto;
 using api.shared.mapper;
-using ecommerc_dotnet.midleware.ConfigImplment;
 
 namespace api.application.Interface;
 

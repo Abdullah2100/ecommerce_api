@@ -33,7 +33,7 @@ public class DeliveryController(
     }
 
 
-    [HttpPost("new")]
+    [HttpPost("")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -68,7 +68,7 @@ public class DeliveryController(
     }
 
 
-    [HttpGet("")]
+    [HttpGet("me")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]

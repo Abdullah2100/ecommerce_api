@@ -46,7 +46,7 @@ public class OrderController(
         };
     }
     
-    [HttpGet("orderStatusDefinition")]
+    [HttpGet("status")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -77,7 +77,7 @@ public class OrderController(
 
     }
     
-    [HttpGet("all/{pageNumber}")]
+    [HttpGet("{pageNumber}")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -156,7 +156,7 @@ public class OrderController(
         };
     }
 
-    [HttpGet("delivery/{pageNumber}")]
+    [HttpGet("deliveries/{pageNumber}")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

@@ -50,7 +50,7 @@ public class GeneralController(
     }
 
 
-    [HttpDelete("{genralSettingId:guid}")]
+    [HttpDelete("{generalSettingId:guid}")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -86,7 +86,7 @@ public class GeneralController(
         };   
     }
 
-    [HttpPut("{genralSettingId:guid}")]
+    [HttpPut("{generalSettingId:guid}")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -127,7 +127,7 @@ public class GeneralController(
     }
 
     [AllowAnonymous]
-    [HttpGet("all/{pageNumber:int}")]
+    [HttpGet("{pageNumber:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

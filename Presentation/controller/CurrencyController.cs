@@ -112,7 +112,7 @@ public class CurrencyController(
     }
 
 
-    [HttpGet("all/{pageNumber:int}")]
+    [HttpGet("{pageNumber:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

@@ -5,7 +5,6 @@ using api.Infrastructure;
 using api.Presentation.dto;
 using api.shared.mapper;
 using api.util;
-using ecommerc_dotnet.midleware.ConfigImplment;
 using Microsoft.CodeAnalysis.Elfie.Model;
 
 namespace api.application.Services;
@@ -33,7 +32,7 @@ public class ProductServices(
     {
         List<ProductDto> products = (await unitOfWork.ProductRepository
                 .GetProducts(storeId, pageNum, pageSize))
-            .Select((de) => de.ToDto(config.getKey("url_file")))
+            .Select((de) => de.ToDto(config.GetKey("url_file")))
             .ToList();
 
         return new Result<List<ProductDto>>(
@@ -52,7 +51,7 @@ public class ProductServices(
     {
         List<ProductDto> products = (await unitOfWork.ProductRepository
                 .GetProductsByCategory(categryId, pageNum, pageSize))
-            .Select((de) => de.ToDto(config.getKey("url_file")))
+            .Select((de) => de.ToDto(config.GetKey("url_file")))
             .ToList();
 
         return new Result<List<ProductDto>>(
@@ -72,7 +71,7 @@ public class ProductServices(
     {
         List<ProductDto> products = (await unitOfWork.ProductRepository
                 .GetProducts(storeId, subCategoryId, pageNum, pageSize))
-            .Select((de) => de.ToDto(config.getKey("url_file")))
+            .Select((de) => de.ToDto(config.GetKey("url_file")))
             .ToList();
 
         return new Result<List<ProductDto>>(
@@ -90,7 +89,7 @@ public class ProductServices(
     {
         var products = (await unitOfWork.ProductRepository
             .GetProducts(pageNum, pageSize));
-        List<ProductDto> productDtos = products.Select((de) => de.ToDto(config.getKey("url_file")))
+        List<ProductDto> productDtos = products.Select((de) => de.ToDto(config.GetKey("url_file")))
             .ToList();
 
         return new Result<List<ProductDto>>(
@@ -101,11 +100,9 @@ public class ProductServices(
         );
     }
 
-    public async Task<Result<List<AdminProductsDto>>> GetProductsForAdmin(
-        Guid adminId,
+    public async Task<Result<List<AdminProductsDto>>> GetProductsForAdmin(Guid adminId,
         int pageNum,
-        int pageSize
-    )
+        int pageSize)
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(adminId);
@@ -120,7 +117,7 @@ public class ProductServices(
             );
         }
 
-        if (user.IsUser ==true)
+        if (user.IsUser == true)
         {
             return new Result<List<AdminProductsDto>>
             (
@@ -134,7 +131,7 @@ public class ProductServices(
 
         List<AdminProductsDto> products = (await unitOfWork.ProductRepository
                 .GetProducts(pageNum, pageSize))
-            .Select((de) => de.ToAdminDto(config.getKey("url_file")))
+            .Select((de) => de.ToAdminDto(config.GetKey("url_file")))
             .ToList();
 
 
@@ -212,8 +209,8 @@ public class ProductServices(
                     {
                         fileServices.DeleteFile(productImagesHolder);
                     }
+
                     unitOfWork.ProductRepository.Delete(productsList);
-                    
                 }
             }
             //end
@@ -341,7 +338,7 @@ public class ProductServices(
 
             return new Result<ProductDto?>
             (
-                data: product?.ToDto(config.getKey("url_file")),
+                data: product?.ToDto(config.GetKey("url_file")),
                 message: "",
                 isSuccessful: true,
                 statusCode: 201
@@ -443,7 +440,8 @@ public class ProductServices(
         //delete preview productvarients
         if (productDto.DeletedProductVariants is not null)
         {
-           await Task.Run(()=>unitOfWork.ProductVariantRepository.DeleteProductVariant(productDto.DeletedProductVariants,
+            await Task.Run(() => unitOfWork.ProductVariantRepository.DeleteProductVariant(
+                productDto.DeletedProductVariants,
                 productDto.Id));
         }
 
@@ -521,12 +519,12 @@ public class ProductServices(
 
         if (productVariants is not null)
         {
-           await unitOfWork.ProductVariantRepository.SaveProductVariants(productVariants);
+            await unitOfWork.ProductVariantRepository.SaveProductVariants(productVariants);
         }
 
         if (savedImage is not null)
         {
-            await Task.Run(()=>unitOfWork.ProductImageRepository.AddProductImage(savedImage));
+            await Task.Run(() => unitOfWork.ProductImageRepository.AddProductImage(savedImage));
         }
 
         product!.Name = productDto.Name ?? product.Name;
@@ -537,7 +535,7 @@ public class ProductServices(
         product.Thumbnail = savedThumbnail ?? product.Thumbnail;
         product.Symbol = productDto.Symbol ?? product.Symbol;
         unitOfWork.ProductRepository.Update(product);
-        
+
         result = await unitOfWork.SaveChanges();
 
         if (result == 0)
@@ -557,7 +555,7 @@ public class ProductServices(
 
         return new Result<ProductDto?>
         (
-            data: product?.ToDto(config.getKey("url_file")),
+            data: product?.ToDto(config.GetKey("url_file")),
             message: "",
             isSuccessful: true,
             statusCode: 200
@@ -618,7 +616,7 @@ public class ProductServices(
                 fileServices.DeleteFile(image.Path);
             }
 
-        if(product.Thumbnail is not null)
+        if (product.Thumbnail is not null)
             fileServices.DeleteFile(product.Thumbnail);
 
         return new Result<bool>

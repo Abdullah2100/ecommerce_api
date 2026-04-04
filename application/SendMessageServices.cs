@@ -1,3 +1,4 @@
+using api.application.Interface;
 using api.Infrastructure;
 
 namespace api.application;

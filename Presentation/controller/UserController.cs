@@ -13,10 +13,10 @@ namespace api.Presentation.controller;
 public class UserController(
     IUserServices userServices,
     IAuthenticationService authenticationService
-    ) : ControllerBase
+) : ControllerBase
 {
     [AllowAnonymous]
-    [HttpPost("signup")]
+    [HttpPost("auth/signup")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SignUp([FromBody] SignupDto data)
@@ -29,11 +29,10 @@ public class UserController(
             _ => StatusCode(result.StatusCode, result.Message)
         };
     }
-    
 
 
     [AllowAnonymous]
-    [HttpPost("login")]
+    [HttpPost("auth/login")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Login([FromBody] LoginDto data)
@@ -78,11 +77,11 @@ public class UserController(
     }
 
 
-    [HttpGet("{page:int}")]
+    [HttpGet()]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetUsers(int page)
+    public async Task<IActionResult> GetUsers([FromQuery()] int page)
     {
         StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
         Claim? id = authenticationService.GetPayloadFromToken("id",
@@ -108,7 +107,7 @@ public class UserController(
         };
     }
     //this to get user per pages like we hav 20 pages of user 25 user at one per page 
-    
+
     [HttpGet("pages")]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -130,7 +129,7 @@ public class UserController(
             return Unauthorized("هناك مشكلة في التحقق");
         }
 
-        var result = await userServices.GetUsersPages( adminId.Value);
+        var result = await userServices.GetUsersPages(adminId.Value);
 
         return result.IsSuccessful switch
         {
@@ -140,7 +139,7 @@ public class UserController(
     }
 
 
-    [HttpDelete("status/{userId:guid}")]
+    [HttpPatch("{userId:guid}/status")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -170,7 +169,6 @@ public class UserController(
             _ => StatusCode(result.StatusCode, result.Message)
         };
     }
-
 
 
     [HttpPut("")]
@@ -316,7 +314,7 @@ public class UserController(
     }
 
 
-    [HttpPatch("address/active/{addressId:guid}")]
+    [HttpPatch("address/{addressId:guid}")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -351,10 +349,8 @@ public class UserController(
     }
 
 
-
-
     [AllowAnonymous]
-    [HttpPost("generateOtp")]
+    [HttpPost("auth/otp/generate")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -375,7 +371,7 @@ public class UserController(
 
 
     [AllowAnonymous]
-    [HttpPost("otpVerification")]
+    [HttpPost("auth/otp/verify")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -396,7 +392,7 @@ public class UserController(
 
 
     [AllowAnonymous]
-    [HttpPost("reseatPassword")]
+    [HttpPost("auth/password-reset")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status200OK)]

@@ -13,7 +13,7 @@ public class AnalyseController(
     IAnalyseServices analyseServices,
     IAuthenticationService authenticationService) : ControllerBase
 {
-    [HttpGet("currentMonth")]
+    [HttpGet("system")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

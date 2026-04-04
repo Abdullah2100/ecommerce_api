@@ -39,7 +39,7 @@ public class PaymentTypeController(
             return Unauthorized("هناك مشكلة في التحقق");
         }
 
-        var result = await paymentTypeServices.Create(paymentTypeDto,userId);
+        var result = await paymentTypeServices.Create(paymentTypeDto, userId);
 
         return result.IsSuccessful switch
         {
@@ -74,7 +74,7 @@ public class PaymentTypeController(
             return Unauthorized("هناك مشكلة في التحقق");
         }
 
-        var result = await  paymentTypeServices.Update(paymentTypeDto,userId);
+        var result = await paymentTypeServices.Update(paymentTypeDto, userId);
 
         return result.IsSuccessful switch
         {
@@ -83,9 +83,9 @@ public class PaymentTypeController(
         };
     }
 
-    [HttpGet("{pageNumber}")]
+    [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetProducts(int pageNumber)
+    public async Task<IActionResult> GetProducts([FromQuery] int pageNumber)
     {
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
@@ -98,5 +98,4 @@ public class PaymentTypeController(
             _ => StatusCode(result.StatusCode, result.Message)
         };
     }
-      
 }
