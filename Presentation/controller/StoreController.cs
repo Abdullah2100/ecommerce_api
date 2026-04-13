@@ -10,9 +10,10 @@ namespace api.Presentation.controller;
 
 [Authorize]
 [ApiController]
-[Route("api/Store")]
+[Route("api/store")]
 public class StoreController(
     IStoreServices storeServices,
+    IBannerSerivces bannerServices,
     IAuthenticationService authenticationService
 )
     : ControllerBase
@@ -84,7 +85,7 @@ public class StoreController(
     }
 
 
-    [HttpPatch("{storeId:guid}/status")]
+    [HttpPut("{storeId:guid}/status")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -124,7 +125,7 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetStore()
+    public async Task<IActionResult> GetMyStore()
     {
         StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
         Claim? id = authenticationService.GetPayloadFromToken("id",
@@ -150,7 +151,7 @@ public class StoreController(
         };
     }
 
-    [HttpGet("pages")]
+    [HttpGet("{storeId:guid}/pages")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -181,10 +182,10 @@ public class StoreController(
     }
 
 
-    [HttpGet()]
+    [HttpGet("{storeId:guid}")]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetStore([FromQuery] Guid storeId)
+    public async Task<IActionResult> GetStoreById(Guid storeId)
     {
         var result = await storeServices.GetStoreByStoreId(storeId);
 
@@ -200,7 +201,7 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetStores([FromQuery] int page = 1)
+    public async Task<IActionResult> GetStores(int page = 1)
     {
         StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
         Claim? id = authenticationService.GetPayloadFromToken("id",
@@ -227,11 +228,11 @@ public class StoreController(
     }
 
     //this or admin page to get name of store while typing 
-    [HttpGet("name/{prefix:regex(^[[\\p{{L}}]]+$)}")]
+    [HttpGet("search/{prefix:regex(^[[\\p{{L}}]]+$)}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetStores(string prefix)
+    public async Task<IActionResult> GetStores( string prefix)
     {
         StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
         Claim? id = authenticationService.GetPayloadFromToken("id",
@@ -249,6 +250,93 @@ public class StoreController(
         }
 
         var result = await storeServices.GetStores(adminId.Value, prefix, 25);
+
+        return result.IsSuccessful switch
+        {
+            true => StatusCode(result.StatusCode, result.Data),
+            _ => StatusCode(result.StatusCode, result.Message)
+        };
+    }
+
+    [HttpPost("{storeId:guid}/banners")]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    public async Task<IActionResult> CreateBanner(
+        Guid storeId, [FromForm] CreateBannerDto banner
+    )
+    {
+        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
+        Claim? id = authenticationService.GetPayloadFromToken("id",
+            authorizationHeader.ToString().Replace("Bearer ", ""));
+
+        Guid? userId = null;
+        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
+        {
+            userId = outId;
+        }
+
+        if (userId is null)
+        {
+            return Unauthorized("هناك مشكلة في التحقق");
+        }
+
+        var result = await bannerServices.CreateBanner(userId.Value, banner);
+
+        return result.IsSuccessful switch
+        {
+            true => StatusCode(result.StatusCode, result.Data),
+            _ => StatusCode(result.StatusCode, result.Message)
+        };
+    }
+
+    [HttpDelete("{storeId:guid}/banners/{bannerId:guid}")]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteBanner(
+        Guid storeId, Guid bannerId
+    )
+    {
+        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
+        Claim? id = authenticationService.GetPayloadFromToken("id",
+            authorizationHeader.ToString().Replace("Bearer ", ""));
+
+        Guid? userId = null;
+        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
+        {
+            userId = outId;
+        }
+
+        if (userId is null)
+        {
+            return Unauthorized("هناك مشكلة في التحقق");
+        }
+
+        var result = await bannerServices
+            .DeleteBanner(bannerId, userId.Value);
+
+        return result.IsSuccessful switch
+        {
+            true => StatusCode(result.StatusCode, result.Data),
+            _ => StatusCode(result.StatusCode, result.Message)
+        };
+    }
+
+    [HttpGet("{storeId:guid}/banners")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetBanner(
+        Guid storeId, int pageNumber
+    )
+    {
+        if (pageNumber < 1)
+            return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
+
+        var result = await bannerServices
+            .GetBanners(storeId, pageNumber, 25);
 
         return result.IsSuccessful switch
         {
