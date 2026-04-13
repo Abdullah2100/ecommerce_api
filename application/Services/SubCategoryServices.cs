@@ -15,27 +15,26 @@ public class SubCategoryServices(
     : ISubCategoryServices
 {
     public async Task<Result<SubCategoryDto?>> CreateSubCategory(
-        Guid userId,
+        Guid storeId,
         CreateSubCategoryDto subCategoryDto
     )
     {
-        User? user = await unitOfWork.UserRepository
-            .GetUser(userId);
+        Store? store = await unitOfWork.StoreRepository
+            .GetStore(storeId);
 
-        var isValide = user.IsValidateFunc(isAdmin: false, isStore: true);
 
-        if (isValide is not null)
+        if (store is not null)
         {
             return new Result<SubCategoryDto?>(
                 isSuccessful: false,
                 data: null,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
+                message: "Store Not Found",
+                statusCode:(int) StatusCodes.Status404NotFound 
             );
         }
 
 
-        int count = await unitOfWork.SubCategoryRepository.GetSubCategoriesCount(user.Store.Id);
+        int count = await unitOfWork.SubCategoryRepository.GetSubCategoriesCount(storeId);
 
         if (count == 20)
         {
@@ -54,13 +53,14 @@ public class SubCategoryServices(
         {
             Id = id,
             CategoryId = subCategoryDto.CategoryId,
-            StoreId = user.Store.Id,
+            StoreId = storeId,
             Name = subCategoryDto.Name,
             UpdatedAt = null,
             CreatedAt = DateTime.Now,
         };
 
         unitOfWork.SubCategoryRepository.Add(subCategory);
+        
         int result = await unitOfWork.SaveChanges();
 
         if (result == 0)
@@ -84,7 +84,7 @@ public class SubCategoryServices(
     }
 
     public async Task<Result<SubCategoryDto?>> UpdateSubCategory(
-        Guid userId,
+        Guid storeId,
         UpdateSubCategoryDto subCategoryDto
     )
     {
@@ -97,26 +97,25 @@ public class SubCategoryServices(
                 statusCode: 200
             );
 
+        Store? store = await unitOfWork.StoreRepository
+            .GetStore(storeId);
 
-        User? user = await unitOfWork.UserRepository
-            .GetUser(userId);
 
-        var isValide = user.IsValidateFunc(isStore: true);
-
-        if (isValide is not null)
+        if (store is not null)
         {
             return new Result<SubCategoryDto?>(
                 isSuccessful: false,
                 data: null,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
+                message: "Store Not Found",
+                statusCode:(int) StatusCodes.Status404NotFound 
             );
         }
+
 
         SubCategory? subCategory = await unitOfWork.SubCategoryRepository
             .GetSubCategory(subCategoryDto.Id);
 
-        if (subCategory is null || subCategory.StoreId != user!.Store!.Id)
+        if (subCategory is null || subCategory.StoreId != storeId)
         {
             return new Result<SubCategoryDto?>
             (
@@ -167,27 +166,26 @@ public class SubCategoryServices(
         );
     }
 
-    public async Task<Result<bool>> DeleteSubCategory(Guid id, Guid userId)
+    public async Task<Result<bool>> DeleteSubCategory(Guid id, Guid storeId)
     {
-        User? user = await unitOfWork.UserRepository
-            .GetUser(userId);
+        Store? store = await unitOfWork.StoreRepository
+            .GetStore(storeId);
 
-        var isValide = user.IsValidateFunc(isStore: true);
 
-        if (isValide is not null)
+        if (store is not null)
         {
             return new Result<bool>(
                 isSuccessful: false,
                 data: false,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
+                message: "Store Not Found",
+                statusCode:(int) StatusCodes.Status404NotFound 
             );
         }
 
         SubCategory? subCategory = await unitOfWork.SubCategoryRepository
             .GetSubCategory(id);
 
-        if (subCategory is null || subCategory.StoreId != user!.Store!.Id)
+        if (subCategory is null || subCategory.StoreId != storeId)
         {
             return new Result<bool>
             (

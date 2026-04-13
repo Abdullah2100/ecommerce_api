@@ -14,6 +14,7 @@ namespace api.Presentation.controller;
 public class StoreController(
     IStoreServices storeServices,
     IBannerSerivces bannerServices,
+    ISubCategoryServices subCategoryServices,
     IAuthenticationService authenticationService
 )
     : ControllerBase
@@ -232,7 +233,7 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetStores( string prefix)
+    public async Task<IActionResult> GetStores(string prefix)
     {
         StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
         Claim? id = authenticationService.GetPayloadFromToken("id",
@@ -337,6 +338,77 @@ public class StoreController(
 
         var result = await bannerServices
             .GetBanners(storeId, pageNumber, 25);
+
+        return result.IsSuccessful switch
+        {
+            true => StatusCode(result.StatusCode, result.Data),
+            _ => StatusCode(result.StatusCode, result.Message)
+        };
+    }
+
+    [HttpPost("{storeId:guid}/subCategories")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    public async Task<IActionResult> CreatSubCategory(
+        Guid storeId,
+        [FromBody] CreateSubCategoryDto subCategory)
+    {
+        var result = await subCategoryServices.CreateSubCategory(storeId, subCategory);
+
+        return result.IsSuccessful switch
+        {
+            true => StatusCode(result.StatusCode, result.Data),
+            _ => StatusCode(result.StatusCode, result.Message)
+        };
+    }
+
+    [HttpPut("{storeId:guid}/subCategories")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateSubCategory(
+        Guid storeId,
+        [FromBody] UpdateSubCategoryDto subCategory)
+    {
+        var result = await subCategoryServices.UpdateSubCategory(storeId, subCategory);
+
+        return result.IsSuccessful switch
+        {
+            true => StatusCode(result.StatusCode, result.Data),
+            _ => StatusCode(result.StatusCode, result.Message)
+        };
+    }
+
+    [HttpDelete("{storeId:guid}/subCategories/{subCategoryId:guid}")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteSubCategory
+    (Guid storeId, Guid subCategoryId)
+    
+    {
+        var result = await subCategoryServices.DeleteSubCategory(
+            storeId: storeId,
+            id: subCategoryId);
+
+        return result.IsSuccessful switch
+        {
+            true => StatusCode(result.StatusCode, result.Data),
+            _ => StatusCode(result.StatusCode, result.Message)
+        };
+    }
+
+    [HttpGet("{storeId:guid}/subCategories")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> GetSubCategory(Guid storeId, int page)
+    {
+        var result = await subCategoryServices.GetSubCategories(
+            storeId, page, 25);
 
         return result.IsSuccessful switch
         {
