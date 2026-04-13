@@ -1,5 +1,6 @@
 using api.domain.entity;
 using api.Presentation.dto;
+using api.Presentation.dto.Request;
 
 namespace api.shared.mapper;
 

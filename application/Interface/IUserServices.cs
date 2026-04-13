@@ -1,5 +1,7 @@
 using api.application.Result;
 using api.Presentation.dto;
+using api.Presentation.dto.Request;
+using api.Presentation.dto.Response;
 
 namespace api.application.Interface;
 
@@ -27,5 +29,5 @@ public interface IUserServices
 
     public Task<Result<bool>> GenerateOtp(ForgetPasswordDto forgetPasswordDto);
     public Task<Result<bool>> OtpVerification(CreateVerificationDto createVerificationDto);
-    public Task<Result<AuthDto?>> ReseatePassword(CreateReseatePasswordDto createReseatePasswordDto);
+    public Task<Result<AuthDto?>> ReseatePassword(CreateRecreatePasswordDto createRecreatePasswordDto);
 }

@@ -1,5 +1,6 @@
 using api.domain.entity;
 using api.Presentation.dto;
+using api.Presentation.dto.Response;
 
 namespace api.shared.mapper;
 
@@ -12,7 +13,7 @@ public static class OrderExperientialExtension
             return new OrderVariantDto
             {
                 Name = orderProductsVariant.ProductVariant?.Product?.Name,
-                VarientName = orderProductsVariant.ProductVariant?.Variant?.Name,
+                VariantName = orderProductsVariant.ProductVariant?.Variant?.Name,
 
             };
         }

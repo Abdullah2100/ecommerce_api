@@ -1,4 +1,5 @@
 using api.Presentation.dto;
+using api.Presentation.dto.Response;
 using Microsoft.AspNetCore.SignalR;
 
 namespace api.shared.signalr;

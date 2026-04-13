@@ -2,6 +2,7 @@ using api.application;
 using api.domain.entity;
 using api.domain.Interface;
 using api.Presentation.dto;
+using api.Presentation.dto.Request;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Infrastructure.Repositories;

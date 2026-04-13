@@ -1,5 +1,6 @@
 using System.Net;
 using api.Presentation.dto;
+using api.Presentation.dto.Response;
 using Microsoft.AspNetCore.Diagnostics;
 
 namespace api.shared.midleware;

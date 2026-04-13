@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using api.application.Interface;
 using api.Presentation.dto;
+using api.Presentation.dto.Request;
+using api.Presentation.dto.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
@@ -396,7 +398,7 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> ReseatPassword([FromBody] CreateReseatePasswordDto data)
+    public async Task<IActionResult> ReseatPassword([FromBody] CreateRecreatePasswordDto data)
     {
         var result = await userServices.ReseatePassword(data);
 

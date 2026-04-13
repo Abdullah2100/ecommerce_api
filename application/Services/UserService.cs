@@ -3,6 +3,8 @@ using api.application.Result;
 using api.domain.entity;
 using api.Infrastructure;
 using api.Presentation.dto;
+using api.Presentation.dto.Request;
+using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.util;
 
@@ -79,7 +81,7 @@ public class UserService(
             Name = signupDto.Name,
             Phone = signupDto.Phone,
             Password = ClsUtil.HashingText(signupDto.Password),
-            IsUser = (signupDto.Role?? enRole.User)==enRole.User,
+            IsUser = (signupDto.Role?? EnRole.User)==EnRole.User,
             DeviceToken = signupDto.DeviceToken ?? "",
             Thumbnail = "",
             CreatedAt = DateTime.Now,
@@ -879,7 +881,7 @@ public class UserService(
         );
     }
 
-    public async Task<Result<AuthDto?>> ReseatePassword(CreateReseatePasswordDto otp)
+    public async Task<Result<AuthDto?>> ReseatePassword(CreateRecreatePasswordDto otp)
     {
         bool isExistUser = await unitOfWork.UserRepository
             .IsExistByEmail(otp.Email);
