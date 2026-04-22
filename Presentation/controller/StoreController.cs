@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using api.application.Interface;
+using api.Filter;
 using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Authorization;
@@ -20,6 +21,7 @@ public class StoreController(
     : ControllerBase
 {
     [HttpPost("")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status201Created)]
@@ -27,21 +29,9 @@ public class StoreController(
     public async Task<IActionResult> CreateNewStore(
         [FromForm] CreateStoreDto store)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-        Guid? userId = null;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            userId = outId;
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        if (userId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await storeServices.CreateStore(store, userId.Value);
+        var result = await storeServices.CreateStore(store, id);
 
         return result.IsSuccessful switch
         {
@@ -52,6 +42,7 @@ public class StoreController(
 
 
     [HttpPut("")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -60,23 +51,10 @@ public class StoreController(
     public async Task<IActionResult> UpdateStore(
         [FromForm] UpdateStoreDto store)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-
-        Guid? userId = null;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
 
-        var result = await storeServices.UpdateStore(store, userId.Value);
+        var result = await storeServices.UpdateStore(store, id);
 
         return result.IsSuccessful switch
         {
@@ -87,6 +65,7 @@ public class StoreController(
 
 
     [HttpPut("{storeId:guid}/status")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -95,23 +74,10 @@ public class StoreController(
         Guid storeId
     )
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-
-        Guid? adminId = null;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            adminId = outId;
-        }
-
-        if (adminId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
 
-        var result = await storeServices.UpdateStoreStatus(adminId.Value, storeId);
+        var result = await storeServices.UpdateStoreStatus(id, storeId);
 
 
         return result.IsSuccessful switch
@@ -123,27 +89,15 @@ public class StoreController(
 
 
     [HttpGet("me")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetMyStore()
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid userId = Guid.Empty;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await storeServices.GetStoreByUserId(userId);
+        var result = await storeServices.GetStoreByUserId(id);
 
         return result.IsSuccessful switch
         {
@@ -153,27 +107,15 @@ public class StoreController(
     }
 
     [HttpGet("{storeId:guid}/pages")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetStoresPages()
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid adminId = Guid.Empty;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            adminId = outId;
-        }
-
-        if (adminId == Guid.Empty)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await storeServices.GetStorePage(adminId, 20);
+        var result = await storeServices.GetStorePage(id, 20);
 
         return result.IsSuccessful switch
         {
@@ -199,27 +141,15 @@ public class StoreController(
 
 
     [HttpGet()]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetStores(int page = 1)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid? adminId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            adminId = outId;
-        }
-
-        if (adminId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await storeServices.GetStores(adminId.Value, page, 25);
+        var result = await storeServices.GetStores(id, page, 25);
 
         return result.IsSuccessful switch
         {
@@ -230,27 +160,15 @@ public class StoreController(
 
     //this or admin page to get name of store while typing 
     [HttpGet("search/{prefix:regex(^[[\\p{{L}}]]+$)}")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetStores(string prefix)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid? adminId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            adminId = outId;
-        }
-
-        if (adminId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await storeServices.GetStores(adminId.Value, prefix, 25);
+        var result = await storeServices.GetStores(id, prefix, 25);
 
         return result.IsSuccessful switch
         {
@@ -260,6 +178,7 @@ public class StoreController(
     }
 
     [HttpPost("{storeId:guid}/banners")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -268,22 +187,9 @@ public class StoreController(
         Guid storeId, [FromForm] CreateBannerDto banner
     )
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid? userId = null;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await bannerServices.CreateBanner(userId.Value, banner);
+        var result = await bannerServices.CreateBanner(id, banner);
 
         return result.IsSuccessful switch
         {
@@ -293,6 +199,7 @@ public class StoreController(
     }
 
     [HttpDelete("{storeId:guid}/banners/{bannerId:guid}")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -301,23 +208,10 @@ public class StoreController(
         Guid storeId, Guid bannerId
     )
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-
-        Guid? userId = null;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await bannerServices
-            .DeleteBanner(bannerId, userId.Value);
+            .DeleteBanner(bannerId, id);
 
         return result.IsSuccessful switch
         {

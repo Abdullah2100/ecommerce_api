@@ -14,7 +14,8 @@ public class UserService(
     IConfig config,
     IFileServices fileServices,
     IUnitOfWork unitOfWork,
-    IAuthenticationService authenticationService
+    IAuthenticationService authenticationService,
+    IServiceProvider sp
 )
     : IUserServices
 {
@@ -803,8 +804,9 @@ public class UserService(
             );
         }
 
-        var SendMessageSerivce = new SendMessageServices(new EmailServices(config));
-        bool emailSendResult = await SendMessageSerivce.SendMessage(message: otp, otp);
+        
+        var sendMessageService = sp.GetRequiredKeyedService<IMessageService>(EnMessageService.Email);
+        bool emailSendResult = await sendMessageService.SendingMessage(message: otp, otp);
 
         if (!emailSendResult)
         {

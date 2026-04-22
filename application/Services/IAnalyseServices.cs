@@ -1,29 +1,26 @@
+using api.application.Interface;
 using api.application.Result;
 using api.domain.entity;
 using api.Infrastructure;
-using api.Presentation.dto;
 using api.Presentation.dto.Response;
 using api.shared.mapper;
 
-namespace api.application.Interface;
+namespace api.application.Services;
 
-public class AnalyseServices(
-    IUnitOfWork unitOfWork,
-    IMessageService messageService
-    ):IAnalyseServices
+public class AnalyseServices(IUnitOfWork unitOfWork):IAnalyseServices
 {
     public async Task<Result<AnalyzesOrderDto?>> GetMonthAnalysis(Guid adminId)
     {
         User? user = await unitOfWork.UserRepository.GetUser(adminId);
         
-        var isValide = user.IsValidateFunc(true);
-        if (isValide is not null)
+        var isValid = user.IsValidateFunc();
+        if (isValid is not null)
         {
             return new Result<AnalyzesOrderDto?>(
                 data: null,
-                message: isValide.Message,
+                message: isValid.Message,
                 isSuccessful: false,
-                statusCode: isValide.StatusCode
+                statusCode: isValid.StatusCode
             );
         }
 

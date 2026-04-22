@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using api.application.Interface;
+using api.Filter;
 using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Authorization;
@@ -17,26 +18,14 @@ public class SubCategoryController(
 ) : ControllerBase
 {
     [HttpGet()]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> GetSubCategory([FromQuery()] int page)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid? adminId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            adminId = outId;
-        }
-
-        if (adminId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await subCategoryServices.GetSubCategoryAll(adminId.Value, page, 25);
+        var result = await subCategoryServices.GetSubCategoryAll(id, page, 25);
 
         return result.IsSuccessful switch
         {

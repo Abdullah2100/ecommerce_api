@@ -15,8 +15,8 @@ namespace api.application.Services;
 public class OrderServices(
     IUnitOfWork unitOfWork,
     IConfig config,
-    IMessageService messageService,
-    IHubContext<OrderHub> hubContext)
+    IHubContext<OrderHub> hubContext,
+    IServiceProvider sp)
     : IOrderServices
 {
     public static readonly List<string> OrderStatus = new List<string>
@@ -591,7 +591,8 @@ public class OrderServices(
     {
         try
         {
-            var messageServe = new SendMessageServices(new NotificationServices());
+            
+            var messageServe = sp.GetRequiredKeyedService<IMessageService>(EnMessageService.Notification);
 
             var orderItems = order.Items.ToList();
 
@@ -602,7 +603,7 @@ public class OrderServices(
                 var storeMessage = this.StoreMessage(status, cancelMessage);
                 if (!string.IsNullOrEmpty(storeMessage) && orderItem.Store.user.DeviceToken is not null)
                 {
-                    await messageServe.SendMessage(storeMessage, orderItem.Store.user.DeviceToken);
+                    await messageServe.SendingMessage(storeMessage, orderItem.Store.user.DeviceToken);
                 }
             }
         }
@@ -616,12 +617,12 @@ public class OrderServices(
     {
         try
         {
-            var messageServe = new SendMessageServices(new NotificationServices());
+            var messageServe = sp.GetRequiredKeyedService<IMessageService>(EnMessageService.Notification);
 
             var userMessage = this.UserMessage(status);
             if (!string.IsNullOrEmpty(userMessage))
             {
-                await messageServe.SendMessage(userMessage, order.User?.DeviceToken??"");
+                await messageServe.SendingMessage(userMessage, order.User?.DeviceToken??"");
             }
         }
         catch (Exception e)
@@ -634,7 +635,7 @@ public class OrderServices(
     {
         try
         {
-            var messageServe = new SendMessageServices(new NotificationServices());
+            var messageServe = sp.GetRequiredKeyedService<IMessageService>(EnMessageService.Notification);
 
             var deliveryMessage = this.DeliveryMessage(status);
 
@@ -648,7 +649,7 @@ public class OrderServices(
             {
                 case 0:
                 {
-                    await messageServe.SendMessage(deliveryMessage, delivery?.DeviceToken??"");
+                    await messageServe.SendingMessage(deliveryMessage, delivery?.DeviceToken??"");
                 }
                     break;
 
@@ -660,7 +661,7 @@ public class OrderServices(
 
                 case 5:
                 {
-                    await messageServe.SendMessage(deliveryMessage, delivery?.DeviceToken??"");
+                    await messageServe.SendingMessage(deliveryMessage, delivery?.DeviceToken??"");
                 }
                     break;
             }
@@ -672,9 +673,7 @@ public class OrderServices(
         }
     }
 
-    private async Task SendNotificationToDeliveries(
-        string message,
-        SendMessageServices messageServe)
+    private async Task SendNotificationToDeliveries(string message, IMessageService messageServe)
     {
         try
         {
@@ -686,7 +685,7 @@ public class OrderServices(
                 foreach (var delivery in deliveryList)
                 {
                     if (delivery.DeviceToken is not null)
-                        await messageService.SendingMessage(message, delivery.DeviceToken!);
+                        await messageServe.SendingMessage(message, delivery.DeviceToken!);
                 }
             }
         }

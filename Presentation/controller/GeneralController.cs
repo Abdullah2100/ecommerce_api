@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using api.application.Interface;
+using api.Filter;
 using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using api.Presentation.dto.Response;
@@ -17,6 +18,7 @@ public class GeneralController(
     IAuthenticationService authenticationService) : ControllerBase
 {
     [HttpPost("")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status201Created)]
@@ -25,23 +27,10 @@ public class GeneralController(
         [FromBody] GeneralSettingDto generalSetting
     )
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-
-        Guid? adminId = null;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            adminId = outId;
-        }
-
-        if (adminId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await generalSettingServices.CreateGeneralSetting(
-            adminId:adminId.Value,
+            adminId:id,
             generalSetting
             );
         return result.IsSuccessful switch
@@ -53,6 +42,7 @@ public class GeneralController(
 
 
     [HttpDelete("{generalSettingId:guid}")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -61,24 +51,11 @@ public class GeneralController(
         Guid genralSettingId 
     )
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-
-        Guid? adminId = null;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            adminId = outId;
-        }
-
-        if (adminId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
        
         var result = await generalSettingServices.DeleteGeneralSetting(
-            adminId:adminId.Value,
+            adminId:id,
             id:genralSettingId
         );
         return result.IsSuccessful switch
@@ -89,6 +66,7 @@ public class GeneralController(
     }
 
     [HttpPut("{generalSettingId:guid}")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -98,24 +76,11 @@ public class GeneralController(
         [FromBody] UpdateGeneralSettingDto generalSetting
     )
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-
-        Guid? admin = null;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            admin = outId;
-        }
-
-        if (admin is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         
         var result = await generalSettingServices.UpdateGeneralSetting(
-            adminId:admin.Value,
+            adminId:id,
             id:genralSettingId,
             settingDto:generalSetting
         );

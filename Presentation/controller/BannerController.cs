@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using api.application.Interface;
+using api.Filter;
 using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Authorization;
@@ -19,28 +20,18 @@ public class BannerController(
 
     //this method for dashboard only
     [HttpGet("{pageNumber:int}")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetBannerRandom(int pageNumber)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
 
-        Guid? adminId = null;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            adminId = outId;
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        if (adminId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
 
         var result = await bannerServices
-            .GetBanners(adminId.Value, pageNumber, 25);
+            .GetBanners(id, pageNumber, 25);
 
         return result.IsSuccessful switch
         {

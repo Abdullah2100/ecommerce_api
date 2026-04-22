@@ -18,14 +18,17 @@ using Stripe;
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
+
+
+
 builder.Services.AddOptions();
 
+builder.Services.AddTransient<IConfig, ConfigurationImplement>();
 
-builder.Services.AddSingleton<IConfig, ConfigurationImplement>();
-builder.Services.AddTransient<IMessageService, EmailServices>();
-builder.Services.AddTransient<IMessageService, NotificationServices>();
+builder.Services.AddKeyedScoped<IMessageService, EmailServices>(EnMessageService.Email);
+builder.Services.AddKeyedScoped<IMessageService, NotificationServices>(EnMessageService.Notification);
 
-builder.Services.AddTransient<IAuthenticationService, AuthenticationServices>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationServices>();
 
 
 
@@ -61,7 +64,6 @@ builder.Services.AddTransient<IPaymentTypeServices,PaymentTypeServices>();
 builder.Services.AddTransient<IPaymentServices,StripPaymentServices>();
 
 
-
  var fireBaseConfig = Path.Combine(
      Directory.GetCurrentDirectory(), 
      "librarynotification-notification.json"
@@ -72,6 +74,8 @@ FirebaseApp.Create(new AppOptions()
 {
      Credential = firebaseCredential
  });
+
+ 
 
 var corsName = "AllowAllOrigins";
 builder.Services.AddCors(options =>

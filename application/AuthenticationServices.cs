@@ -13,58 +13,11 @@ namespace api.application
         RefreshToken
     }
 
-    public enum EnTokenClaimType
-    {
-        Email,
-        Sub,
-        Exp,
-        Lat,
-        None
-    }
+
 
     public class AuthenticationServices(IConfig config) : IAuthenticationService
     {
-        private static EnTokenClaimType _convertKeyToClaimType(string key)
-        {
-            switch (key)
-            {
-                case "email": return EnTokenClaimType.Email;
-                case "id": return EnTokenClaimType.Sub;
-                case "lat": return EnTokenClaimType.Lat;
-                case "exp": return EnTokenClaimType.Exp;
-                default: return EnTokenClaimType.None;
-            }
-        }
-
-        public static Claim? getClaimType(IEnumerable<Claim> claim, string key)
-        {
-            EnTokenClaimType claimType = _convertKeyToClaimType(key);
-            switch (claimType)
-            {
-                case EnTokenClaimType.Email:
-                {
-                    return claim.First(x => x.Type == "email");
-                }
-                case EnTokenClaimType.Sub:
-                {
-                    return claim.First(x => x.Type == "sub");
-                }
-                case EnTokenClaimType.Lat:
-                {
-                    return claim.First(x => x.Type == "iat");
-                }
-                case EnTokenClaimType.Exp:
-                {
-                    return claim.First(x => x.Type == "exp");
-                }
-                default:
-                {
-                    return null;
-                }
-            }
-        }
-
-        public string GenerateToken(Guid id, string email, EnTokenMode tokenType)
+       public string GenerateToken(Guid id, string email, EnTokenMode tokenType)
         {
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
             string key = config.GetKey("credentials:key");
@@ -74,7 +27,7 @@ namespace api.application
             List<Claim> claims = new List<Claim>()
             {
                 new(JwtRegisteredClaimNames.Jti, ClsUtil.GenerateGuid().ToString()),
-                new(JwtRegisteredClaimNames.Sub, id.ToString() ?? ""),
+                new(JwtRegisteredClaimNames.NameId, id.ToString() ?? ""),
                 new(JwtRegisteredClaimNames.Email, email)
             };
 
@@ -95,20 +48,6 @@ namespace api.application
             return tokenHandler.WriteToken(token);
         }
 
-        public Claim? GetPayloadFromToken(string key, string token)
-        {
-            try
-            {
-                JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-
-                JwtSecurityToken? jwtToken = tokenHandler.ReadJwtToken(token);
-                return getClaimType(jwtToken.Claims, key);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error extracting payload: {ex.Message}");
-                return null;
-            }
-        }
+       
     }
 }

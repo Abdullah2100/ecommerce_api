@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using api.application.Interface;
+using api.Filter;
 using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Authorization;
@@ -16,6 +17,7 @@ public class PaymentTypeController(
     IAuthenticationService authenticationService) : ControllerBase
 {
     [HttpPost("")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -25,22 +27,9 @@ public class PaymentTypeController(
         [FromForm] CreatePaymentTypeDto paymentTypeDto
     )
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid userId = Guid.Empty;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await paymentTypeServices.Create(paymentTypeDto, userId);
+        var result = await paymentTypeServices.Create(paymentTypeDto, id);
 
         return result.IsSuccessful switch
         {
@@ -51,6 +40,7 @@ public class PaymentTypeController(
 
 
     [HttpPut("")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -60,22 +50,9 @@ public class PaymentTypeController(
         [FromForm] UpdatePaymentTypeDto paymentTypeDto
     )
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid userId = Guid.Empty;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await paymentTypeServices.Update(paymentTypeDto, userId);
+        var result = await paymentTypeServices.Update(paymentTypeDto, id);
 
         return result.IsSuccessful switch
         {

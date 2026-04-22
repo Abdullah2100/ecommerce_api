@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using api.application.Interface;
+using api.Filter;
 using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Authorization;
@@ -98,6 +99,7 @@ public class ProductController(
 
 
     [HttpGet("")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -107,23 +109,10 @@ public class ProductController(
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
 
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-
-        Guid adminId = Guid.Empty;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            adminId = outId;
-        }
-
-        if (adminId == Guid.Empty)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await productServices.GetProductsForAdmin(
-            adminId,
+            id,
             pageNumber,
             25
         );
@@ -137,27 +126,15 @@ public class ProductController(
 
 
     [HttpGet("pages")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProductsPagesNum()
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid adminId = Guid.Empty;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            adminId = outId;
-        }
-
-        if (adminId == Guid.Empty)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await productServices.GetProductsPagesForAdmin(adminId, 25);
+        var result = await productServices.GetProductsPagesForAdmin(id, 25);
 
         return result.IsSuccessful switch
         {
@@ -168,6 +145,7 @@ public class ProductController(
 
 
     [HttpPost("")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -177,23 +155,10 @@ public class ProductController(
         [FromForm] CreateProductDto product
     )
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-
-        Guid userId = Guid.Empty;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await productServices.CreateProducts(
-            userId, product);
+            id, product);
 
         return result.IsSuccessful switch
         {
@@ -204,6 +169,7 @@ public class ProductController(
 
 
     [HttpPut("")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -213,23 +179,10 @@ public class ProductController(
         [FromForm] UpdateProductDto product
     )
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-
-        Guid userId = Guid.Empty;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await productServices.UpdateProducts(
-            userId, product);
+            id, product);
 
         return result.IsSuccessful switch
         {
@@ -240,6 +193,7 @@ public class ProductController(
 
 
     [HttpDelete("{storeId:guid}/{productId:guid}")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -250,22 +204,9 @@ public class ProductController(
         Guid productId
     )
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid userId = Guid.Empty;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await productServices.DeleteProducts(userId, storeId, productId);
+        var result = await productServices.DeleteProducts(id, storeId, productId);
 
         return result.IsSuccessful switch
         {

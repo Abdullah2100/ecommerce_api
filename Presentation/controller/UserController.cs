@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using api.application.Interface;
+using api.Filter;
 using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using api.Presentation.dto.Response;
@@ -50,26 +51,15 @@ public class UserController(
 
 
     [HttpGet("me")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUser()
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-        Guid? userId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            userId = outId;
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        if (userId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await userServices.GetMe(userId.Value);
+        var result = await userServices.GetMe(id);
 
         return result.IsSuccessful switch
         {
@@ -80,27 +70,15 @@ public class UserController(
 
 
     [HttpGet()]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUsers([FromQuery()] int page)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid? adminId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            adminId = outId;
-        }
-
-        if (adminId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await userServices.GetUsers(page, adminId.Value);
+        var result = await userServices.GetUsers(page, id);
 
         return result.IsSuccessful switch
         {
@@ -111,27 +89,15 @@ public class UserController(
     //this to get user per pages like we hav 20 pages of user 25 user at one per page 
 
     [HttpGet("pages")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUserPages()
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid? adminId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            adminId = outId;
-        }
-
-        if (adminId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await userServices.GetUsersPages(adminId.Value);
+        var result = await userServices.GetUsersPages(id);
 
         return result.IsSuccessful switch
         {
@@ -142,28 +108,16 @@ public class UserController(
 
 
     [HttpPatch("{userId:guid}/status")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> BlockOrUnBlockUser(Guid userId)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid? adminId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            adminId = outId;
-        }
-
-        if (adminId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await userServices.BlockOrUnBlockUser(adminId.Value, userId);
+        var result = await userServices.BlockOrUnBlockUser(id, userId);
 
         return result.IsSuccessful switch
         {
@@ -174,6 +128,7 @@ public class UserController(
 
 
     [HttpPut("")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -182,22 +137,9 @@ public class UserController(
         [FromForm] UpdateUserInfoDto userData
     )
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid? userId = null;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await userServices.UpdateUser(userData, userId.Value);
+        var result = await userServices.UpdateUser(userData, id);
 
         return result.IsSuccessful switch
         {
@@ -209,6 +151,7 @@ public class UserController(
 
 
     [HttpPost("address")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -217,22 +160,9 @@ public class UserController(
         [FromBody] CreateAddressDto address
     )
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid? userId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await userServices.AddAddressToUser(address, userId.Value);
+        var result = await userServices.AddAddressToUser(address, id);
 
         return result.IsSuccessful switch
         {
@@ -244,6 +174,7 @@ public class UserController(
     }
 
     [HttpPut("address")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -252,22 +183,9 @@ public class UserController(
         [FromBody] UpdateAddressDto address
     )
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid? userId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await userServices.UpdateUserAddress(address, userId.Value);
+        var result = await userServices.UpdateUserAddress(address, id);
 
 
         return result.IsSuccessful switch
@@ -280,6 +198,7 @@ public class UserController(
     }
 
     [HttpDelete("address/{addressId}")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -288,22 +207,9 @@ public class UserController(
         Guid addressId
     )
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid? adminId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            adminId = outId;
-        }
-
-        if (adminId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await userServices.DeleteUserAddress(addressId, adminId.Value);
+        var result = await userServices.DeleteUserAddress(addressId, id);
 
 
         return result.IsSuccessful switch
@@ -317,28 +223,16 @@ public class UserController(
 
 
     [HttpPatch("address/{addressId:guid}")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> UpdateUserCurrentLocation(Guid addressId)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid? userId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await userServices.UpdateUserCurrentAddress(addressId, userId.Value);
+        var result = await userServices.UpdateUserCurrentAddress(addressId, id);
 
 
         return result.IsSuccessful switch

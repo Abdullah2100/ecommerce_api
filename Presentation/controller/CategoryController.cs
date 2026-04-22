@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using api.application.Interface;
+using api.Filter;
 using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Authorization;
@@ -16,27 +17,19 @@ public class CategoryController(
     IAuthenticationService authenticationService) : ControllerBase
 {
     [HttpPost("")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateCategory([FromForm] CreateCategoryDto category)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-        Guid? adminId = null;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            adminId = outId;
-        }
+    
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        if (adminId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
 
-        var result = await categoryServices.CreateCategory(category, adminId.Value);
+
+        var result = await categoryServices.CreateCategory(category, id);
 
         return result.IsSuccessful switch
         {
@@ -47,6 +40,7 @@ public class CategoryController(
 
 
     [HttpPut("")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -54,21 +48,10 @@ public class CategoryController(
     public async Task<IActionResult> UpdateCateogry(
         [FromForm] UpdateCategoryDto category)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-        Guid? adminId = null;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            adminId = outId;
-        }
+   
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        if (adminId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await categoryServices.UpdateCategory(category, adminId.Value);
+        var result = await categoryServices.UpdateCategory(category, id);
 
         return result.IsSuccessful switch
         {
@@ -78,28 +61,19 @@ public class CategoryController(
     }
 
     [HttpDelete("{categoryId:guid}")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteCategory(Guid categoryId)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
+     
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        Guid? adminId = null;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            adminId = outId;
-        }
 
-        if (adminId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
 
-        var result = await categoryServices.DeleteCategory(categoryId, adminId.Value);
+        var result = await categoryServices.DeleteCategory(categoryId, id);
 
         return result.IsSuccessful switch
         {

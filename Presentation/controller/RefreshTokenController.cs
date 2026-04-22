@@ -16,14 +16,11 @@ public class RefreshTokenController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> CreateBanner([FromQuery]string token)
     {
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            token.Replace("Bearer ", ""));
-        Claim? issuAt = authenticationService.GetPayloadFromToken("exp",
-            token.Replace("Bearer ", ""));
-        Claim? expire = authenticationService.GetPayloadFromToken("lat",
-            token.Replace("Bearer ", ""));
+        Claim? id = User.Claims.First(value=>value.Type== ClaimTypes.NameIdentifier);
+        Claim? issueAt = User.FindFirst("exp");
+        Claim? expire =User.FindFirst("lat");
        
-        var result = await refreshTokenServices.GenerateRefreshToken(token, id, issuAt, expire);
+        var result = await refreshTokenServices.GenerateRefreshToken(token, id, issueAt, expire);
 
         return result.IsSuccessful switch
         {

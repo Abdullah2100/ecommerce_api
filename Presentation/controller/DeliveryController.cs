@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using api.application.Interface;
+using api.Filter;
 using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using api.Presentation.dto.Response;
@@ -36,6 +37,8 @@ public class DeliveryController(
 
 
     [HttpPost("")]
+    [GetUserIdFromUserClaims]
+
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -43,23 +46,11 @@ public class DeliveryController(
     public async Task<IActionResult> CreateDelivery
     ([FromForm] CreateDeliveryDto delivery)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-
-        Guid? userId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+ 
 
         var result = await deliveryServices.CreateDelivery(
-            userId.Value,
+            id,
             delivery);
 
         return result.IsSuccessful switch
@@ -71,26 +62,16 @@ public class DeliveryController(
 
 
     [HttpGet("me")]
+    [GetUserIdFromUserClaims]
+
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDelivery()
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-        Guid? userId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await deliveryServices.GetDelivery(userId.Value);
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+ 
+        var result = await deliveryServices.GetDelivery(id);
 
         return result.IsSuccessful switch
         {
@@ -101,26 +82,17 @@ public class DeliveryController(
 
 
     [HttpPut()]
+    [GetUserIdFromUserClaims]
+
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateDeliveryInfo([FromForm] UpdateDeliveryDto delivery)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-        Guid? deliveryId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            deliveryId = outId;
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+ 
 
-        if (deliveryId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await deliveryServices.UpdateDelivery(delivery, deliveryId.Value);
+        var result = await deliveryServices.UpdateDelivery(delivery, id);
 
         return result.IsSuccessful switch
         {
@@ -131,26 +103,17 @@ public class DeliveryController(
 
 
     [HttpGet("all/{pageNumber:int}")]
+    [GetUserIdFromUserClaims]
+
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDeivery(int pageNumber)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-        Guid? belongToId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            belongToId = outId;
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+ 
 
-        if (belongToId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await deliveryServices.GetDeliveries(belongToId.Value, pageNumber, 25);
+        var result = await deliveryServices.GetDeliveries(id, pageNumber, 25);
 
         return result.IsSuccessful switch
         {
@@ -161,27 +124,17 @@ public class DeliveryController(
 
 
     [HttpPatch("{status:bool}")]
+    [GetUserIdFromUserClaims]
+
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> UpdateDeliveryStatus(bool status)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-        Guid? userId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
 
-        var result = await deliveryServices.UpdateDeliveryStatus(userId.Value, status);
+        var result = await deliveryServices.UpdateDeliveryStatus(id, status);
 
         return result.IsSuccessful switch
         {
@@ -192,35 +145,21 @@ public class DeliveryController(
 
 
     [HttpGet("{pageNumber:int}")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> getOrderNotTakedByDelivery
+    public async Task<IActionResult> GetOrderNotTakedByDelivery
     (
         int pageNumber = 1
     )
     {
-        if (pageNumber < 1)
-            return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-
-        Guid? deliveryId = null;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            deliveryId = outId;
-        }
-
-        if (deliveryId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
 
         var result = await orderServices
-            .GetOrdersNotBelongToDeliveries(deliveryId.Value, pageNumber, 25);
+            .GetOrdersNotBelongToDeliveries(id, pageNumber, 25);
 
         return result.IsSuccessful switch
         {
@@ -231,11 +170,13 @@ public class DeliveryController(
 
 
     [HttpGet("me/{pageNumber:int}")]
+    [GetUserIdFromUserClaims]
+
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> getOrderBelongToMe
+    public async Task<IActionResult> GetOrderBelongToMe
     (
         int pageNumber = 1
     )
@@ -243,23 +184,11 @@ public class DeliveryController(
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
 
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-
-        Guid? deliveryId = null;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            deliveryId = outId;
-        }
-
-        if (deliveryId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+ 
 
         var result = await orderServices.GetOrdersByDeliveryId(
-            deliveryId.Value, pageNumber, 25);
+            id, pageNumber, 25);
 
         return result.IsSuccessful switch
         {
@@ -270,27 +199,17 @@ public class DeliveryController(
 
 
     [HttpPatch("{orderId:guid}")]
+    [GetUserIdFromUserClaims]
+
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> updateOrderDeliveryId(Guid orderId)
+    public async Task<IActionResult> UpdateOrderDeliveryId(Guid orderId)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-        Guid? deliveryId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            deliveryId = outId;
-        }
-
-        if (deliveryId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await orderServices.SubmitOrderToDelivery(orderId, deliveryId.Value);
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+ 
+        var result = await orderServices.SubmitOrderToDelivery(orderId, id);
 
         return result.IsSuccessful switch
         {
@@ -301,27 +220,17 @@ public class DeliveryController(
 
 
     [HttpDelete("{orderId:guid}")]
+    [GetUserIdFromUserClaims]
+
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> cencleOrderBelongToDelivery(Guid orderId)
+    public async Task<IActionResult> RenameOrderBelongToDelivery(Guid orderId)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-        Guid? deliveryId = null;
-        if (Guid.TryParse(id?.Value, out Guid outId))
-        {
-            deliveryId = outId;
-        }
-
-        if (deliveryId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
-
-        var result = await orderServices.CancelOrderFromDelivery(orderId, deliveryId.Value);
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+ 
+        var result = await orderServices.CancelOrderFromDelivery(orderId, id);
 
         return result.IsSuccessful switch
         {

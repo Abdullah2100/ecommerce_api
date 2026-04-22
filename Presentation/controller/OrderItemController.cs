@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using api.application.Interface;
+using api.Filter;
 using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Authorization;
@@ -16,6 +17,7 @@ public class OrderItemController(
     IAuthenticationService authenticationService) : ControllerBase
 {
     [HttpGet("{pageNumber}")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -28,24 +30,11 @@ public class OrderItemController(
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
 
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-
-        Guid? userId = null;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await orderItemServices
             .GetOrderItmes(
-                userId.Value,
+                id,
                 pageNumber,
                 25
             );
@@ -58,30 +47,18 @@ public class OrderItemController(
     }
 
     [HttpPut("status")]
+    [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> UpdateOrderItemStatus
         ([FromBody] UpdateOrderItemStatusDto orderItemStatusDto)
     {
-        StringValues authorizationHeader = HttpContext.Request.Headers["Authorization"];
-        Claim? id = authenticationService.GetPayloadFromToken("id",
-            authorizationHeader.ToString().Replace("Bearer ", ""));
-
-        Guid? userId = null;
-        if (Guid.TryParse(id?.Value.ToString(), out Guid outId))
-        {
-            userId = outId;
-        }
-
-        if (userId is null)
-        {
-            return Unauthorized("هناك مشكلة في التحقق");
-        }
+        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await orderItemServices
             .UpdateOrderItmesStatus(
-                userId.Value,
+                id,
                 orderItemStatusDto);
 
         return result.IsSuccessful switch
