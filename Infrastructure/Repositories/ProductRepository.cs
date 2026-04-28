@@ -171,7 +171,7 @@ public class ProductRepository(
 
             return products;
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             Console.WriteLine(ex.Message);
             return new List<Product>();

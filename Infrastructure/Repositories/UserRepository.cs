@@ -123,7 +123,7 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
 
             return user;
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             Console.WriteLine($"this the excptino error from get user {ex.Message}");
             return null;

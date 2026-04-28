@@ -607,7 +607,7 @@ public class OrderServices(
                 }
             }
         }
-        catch (Exception e)
+        catch (System.Exception e)
         {
             Console.WriteLine($"Error from notification service: {e.Message}");
         }
@@ -625,7 +625,7 @@ public class OrderServices(
                 await messageServe.SendingMessage(userMessage, order.User?.DeviceToken??"");
             }
         }
-        catch (Exception e)
+        catch (System.Exception e)
         {
             Console.WriteLine($"Error from notification service: {e.Message}");
         }
@@ -667,7 +667,7 @@ public class OrderServices(
             }
         }
         catch
-            (Exception e)
+            (System.Exception e)
         {
             Console.WriteLine($"Error from notification service: {e.Message}");
         }
@@ -690,7 +690,7 @@ public class OrderServices(
             }
         }
         catch
-            (Exception e)
+            (System.Exception e)
         {
             Console.WriteLine($"Error from notification service: {e.Message}");
         }

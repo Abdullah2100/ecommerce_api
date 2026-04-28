@@ -48,7 +48,7 @@ public class ProductVariantRepository(AppDbContext context) : IProductVariantRep
                     context.ProductVariants.Remove(result);
             }
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             Console.WriteLine($"{ex.Message}");
         }

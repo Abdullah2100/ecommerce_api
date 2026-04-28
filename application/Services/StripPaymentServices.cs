@@ -15,7 +15,7 @@ public class StripPaymentServices:IPaymentServices
                 return true;
             return false;
         }
-        catch (Exception e)
+        catch (System.Exception e)
         {
             Console.WriteLine(e);
             return false;

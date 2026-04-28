@@ -406,14 +406,14 @@ public class OrderRepository(AppDbContext context)
                        .GetDbConnection()
                        .CreateCommand())
             {
-                command.CommandText = "SELECT * FROM fun_calculate_distance_between_user_and_stores(@orderId)";
+                command.CommandText = @"SELECT * FROM fun_calculate_distance_between_user_and_stores(@orderId)";
                 command.Parameters.Add(new NpgsqlParameter("@orderId", orderId));
                 await context.Database.OpenConnectionAsync();
                 var result = await command.ExecuteScalarAsync();
                 return (bool?)result == true ? true : false;
             }
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             Console.WriteLine("Error from isSavedDistance " + ex);
             return false;

@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Mail;
 using api.application.Interface;
 using api.Infrastructure;
-using Exception = System.Exception;
 
 namespace api.application;
 
@@ -32,7 +31,7 @@ public class EmailServices(IConfig config) : IMessageService
             );
             return true;
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             Console.WriteLine("this error from sending otp to user " + ex.Message);
             return false;

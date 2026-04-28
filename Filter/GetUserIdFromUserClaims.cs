@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 namespace api.Filter;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-public class GetUserIdFromUserClaims() :Attribute,IAsyncResourceFilter
+public class GetUserIdFromUserClaims :Attribute,IAsyncResourceFilter
 {
    
 
@@ -24,4 +24,5 @@ public class GetUserIdFromUserClaims() :Attribute,IAsyncResourceFilter
         await next();
         throw new NotImplementedException();
     }
+    
 }

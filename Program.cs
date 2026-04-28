@@ -4,6 +4,7 @@ using api.application.Interface;
 using api.application.Services;
 using api.application.UnitOfWork;
 using api.domain.Interface;
+using api.Exceptions;
 using api.Infrastructure;
 using api.Infrastructure.Repositories;
 using api.shared.midleware;
@@ -125,9 +126,15 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 //stripe services
 builder.Services.AddSingleton(new StripeClient(configuration["strip:publishable_key"]));
 
+//excpeption service
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
 StripeConfiguration.ApiKey = builder.Configuration["strip:publishable_key"];
 
+
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {

@@ -1,5 +1,4 @@
 using api.domain.entity;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using api.Presentation.dto.Response;
 
@@ -33,7 +32,7 @@ public static class ProductMapperExtension
                     SubcategoryId = product.SubcategoryId,
                 };
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
                 Console.WriteLine(ex.Message);
                 return new ProductDto();
@@ -66,7 +65,7 @@ public static class ProductMapperExtension
                     Subcategory = product?.SubCategory?.Name ?? "",
                 };
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
                 Console.WriteLine(ex.Message);
                 return new AdminProductsDto();
