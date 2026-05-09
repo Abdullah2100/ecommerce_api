@@ -5,6 +5,7 @@ using api.application.Services;
 using api.application.UnitOfWork;
 using api.domain.Interface;
 using api.Exceptions;
+using api.Filter;
 using api.Infrastructure;
 using api.Infrastructure.Repositories;
 using api.shared.midleware;
@@ -12,6 +13,7 @@ using api.shared.signalr;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.CodeAnalysis.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
@@ -92,9 +94,13 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(
+    option=>
+        option.Filters.Add(new CustomResultFilter())
+    );
 builder.Services.AddSignalR(option =>
-    option.EnableDetailedErrors = true);
+    option.EnableDetailedErrors = true
+);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

@@ -12,7 +12,7 @@ namespace api.application.Services;
 public class VariantServices(IUnitOfWork unitOfWork)
     : IVariantServices
 {
-    public async Task<Result<VariantDto?>> CreateVariant(
+    public async Task<VariantDto?>> CreateVariant(
         CreateVariantDto variantDto,
         Guid adminId
     )
@@ -74,7 +74,7 @@ public class VariantServices(IUnitOfWork unitOfWork)
         );
     }
 
-    public async Task<Result<VariantDto?>> UpdateVariant(
+    public async Task<VariantDto?>> UpdateVariant(
         UpdateVariantDto variantDto,
         Guid adminId
     )
@@ -153,7 +153,7 @@ public class VariantServices(IUnitOfWork unitOfWork)
         );
     }
 
-    public async Task<Result<bool>> DeleteVariant(Guid vairantId, Guid adminId)
+    public async Task<bool>> DeleteVariant(Guid vairantId, Guid adminId)
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(adminId);
@@ -208,7 +208,7 @@ public class VariantServices(IUnitOfWork unitOfWork)
         );
     }
 
-    public async Task<Result<int?>> GetVariantPage(Guid adminId, int variantPerPage)
+    public async Task<int?>> GetVariantPage(Guid adminId, int variantPerPage)
 
     {
         User? store = await unitOfWork.UserRepository.GetUser(adminId);
@@ -235,7 +235,7 @@ public class VariantServices(IUnitOfWork unitOfWork)
     }
 
 
-    public async Task<Result<List<VariantDto>>> GetVariants(int page, int pageSize)
+    public async Task<List<VariantDto>>> GetVariants(int page, int pageSize)
     {
         var varients = (await unitOfWork.VarientRepository
             .GetVarients(page, pageSize));

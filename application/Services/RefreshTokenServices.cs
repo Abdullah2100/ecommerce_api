@@ -25,7 +25,7 @@ public class RefreshTokenServices(
         return result.Days >= 29;
     }
 
-    public async Task<Result<AuthDto?>> GenerateRefreshToken(
+    public async Task<AuthDto?>> GenerateRefreshToken(
         string token,
         Claim? id,
         Claim? issuAt,

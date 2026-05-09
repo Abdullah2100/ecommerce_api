@@ -14,7 +14,7 @@ public class SubCategoryServices(
     IUnitOfWork unitOfWork)
     : ISubCategoryServices
 {
-    public async Task<Result<SubCategoryDto?>> CreateSubCategory(
+    public async Task<SubCategoryDto?>> CreateSubCategory(
         Guid storeId,
         CreateSubCategoryDto subCategoryDto
     )
@@ -83,7 +83,7 @@ public class SubCategoryServices(
         );
     }
 
-    public async Task<Result<SubCategoryDto?>> UpdateSubCategory(
+    public async Task<SubCategoryDto?>> UpdateSubCategory(
         Guid storeId,
         UpdateSubCategoryDto subCategoryDto
     )
@@ -166,7 +166,7 @@ public class SubCategoryServices(
         );
     }
 
-    public async Task<Result<bool>> DeleteSubCategory(Guid id, Guid storeId)
+    public async Task<bool>> DeleteSubCategory(Guid id, Guid storeId)
     {
         Store? store = await unitOfWork.StoreRepository
             .GetStore(storeId);
@@ -217,7 +217,7 @@ public class SubCategoryServices(
         );
     }
 
-    public async Task<Result<List<SubCategoryDto>>> GetSubCategories(Guid id, int page, int length)
+    public async Task<List<SubCategoryDto>>> GetSubCategories(Guid id, int page, int length)
     {
         List<SubCategoryDto> subCategories = (await unitOfWork.SubCategoryRepository
                 .GetSubCategories(id, page, length))
@@ -243,7 +243,7 @@ public class SubCategoryServices(
         };
     }
 
-    public async Task<Result<List<SubCategoryDto>>> GetSubCategoryAll(
+    public async Task<List<SubCategoryDto>>> GetSubCategoryAll(
         Guid adminId,
         int page,
         int length)

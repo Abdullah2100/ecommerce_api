@@ -30,7 +30,7 @@ public class OrderServices(
     };
 
 
-    public async Task<Result<OrderDto?>> CreateOrder(Guid userId, CreateOrderDto orderDto)
+    public async Task<OrderDto?>> CreateOrder(Guid userId, CreateOrderDto orderDto)
     {
         User? user = await unitOfWork.UserRepository.GetUser(userId);
 
@@ -206,7 +206,7 @@ public class OrderServices(
     }
 
 
-    public async Task<Result<List<OrderDto>>> GetMyOrders(Guid userId, int pageNum, int pageSize)
+    public async Task<List<OrderDto>>> GetMyOrders(Guid userId, int pageNum, int pageSize)
     {
         List<OrderDto> orders = (await unitOfWork.OrderRepository
                 .GetOrders(userId, pageNum, pageSize))
@@ -223,7 +223,7 @@ public class OrderServices(
     }
 
     //for admin dashboard
-    public async Task<Result<AdminOrderDto?>> GetOrders(Guid userId, int pageNum, int pageSize)
+    public async Task<AdminOrderDto?>> GetOrders(Guid userId, int pageNum, int pageSize)
     {
         User? delivery = await unitOfWork.UserRepository.GetUser(userId);
 
@@ -257,7 +257,7 @@ public class OrderServices(
         );
     }
 
-    public async Task<Result<bool>> UpdateOrderStatus(Guid id, int status)
+    public async Task<bool>> UpdateOrderStatus(Guid id, int status)
     {
         Order? order = await unitOfWork.OrderRepository
             .GetOrder(id);
@@ -307,7 +307,7 @@ public class OrderServices(
         );
     }
 
-    public async Task<Result<bool>> DeleteOrder(Guid id, Guid userId)
+    public async Task<bool>> DeleteOrder(Guid id, Guid userId)
     {
         Order? order = await unitOfWork.OrderRepository.GetOrder(id, userId);
         if (order is null)
@@ -345,7 +345,7 @@ public class OrderServices(
 
 
     // for delivery 
-    public async Task<Result<List<OrderDto>>> GetOrdersByDeliveryId(Guid deliveryId, int pageNum, int pageSize)
+    public async Task<List<OrderDto>>> GetOrdersByDeliveryId(Guid deliveryId, int pageNum, int pageSize)
     {
         Delivery? delivery = await unitOfWork.DeliveryRepository.GetDelivery(deliveryId);
 
@@ -376,7 +376,7 @@ public class OrderServices(
         );
     }
 
-    public async Task<Result<List<OrderDto>>> GetOrdersNotBelongToDeliveries(Guid deliveryId, int pageNum, int pageSize)
+    public async Task<List<OrderDto>>> GetOrdersNotBelongToDeliveries(Guid deliveryId, int pageNum, int pageSize)
     {
         Delivery? delivery = await unitOfWork.DeliveryRepository.GetDelivery(deliveryId);
 
@@ -407,7 +407,7 @@ public class OrderServices(
     }
 
 
-    public async Task<Result<bool>> SubmitOrderToDelivery(Guid id, Guid deliveryId)
+    public async Task<bool>> SubmitOrderToDelivery(Guid id, Guid deliveryId)
     {
         Delivery? delivery = await unitOfWork.DeliveryRepository.GetDelivery(deliveryId);
 
@@ -491,7 +491,7 @@ public class OrderServices(
         );
     }
 
-    public async Task<Result<bool>> CancelOrderFromDelivery(Guid id, Guid deliveryId)
+    public async Task<bool>> CancelOrderFromDelivery(Guid id, Guid deliveryId)
     {
         Delivery? delivery = await unitOfWork.DeliveryRepository.GetDelivery(deliveryId);
 
@@ -557,7 +557,7 @@ public class OrderServices(
         );
     }
 
-    public async Task<Result<List<string>>> GetOrdersStatus(Guid adminId)
+    public async Task<List<string>>> GetOrdersStatus(Guid adminId)
     {
         User? user = await unitOfWork.UserRepository.GetUser(adminId);
         var isValide = user.IsValidateFunc();

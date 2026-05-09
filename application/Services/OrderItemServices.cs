@@ -19,7 +19,7 @@ public class OrderItemServices(
 )
     : IOrderItemServices
 {
-    public async Task<Result<List<OrderItemDto>>> GetOrderItmes(
+    public async Task<List<OrderItemDto>>> GetOrderItmes(
         Guid storeId,
         int pageNum,
         int pageSize)
@@ -51,7 +51,7 @@ public class OrderItemServices(
         );
     }
 
-    public async Task<Result<int>> UpdateOrderItmesStatus(
+    public async Task<int>> UpdateOrderItmesStatus(
         Guid userId,
         UpdateOrderItemStatusDto orderItemsStatusDto)
     {

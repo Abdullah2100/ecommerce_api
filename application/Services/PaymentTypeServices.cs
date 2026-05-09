@@ -16,7 +16,7 @@ public class PaymentTypeServices(
     IConfig config
     ):IPaymentTypeServices
 {
-    public async Task<Result<PaymentTypeDto?>> Create(CreatePaymentTypeDto paymentTypeDto,Guid adminId)
+    public async Task<PaymentTypeDto?>> Create(CreatePaymentTypeDto paymentTypeDto,Guid adminId)
     {
         User? admin = await unitOfWork.UserRepository.GetUser(adminId);
         var validation = admin.IsValidateFunc();
@@ -77,7 +77,7 @@ public class PaymentTypeServices(
         ); 
     }
 
-    public async Task<Result<PaymentTypeDto?>> Update(UpdatePaymentTypeDto paymentTypeDto,Guid adminId)
+    public async Task<PaymentTypeDto?>> Update(UpdatePaymentTypeDto paymentTypeDto,Guid adminId)
     {
         User? admin = await unitOfWork.UserRepository.GetUser(adminId);
         var validation = admin.IsValidateFunc();
@@ -150,7 +150,7 @@ public class PaymentTypeServices(
         ); 
     }
 
-    public async Task<Result<List<PaymentTypeDto>?>> GetPaymentTypes(int pageNum, int pageSie = 25)
+    public async Task<List<PaymentTypeDto>?>> GetPaymentTypes(int pageNum, int pageSie = 25)
     {
         var paymentTypes = await unitOfWork.PaymentTypeRepository.GetPaymentTypes(pageNum, pageSie);
 

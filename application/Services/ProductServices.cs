@@ -26,7 +26,7 @@ public class ProductServices(
             fileServices.DeleteFile(savedThumbnail);
     }
 
-    public async Task<Result<List<ProductDto>>> GetProductsByStoreId(
+    public async Task<List<ProductDto>>> GetProductsByStoreId(
         Guid storeId,
         int pageNum,
         int pageSize
@@ -45,7 +45,7 @@ public class ProductServices(
         );
     }
 
-    public async Task<Result<List<ProductDto>>> GetProductsByCategoryId(
+    public async Task<List<ProductDto>>> GetProductsByCategoryId(
         Guid categryId,
         int pageNum,
         int pageSize
@@ -64,7 +64,7 @@ public class ProductServices(
         );
     }
 
-    public async Task<Result<List<ProductDto>>> GetProducts(
+    public async Task<List<ProductDto>>> GetProducts(
         Guid storeId,
         Guid subCategoryId,
         int pageNum,
@@ -84,7 +84,7 @@ public class ProductServices(
         );
     }
 
-    public async Task<Result<List<ProductDto>>> GetProducts(
+    public async Task<List<ProductDto>>> GetProducts(
         int pageNum,
         int pageSize
     )
@@ -102,7 +102,7 @@ public class ProductServices(
         );
     }
 
-    public async Task<Result<List<AdminProductsDto>>> GetProductsForAdmin(Guid adminId,
+    public async Task<List<AdminProductsDto>>> GetProductsForAdmin(Guid adminId,
         int pageNum,
         int pageSize)
     {
@@ -145,7 +145,7 @@ public class ProductServices(
         );
     }
 
-    public async Task<Result<int>> GetProductsPagesForAdmin(Guid adminId, int length = 25)
+    public async Task<int>> GetProductsPagesForAdmin(Guid adminId, int length = 25)
     {
         User? admin = await unitOfWork.UserRepository.GetUser(adminId);
 
@@ -176,7 +176,7 @@ public class ProductServices(
         );
     }
 
-    public async Task<Result<ProductDto?>> CreateProducts(
+    public async Task<ProductDto?>> CreateProducts(
         Guid userId,
         CreateProductDto productDto
     )
@@ -359,7 +359,7 @@ public class ProductServices(
     }
 
 
-    public async Task<Result<ProductDto?>> UpdateProducts(
+    public async Task<ProductDto?>> UpdateProducts(
         Guid userId, UpdateProductDto productDto
     )
     {
@@ -564,7 +564,7 @@ public class ProductServices(
         );
     }
 
-    public async Task<Result<bool>> DeleteProducts(
+    public async Task<bool>> DeleteProducts(
         Guid userId,
         Guid storeId,
         Guid id

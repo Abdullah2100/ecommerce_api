@@ -6,9 +6,9 @@ namespace api.application.Interface;
 
 public interface IVariantServices
 {
-   Task<Result<VariantDto?>> CreateVariant(CreateVariantDto variantDto,Guid adminId); 
-   Task<Result<VariantDto?>> UpdateVariant(UpdateVariantDto variantDto,Guid adminId); 
-   Task<Result<bool>> DeleteVariant(Guid vairantId,Guid adminId); 
-   Task<Result<List<VariantDto>>> GetVariants(int page,int pageSize);
-   Task<Result<int?>> GetVariantPage(Guid adminId, int variantPerPage);
+   Task<VariantDto?> CreateVariant(CreateVariantDto variantDto,Guid adminId); 
+   Task<VariantDto?> UpdateVariant(UpdateVariantDto variantDto,Guid adminId); 
+   Task<bool> DeleteVariant(Guid vairantId,Guid adminId); 
+   Task<List<VariantDto>> GetVariants(int page,int pageSize);
+   Task<int?> GetVariantPage(Guid adminId, int variantPerPage);
 }

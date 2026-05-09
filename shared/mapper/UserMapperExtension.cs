@@ -39,7 +39,7 @@ public static class UserMapperExtension
         }
 
 
-        private Result<AuthDto?>? IsHasStore()
+        private string? IsHasStore()
         {
             switch (user.Store is not null)
             {
@@ -47,13 +47,7 @@ public static class UserMapperExtension
                 {
                     if (user.Store.IsBlock)
                     {
-                        return new Result<AuthDto?>
-                        (
-                            data: null,
-                            message: "store is Blocked",
-                            isSuccessful: false,
-                            statusCode: 400
-                        );
+                        return "store is Blocked";
                     }
 
                     return null;
@@ -63,13 +57,7 @@ public static class UserMapperExtension
                 {
                     if (user.Store is null)
                     {
-                        return new Result<AuthDto?>
-                        (
-                            data: null,
-                            message: "you must has store before done this operation",
-                            isSuccessful: false,
-                            statusCode: 400
-                        );
+                        return "you must has store before done this operation";
                     }
 
                     return null;
@@ -80,18 +68,12 @@ public static class UserMapperExtension
 
     extension(User? user)
     {
-        public Result<AuthDto?>? IsValidateFunc(bool? isAdmin = true,
+        public string? IsValidateFunc(bool? isAdmin = true,
             bool isStore = false)
         {
             if (user is null)
             {
-                return new Result<AuthDto?>
-                (
-                    data: null,
-                    message: "user not found",
-                    isSuccessful: false,
-                    statusCode: 404
-                );
+                return "user not found";
             }
 
 
@@ -104,13 +86,7 @@ public static class UserMapperExtension
                 {
                     if (user.IsBlocked)
                     {
-                        return new Result<AuthDto?>
-                        (
-                            data: null,
-                            message: "user is blocked",
-                            isSuccessful: false,
-                            statusCode: 400
-                        );
+                        return "user is blocked";
                     }
 
                     //check if user has store
@@ -118,15 +94,9 @@ public static class UserMapperExtension
                 }
                 default:
                 {
-                    if (user is { IsUser: false , IsBlocked: true })
+                    if (user is { IsUser: false, IsBlocked: true })
                     {
-                        return new Result<AuthDto?>
-                        (
-                            data: null,
-                            message: "user not havs the permission",
-                            isSuccessful: false,
-                            statusCode: 400
-                        );
+                        return "user not havs the permission";
                     }
 
                     //check if admin has store

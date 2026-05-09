@@ -26,7 +26,7 @@ public class DeliveryServices(
 )
     : IDeliveryServices
 {
-    public async Task<Result<AuthDto?>> Login(LoginDto loginDto)
+    public async Task<AuthDto?>> Login(LoginDto loginDto)
     {
         if (string.IsNullOrWhiteSpace(loginDto.DeviceToken))
             return new Result<AuthDto?>
@@ -113,7 +113,7 @@ public class DeliveryServices(
     }
 
 
-    public async Task<Result<DeliveryDto?>> CreateDelivery(
+    public async Task<DeliveryDto?>> CreateDelivery(
         Guid userId,
         CreateDeliveryDto deliveryDto
     )
@@ -216,7 +216,7 @@ public class DeliveryServices(
         );
     }
 
-    public async Task<Result<DeliveryDto?>> UpdateDeliveryStatus(Guid id, bool status)
+    public async Task<DeliveryDto?>> UpdateDeliveryStatus(Guid id, bool status)
     {
         Delivery? delivery = await unitOfWork.DeliveryRepository
             .GetDelivery(id);
@@ -268,7 +268,7 @@ public class DeliveryServices(
     }
 
 
-    public async Task<Result<DeliveryDto?>> GetDelivery(Guid id)
+    public async Task<DeliveryDto?>> GetDelivery(Guid id)
     {
         Delivery? delivery = await unitOfWork.DeliveryRepository
             .GetDelivery(id);
@@ -299,7 +299,7 @@ public class DeliveryServices(
     }
 
 
-    public async Task<Result<List<DeliveryDto>>> GetDeliveries(
+    public async Task<List<DeliveryDto>>> GetDeliveries(
         Guid belongToId,
         int pageNumber,
         int pageSize
@@ -385,7 +385,7 @@ public class DeliveryServices(
     }
 
 
-    public async Task<Result<DeliveryDto>> UpdateDelivery(UpdateDeliveryDto deliveryDto, Guid id)
+    public async Task<DeliveryDto>> UpdateDelivery(UpdateDeliveryDto deliveryDto, Guid id)
     {
         Delivery? delivery = await unitOfWork.DeliveryRepository
             .GetDelivery(id);

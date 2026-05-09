@@ -9,7 +9,7 @@ namespace api.application.Services;
 
 public class AnalyseServices(IUnitOfWork unitOfWork):IAnalyseServices
 {
-    public async Task<Result<AnalyzesOrderDto?>> GetMonthAnalysis(Guid adminId)
+    public async Task<AnalyzesOrderDto?>> GetMonthAnalysis(Guid adminId)
     {
         User? user = await unitOfWork.UserRepository.GetUser(adminId);
         

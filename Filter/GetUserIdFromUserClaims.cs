@@ -22,7 +22,8 @@ public class GetUserIdFromUserClaims :Attribute,IAsyncResourceFilter
         context.HttpContext.Items["id"]= id;
         
         await next();
-        throw new NotImplementedException();
+        
+        context.HttpContext.Items["id"] = null;
     }
     
 }

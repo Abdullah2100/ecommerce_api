@@ -17,7 +17,7 @@ public class CategoryServices(
     IFileServices fileService)
     : ICategoryServices
 {
-    public async Task<Result<CategoryDto?>> CreateCategory(CreateCategoryDto categoryDto, Guid adminId)
+    public async Task<CategoryDto?>> CreateCategory(CreateCategoryDto categoryDto, Guid adminId)
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(adminId);
@@ -90,7 +90,7 @@ public class CategoryServices(
         );
     }
 
-    public async Task<Result<CategoryDto?>> UpdateCategory(UpdateCategoryDto categoryDto, Guid adminId)
+    public async Task<CategoryDto?>> UpdateCategory(UpdateCategoryDto categoryDto, Guid adminId)
     {
         if (categoryDto.IsEmpty())
             return new Result<CategoryDto?>
@@ -197,7 +197,7 @@ public class CategoryServices(
         );
     }
 
-    public async Task<Result<bool>> DeleteCategory(Guid categoryId, Guid adminId)
+    public async Task<bool>> DeleteCategory(Guid categoryId, Guid adminId)
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(adminId);
@@ -247,7 +247,7 @@ public class CategoryServices(
         );
     }
 
-    public async Task<Result<List<CategoryDto>>> GetCategories(int pageNumber, int pageSize)
+    public async Task<List<CategoryDto>>> GetCategories(int pageNumber, int pageSize)
     {
         List<CategoryDto> categories = (await unitOfWork.CategoryRepository.GetCategories(pageNumber, pageSize))
             .Select(ca => ca.ToDto(config.GetKey("url_file")))

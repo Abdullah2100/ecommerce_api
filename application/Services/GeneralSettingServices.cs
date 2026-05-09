@@ -15,7 +15,7 @@ public class GeneralSettingServices(
 )
     : IGeneralSettingServices
 {
-    public async Task<Result<GeneralSettingDto?>> CreateGeneralSetting(
+    public async Task<GeneralSettingDto?>> CreateGeneralSetting(
         Guid adminId,
         GeneralSettingDto settingDto)
     {
@@ -76,7 +76,7 @@ public class GeneralSettingServices(
         );
     }
 
-    public async Task<Result<GeneralSettingDto?>> UpdateGeneralSetting(
+    public async Task<GeneralSettingDto?>> UpdateGeneralSetting(
         Guid id, Guid adminId,
         UpdateGeneralSettingDto settingDto
     )
@@ -145,7 +145,7 @@ public class GeneralSettingServices(
         );
     }
 
-    public async Task<Result<bool>> DeleteGeneralSetting(Guid id, Guid adminId)
+    public async Task<bool>> DeleteGeneralSetting(Guid id, Guid adminId)
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(adminId);
@@ -196,7 +196,7 @@ public class GeneralSettingServices(
         );
     }
 
-    public async Task<Result<List<GeneralSettingDto>>> GetGeneralSettings(int pageNum, int pageSize)
+    public async Task<List<GeneralSettingDto>>> GetGeneralSettings(int pageNum, int pageSize)
     {
         List<GeneralSettingDto> categories = (await unitOfWork.GeneralSettingRepository.Getgenralsettings(pageNum, pageSize))
             .Select(ca => ca.ToDto())

@@ -19,14 +19,16 @@ public class BannerSerivces(
     IFileServices fileServices)
     : IBannerSerivces
 {
-    public async Task<Result<BannerDto?>> CreateBanner(
+    public async Task<BannerDto?>> CreateBanner(
         Guid userId,
         CreateBannerDto bannerDto
     )
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(userId);
+        
         var validation = user.IsValidateFunc(false, true);
+        
         if (validation is not null)
         {
             return new Result<BannerDto?>
@@ -114,7 +116,7 @@ public class BannerSerivces(
         );
     }
 
-    public async Task<Result<bool>> DeleteBanner(Guid id, Guid userId)
+    public async Task<bool>> DeleteBanner(Guid id, Guid userId)
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(userId);
@@ -186,7 +188,7 @@ public class BannerSerivces(
         );
     }
 
-    public async Task<Result<List<BannerDto>>> GetBannersAll(
+    public async Task<List<BannerDto>>> GetBannersAll(
         Guid adminId,
         int pageNumber,
         int pageSize)
@@ -220,7 +222,7 @@ public class BannerSerivces(
         );
     }
 
-    public async Task<Result<List<BannerDto>>> GetBanners(
+    public async Task<List<BannerDto>>> GetBanners(
         Guid storeId,
         int pageNumber,
         int pageSize
@@ -240,7 +242,7 @@ public class BannerSerivces(
         );
     }
 
-    public async Task<Result<List<BannerDto>>> GetBanners(
+    public async Task<List<BannerDto>>> GetBanners(
         int randomLenght
     )
     {

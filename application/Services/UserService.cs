@@ -19,7 +19,7 @@ public class UserService(
 )
     : IUserServices
 {
-    public async Task<Result<AuthDto?>> Signup(SignupDto signupDto)
+    public async Task<AuthDto?>> Signup(SignupDto signupDto)
     {
        
         string? validationResult = ClsValidation
@@ -123,7 +123,7 @@ public class UserService(
         );
     }
 
-    public async Task<Result<AuthDto?>> Login(LoginDto loginDto)
+    public async Task<AuthDto?>> Login(LoginDto loginDto)
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(loginDto.Username,
@@ -174,7 +174,7 @@ public class UserService(
     }
 
 
-    public async Task<Result<UserInfoDto?>> GetMe(Guid id)
+    public async Task<UserInfoDto?>> GetMe(Guid id)
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(id);
@@ -199,7 +199,7 @@ public class UserService(
     }
 
 
-    public async Task<Result<List<UserInfoDto>?>> GetUsers(
+    public async Task<List<UserInfoDto>?>> GetUsers(
         int page,
         Guid id)
     {
@@ -231,7 +231,7 @@ public class UserService(
         );
     }
 
-    public async Task<Result<int?>> GetUsersPages(Guid id,int pageLenght)
+    public async Task<int?>> GetUsersPages(Guid id,int pageLenght)
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(id);
@@ -257,7 +257,7 @@ public class UserService(
         ); 
     }
 
-    public async Task<Result<bool>> BlockOrUnBlockUser(Guid id, Guid userId)
+    public async Task<bool>> BlockOrUnBlockUser(Guid id, Guid userId)
     {
         User? admin = await unitOfWork.UserRepository
             .GetUser(id);
@@ -324,7 +324,7 @@ public class UserService(
     }
 
 
-    public async Task<Result<UserInfoDto?>> UpdateUser(
+    public async Task<UserInfoDto?>> UpdateUser(
         UpdateUserInfoDto userDto,
         Guid id,
        bool isUpdateWillBeTop=false)
@@ -437,7 +437,7 @@ public class UserService(
         );
     }
 
-    public async Task<Result<AddressDto?>> AddAddressToUser(
+    public async Task<AddressDto?>> AddAddressToUser(
         CreateAddressDto addressDto,
         Guid id
     )
@@ -505,7 +505,7 @@ public class UserService(
     }
 
 
-    public async Task<Result<AddressDto?>> UpdateUserAddress(
+    public async Task<AddressDto?>> UpdateUserAddress(
         UpdateAddressDto addressDto,
         Guid id)
     {
@@ -599,7 +599,7 @@ public class UserService(
     }
 
 
-    public async Task<Result<bool>> DeleteUserAddress(Guid addressId, Guid id)
+    public async Task<bool>> DeleteUserAddress(Guid addressId, Guid id)
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(id);
@@ -674,7 +674,7 @@ public class UserService(
     }
 
 
-    public async Task<Result<bool>> UpdateUserCurrentAddress(Guid addressId, Guid id)
+    public async Task<bool>> UpdateUserCurrentAddress(Guid addressId, Guid id)
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(id);
@@ -752,7 +752,7 @@ public class UserService(
     }
 
 
-    public async Task<Result<bool>> GenerateOtp(ForgetPasswordDto forgetPasswordDto)
+    public async Task<bool>> GenerateOtp(ForgetPasswordDto forgetPasswordDto)
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(forgetPasswordDto.Email);
@@ -828,7 +828,7 @@ public class UserService(
         );
     }
 
-    public async Task<Result<bool>> OtpVerification(CreateVerificationDto otp)
+    public async Task<bool>> OtpVerification(CreateVerificationDto otp)
     {
         bool isExistUser = await unitOfWork.UserRepository
             .IsExistByEmail(otp.Email);
@@ -883,7 +883,7 @@ public class UserService(
         );
     }
 
-    public async Task<Result<AuthDto?>> ReseatePassword(CreateRecreatePasswordDto otp)
+    public async Task<AuthDto?>> ReseatePassword(CreateRecreatePasswordDto otp)
     {
         bool isExistUser = await unitOfWork.UserRepository
             .IsExistByEmail(otp.Email);

@@ -23,7 +23,7 @@ public class StoreServices(
     : IStoreServices
 {
 
-    public async Task<Result<List<StoreDto>?>> GetStores(Guid adminId, string prefix, int pageSize)
+    public async Task<List<StoreDto>?>> GetStores(Guid adminId, string prefix, int pageSize)
     {
        /* User? user = await unitOfWork.UserRepository
             .GetUser(adminId);
@@ -66,7 +66,7 @@ public class StoreServices(
             fileServices.DeleteFile(smallImage);
     }
 
-    public async Task<Result<StoreDto?>> CreateStore(
+    public async Task<StoreDto?>> CreateStore(
         CreateStoreDto store,
         Guid userId)
     {
@@ -177,7 +177,7 @@ public class StoreServices(
         );
     }
 
-    public async Task<Result<StoreDto?>> UpdateStore(
+    public async Task<StoreDto?>> UpdateStore(
         UpdateStoreDto storeDto,
         Guid userId
     )
@@ -309,7 +309,7 @@ public class StoreServices(
         );
     }
 
-    public async Task<Result<int?>> GetStorePage(Guid adminId, int storePerPage)
+    public async Task<int?>> GetStorePage(Guid adminId, int storePerPage)
 
 {
         User? store = await unitOfWork.UserRepository.GetUser(adminId);
@@ -336,7 +336,7 @@ public class StoreServices(
     }
 
 
-    public async Task<Result<StoreDto?>> GetStoreByUserId(Guid userId)
+    public async Task<StoreDto?>> GetStoreByUserId(Guid userId)
     {
         Store? store = await unitOfWork.StoreRepository.GetStoreByUserId(userId);
 
@@ -359,7 +359,7 @@ public class StoreServices(
     }
 
 
-    public async Task<Result<StoreDto?>> GetStoreByStoreId(Guid id)
+    public async Task<StoreDto?>> GetStoreByStoreId(Guid id)
     {
         Store? store = await unitOfWork.StoreRepository.GetStore(id);
 
@@ -382,7 +382,7 @@ public class StoreServices(
     }
 
 
-    public async Task<Result<List<StoreDto>?>> GetStores(Guid adminId, int pageNumber, int pageSize)
+    public async Task<List<StoreDto>?>> GetStores(Guid adminId, int pageNumber, int pageSize)
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(adminId);
@@ -413,7 +413,7 @@ public class StoreServices(
         );
     }
 
-    public async Task<Result<bool?>> UpdateStoreStatus(Guid adminId, Guid storeId)
+    public async Task<bool?>> UpdateStoreStatus(Guid adminId, Guid storeId)
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(adminId);

@@ -7,10 +7,10 @@ namespace api.application.Interface;
 
 public interface IBannerSerivces
 {
-    Task<Result<BannerDto?>> CreateBanner(Guid userId, CreateBannerDto bannerDto);
-    Task<Result<bool>> DeleteBanner(Guid id, Guid userId);
+    Task<BannerDto?> CreateBanner(Guid userId, CreateBannerDto bannerDto);
+    Task<bool> DeleteBanner(Guid id, Guid userId);
 
-    Task<Result<List<BannerDto>>> GetBannersAll(Guid adminId, int pageNumber, int pageSize);
-    Task<Result<List<BannerDto>>> GetBanners(Guid storeId, int pageNumber, int pageSize);
-    Task<Result<List<BannerDto>>> GetBanners(int randomLenght);
+    Task<List<BannerDto>> GetBannersAll(Guid adminId, int pageNumber, int pageSize);
+    Task<List<BannerDto>> GetBanners(Guid storeId, int pageNumber, int pageSize);
+    Task<List<BannerDto>> GetBanners(int randomLenght);
 }

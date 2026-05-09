@@ -13,7 +13,7 @@ namespace api.application.Services;
 public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
 {
     
-    public async Task<Result<CurrencyDto?>> CreateCurrency(Guid adminId, CreateCurrencyDto currencyDto)
+    public async Task<CurrencyDto?>> CreateCurrency(Guid adminId, CreateCurrencyDto currencyDto)
     {
         User? admin = await unitOfWork.UserRepository.GetUser(adminId);
 
@@ -72,7 +72,7 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
         );
     }
 
-    public async Task<Result<CurrencyDto?>> UpdateCurrency(Guid adminId, UpdateCurrencyDto currencyDto)
+    public async Task<CurrencyDto?>> UpdateCurrency(Guid adminId, UpdateCurrencyDto currencyDto)
     {
         User? admin = await unitOfWork.UserRepository.GetUser(adminId);
 
@@ -126,7 +126,7 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
         );
     }
 
-    public async Task<Result<bool>> DeleteCurrency(Guid adminId, Guid id)
+    public async Task<bool>> DeleteCurrency(Guid adminId, Guid id)
     {
         User? admin = await unitOfWork.UserRepository.GetUser(adminId);
 
@@ -175,7 +175,7 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
             statusCode: 200);
     }
 
-    public async Task<Result<List<CurrencyDto>>> GetCurrency(int pageNum,int pageSize)
+    public async Task<List<CurrencyDto>>> GetCurrency(int pageNum,int pageSize)
     {
              
         var payments = await unitOfWork.CurrencyRepository.GetAll(pageNum, pageSize);
