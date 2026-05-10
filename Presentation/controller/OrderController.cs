@@ -35,7 +35,7 @@ public class OrderController(
             _ => StatusCode(result.StatusCode, result.Message)
         };
     }
-    
+
     [HttpGet("status")]
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -45,17 +45,16 @@ public class OrderController(
     public async Task<IActionResult> GetOrderStatus()
     {
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
-        
+
         var result = await orderServices.GetOrdersStatus(id);
 
         return result.IsSuccessful switch
         {
             true => StatusCode(result.StatusCode, result.Data),
             _ => StatusCode(result.StatusCode, result.Message)
-        };  
-
+        };
     }
-    
+
     [HttpGet("{pageNumber}")]
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -118,7 +117,7 @@ public class OrderController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetOrderNotBelongToDelivery
-    (int pageNumber = 1)
+        (int pageNumber = 1)
     {
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
@@ -138,8 +137,6 @@ public class OrderController(
         };
     }
 
-
-    
 
     [HttpDelete("{orderId}")]
     [GetUserIdFromUserClaims]
@@ -181,8 +178,8 @@ public class OrderController(
         var result = await orderServices
             .UpdateOrderStatus(
                 orderStatus.Id,
-               orderStatus.Status
-                );
+                orderStatus.Status
+            );
 
         return result.IsSuccessful switch
         {
@@ -190,8 +187,4 @@ public class OrderController(
             _ => StatusCode(result.StatusCode, result.Message)
         };
     }
-    
-    
-    
-    
 }

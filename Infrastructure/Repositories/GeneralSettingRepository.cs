@@ -16,6 +16,7 @@ public class GeneralSettingRepository(AppDbContext context) : IGeneralSettingRep
             .Take(length)
             .ToListAsync();
     }
+
     public void Add(GeneralSetting entity)
     {
         context.GeneralSettings.Add(entity);

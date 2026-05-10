@@ -8,12 +8,10 @@ public class CreateStoreDto
     [Required]
     public string Name { get; set; } = string.Empty;
 
-    [Required] public  IFormFile WallpaperImage { get; set; }
+    [Required] public IFormFile WallpaperImage { get; set; }
     [Required] public IFormFile SmallImage { get; set; }
 
-    [Required]
-    public decimal Longitude { get; set; }
-        
-    [Required]
-    public decimal Latitude { get; set; }
+    [Required] public decimal Longitude { get; set; }
+
+    [Required] public decimal Latitude { get; set; }
 }

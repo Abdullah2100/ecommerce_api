@@ -33,7 +33,7 @@ public class OrderItemController(
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await orderItemServices
-            .GetOrderItmes(
+            .GetOrderItems(
                 id,
                 pageNumber,
                 25
@@ -57,7 +57,7 @@ public class OrderItemController(
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await orderItemServices
-            .UpdateOrderItmesStatus(
+            .UpdateOrderItemsStatus(
                 id,
                 orderItemStatusDto);
 

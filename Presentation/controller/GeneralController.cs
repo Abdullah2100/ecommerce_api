@@ -30,14 +30,14 @@ public class GeneralController(
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await generalSettingServices.CreateGeneralSetting(
-            adminId:id,
+            adminId: id,
             generalSetting
-            );
+        );
         return result.IsSuccessful switch
         {
             true => StatusCode(result.StatusCode, result.Data),
             _ => StatusCode(result.StatusCode, result.Message)
-        };   
+        };
     }
 
 
@@ -48,21 +48,21 @@ public class GeneralController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteGeneralSetting(
-        Guid genralSettingId 
+        Guid genralSettingId
     )
     {
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-       
+
         var result = await generalSettingServices.DeleteGeneralSetting(
-            adminId:id,
-            id:genralSettingId
+            adminId: id,
+            id: genralSettingId
         );
         return result.IsSuccessful switch
         {
             true => StatusCode(result.StatusCode, result.Data),
             _ => StatusCode(result.StatusCode, result.Message)
-        };   
+        };
     }
 
     [HttpPut("{generalSettingId:guid}")]
@@ -72,25 +72,23 @@ public class GeneralController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateGeneralSetting(
-        Guid genralSettingId ,
+        Guid genralSettingId,
         [FromBody] UpdateGeneralSettingDto generalSetting
     )
     {
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
-        
+
         var result = await generalSettingServices.UpdateGeneralSetting(
-            adminId:id,
-            id:genralSettingId,
-            settingDto:generalSetting
+            adminId: id,
+            id: genralSettingId,
+            settingDto: generalSetting
         );
         return result.IsSuccessful switch
         {
             true => StatusCode(result.StatusCode, result.Data),
             _ => StatusCode(result.StatusCode, result.Message)
-        };   
-        
-     
+        };
     }
 
     [AllowAnonymous]
@@ -99,25 +97,20 @@ public class GeneralController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> GetGeneralSettings(
-         int pageNumber
+        int pageNumber
     )
     {
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
 
         var result = await generalSettingServices.GetGeneralSettings(
-            pageNum:pageNumber,
-            pageSize:25
+            pageNum: pageNumber,
+            pageSize: 25
         );
         return result.IsSuccessful switch
         {
             true => StatusCode(result.StatusCode, result.Data),
             _ => StatusCode(result.StatusCode, result.Message)
-        };    
+        };
     }
-
-
-  
-    
-    
 }

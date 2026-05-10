@@ -1,4 +1,5 @@
-namespace api.application.Interface;
+using Microsoft.AspNetCore.Mvc;
+
 using api.application.Result;
 
 public interface IPaymentServices

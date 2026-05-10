@@ -19,7 +19,7 @@ public class OrderItemServices(
 )
     : IOrderItemServices
 {
-    public async Task<List<OrderItemDto>>> GetOrderItmes(
+    public async Task<List<OrderItemDto>>> GetOrderItems(
         Guid storeId,
         int pageNum,
         int pageSize)
@@ -51,7 +51,7 @@ public class OrderItemServices(
         );
     }
 
-    public async Task<int>> UpdateOrderItmesStatus(
+    public async Task<int>> UpdateOrderItemsStatus(
         Guid userId,
         UpdateOrderItemStatusDto orderItemsStatusDto)
     {
@@ -66,16 +66,18 @@ public class OrderItemServices(
                 isSuccessful: false,
                 statusCode: 404
             );
-        } ;
-        
+        }
+
+        ;
+
         orderItem.Status = orderItemsStatusDto.Status == EnOrderItemStatusDto.Excepted
             ? EnOrderItemStatus.Excepted
             : orderItemsStatusDto.Status == EnOrderItemStatusDto.TookByDelivery
                 ? EnOrderItemStatus.ReceivedByDelivery
                 : EnOrderItemStatus.Cancelled;
-        
+
         unitOfWork.OrderItemRepository.Update(orderItem);
-        
+
         int result = await unitOfWork.SaveChanges();
 
         if (result == 0)
@@ -97,7 +99,6 @@ public class OrderItemServices(
         };
         await hubContext.Clients.All.SendAsync("orderItemsStatusChange", statusEvent);
 
-       
 
         return new Result<int>
         (
@@ -107,7 +108,4 @@ public class OrderItemServices(
             statusCode: 204
         );
     }
-
- 
-
 }

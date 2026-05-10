@@ -12,11 +12,11 @@ namespace api.Presentation.controller;
 public class PaymentController : ControllerBase
 {
     [HttpPost("")]
-    public async Task<IActionResult> CreateSession([FromBody]PaymentRequirementData paymentRequirementData)
+    public async Task<IActionResult> CreateSession([FromBody] PaymentRequirementData paymentRequirementData)
     {
         var options = new PaymentIntentCreateOptions
         {
-            Amount = paymentRequirementData.Amount*100,
+            Amount = paymentRequirementData.Amount * 100,
             Currency = "usd",
             AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
             {
@@ -28,6 +28,5 @@ public class PaymentController : ControllerBase
         var paymentIntent = await service.CreateAsync(options);
 
         return Ok(new { client_secret = paymentIntent.ClientSecret });
- 
     }
 }

@@ -7,6 +7,7 @@ public enum EnRole
     Admin,
     User,
 }
+
 public class SignupDto
 {
     [StringLength(maximumLength: 50, ErrorMessage = "Name must not be empty")]

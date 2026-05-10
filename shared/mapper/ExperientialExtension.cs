@@ -14,7 +14,6 @@ public static class ExperientialExtension
             {
                 Id = variant.Id,
                 Name = variant.Name,
-
             };
         }
     }
@@ -24,8 +23,6 @@ public static class ExperientialExtension
         public bool IsEmpty()
         {
             return string.IsNullOrWhiteSpace(dto.Name?.Trim());
-
         }
     }
 }
-    

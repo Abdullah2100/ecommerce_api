@@ -29,7 +29,7 @@ public class SubCategoryServices(
                 isSuccessful: false,
                 data: null,
                 message: "Store Not Found",
-                statusCode:(int) StatusCodes.Status404NotFound 
+                statusCode: (int)StatusCodes.Status404NotFound
             );
         }
 
@@ -60,7 +60,7 @@ public class SubCategoryServices(
         };
 
         unitOfWork.SubCategoryRepository.Add(subCategory);
-        
+
         int result = await unitOfWork.SaveChanges();
 
         if (result == 0)
@@ -107,7 +107,7 @@ public class SubCategoryServices(
                 isSuccessful: false,
                 data: null,
                 message: "Store Not Found",
-                statusCode:(int) StatusCodes.Status404NotFound 
+                statusCode: (int)StatusCodes.Status404NotFound
             );
         }
 
@@ -178,7 +178,7 @@ public class SubCategoryServices(
                 isSuccessful: false,
                 data: false,
                 message: "Store Not Found",
-                statusCode:(int) StatusCodes.Status404NotFound 
+                statusCode: (int)StatusCodes.Status404NotFound
             );
         }
 
@@ -198,7 +198,7 @@ public class SubCategoryServices(
 
         unitOfWork.SubCategoryRepository.Delete(id);
         int result = await unitOfWork.SaveChanges();
-        
+
         if (result == 0)
             return new Result<bool>
             (

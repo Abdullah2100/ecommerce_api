@@ -8,18 +8,18 @@ namespace api.Presentation.controller;
 [Route("api/RefreshToken")]
 public class RefreshTokenController(
     IAuthenticationService authenticationService,
-    IRefreshTokenServices refreshTokenServices): ControllerBase
+    IRefreshTokenServices refreshTokenServices) : ControllerBase
 {
     [HttpPost()]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> CreateBanner([FromQuery]string token)
+    public async Task<IActionResult> CreateBanner([FromQuery] string token)
     {
-        Claim? id = User.Claims.First(value=>value.Type== ClaimTypes.NameIdentifier);
+        Claim? id = User.Claims.First(value => value.Type == ClaimTypes.NameIdentifier);
         Claim? issueAt = User.FindFirst("exp");
-        Claim? expire =User.FindFirst("lat");
-       
+        Claim? expire = User.FindFirst("lat");
+
         var result = await refreshTokenServices.GenerateRefreshToken(token, id, issueAt, expire);
 
         return result.IsSuccessful switch
@@ -28,6 +28,4 @@ public class RefreshTokenController(
             _ => StatusCode(result.StatusCode, result.Message)
         };
     }
-
-
 }

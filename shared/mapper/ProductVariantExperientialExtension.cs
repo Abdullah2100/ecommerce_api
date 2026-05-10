@@ -26,8 +26,7 @@ public static class ProductVariantExperientialExtension
             {
                 Name = productVariant.Name,
                 Percentage = productVariant.Percentage,
-                VariantName = productVariant?.Variant?.Name??""
-            
+                VariantName = productVariant?.Variant?.Name ?? ""
             };
         }
     }

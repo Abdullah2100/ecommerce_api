@@ -24,9 +24,7 @@ public class CategoryController(
     [ProducesResponseType(StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateCategory([FromForm] CreateCategoryDto category)
     {
-    
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
-
 
 
         var result = await categoryServices.CreateCategory(category, id);
@@ -48,7 +46,6 @@ public class CategoryController(
     public async Task<IActionResult> UpdateCateogry(
         [FromForm] UpdateCategoryDto category)
     {
-   
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await categoryServices.UpdateCategory(category, id);
@@ -68,9 +65,7 @@ public class CategoryController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteCategory(Guid categoryId)
     {
-     
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
-
 
 
         var result = await categoryServices.DeleteCategory(categoryId, id);

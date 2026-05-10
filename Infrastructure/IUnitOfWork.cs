@@ -2,7 +2,7 @@ using api.domain.Interface;
 
 namespace api.Infrastructure;
 
-public interface IUnitOfWork:IDisposable
+public interface IUnitOfWork : IDisposable
 {
     public IAddressRepository AddressRepository { get; }
     public IBannerRepository BannerRepository { get; }
@@ -19,7 +19,7 @@ public interface IUnitOfWork:IDisposable
     public ISubCategoryRepository SubCategoryRepository { get; }
     public IUserRepository UserRepository { get; }
     public IVarientRepository VarientRepository { get; }
-    public IOrderProductVariant OrderProductVariantRepository { get; } 
+    public IOrderProductVariant OrderProductVariantRepository { get; }
     public IAnalyseRepository AnalyseRepository { get; }
     public ICurrencyRepository CurrencyRepository { get; }
     public IPaymentTypeRepository PaymentTypeRepository { get; set; }

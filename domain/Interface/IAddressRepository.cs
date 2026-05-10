@@ -1,6 +1,7 @@
 using api.domain.entity;
 
 namespace api.domain.Interface;
+
 public interface IAddressRepository : IRepository<Address>
 {
     Task<int> GetAddressCount(Guid id);

@@ -3,7 +3,7 @@ using Stripe;
 
 namespace api.application.Services;
 
-public class StripPaymentServices:IPaymentServices
+public class StripPaymentServices : IPaymentServices
 {
     public async Task<bool> IsSuccessFullPayment(string id)
     {
@@ -20,6 +20,5 @@ public class StripPaymentServices:IPaymentServices
             Console.WriteLine(e);
             return false;
         }
-       
     }
 }

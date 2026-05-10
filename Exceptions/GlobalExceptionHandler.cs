@@ -4,11 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace api.Exceptions;
 
-public  class GlobalExceptionHandler(IProblemDetailsService ps) :IExceptionHandler
+public class GlobalExceptionHandler(IProblemDetailsService ps) : IExceptionHandler
 {
-
     public ValueTask<bool> TryHandleAsync(HttpContext httpContext,
-        System.Exception exception, 
+        System.Exception exception,
         CancellationToken cancellationToken)
     {
         httpContext.Response.StatusCode = exception switch
@@ -25,7 +24,7 @@ public  class GlobalExceptionHandler(IProblemDetailsService ps) :IExceptionHandl
                 ProblemDetails = new ProblemDetails
                 {
                     Type = exception.GetType().Name,
-                    Title ="Exception occured",
+                    Title = "Exception occured",
                     Detail = exception.Message
                 }
             }

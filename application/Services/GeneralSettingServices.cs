@@ -198,7 +198,8 @@ public class GeneralSettingServices(
 
     public async Task<List<GeneralSettingDto>>> GetGeneralSettings(int pageNum, int pageSize)
     {
-        List<GeneralSettingDto> categories = (await unitOfWork.GeneralSettingRepository.Getgenralsettings(pageNum, pageSize))
+        List<GeneralSettingDto> categories =
+            (await unitOfWork.GeneralSettingRepository.Getgenralsettings(pageNum, pageSize))
             .Select(ca => ca.ToDto())
             .ToList();
         return new Result<List<GeneralSettingDto>>

@@ -23,8 +23,6 @@ public class AnalyseController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> GetOrderStatus()
     {
-
-
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await analyseServices.GetMonthAnalysis(id);

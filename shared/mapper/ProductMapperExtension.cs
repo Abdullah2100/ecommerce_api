@@ -6,7 +6,6 @@ namespace api.shared.mapper;
 
 public static class ProductMapperExtension
 {
-   
     extension(Product product)
     {
         public ProductDto ToDto(string url)
@@ -22,7 +21,7 @@ public static class ProductMapperExtension
                     Symbol = product.Symbol,
                     Thumbnail = string.IsNullOrEmpty(product.Thumbnail) ? "" : url + product.Thumbnail,
                     CategoryId = product.SubCategory.CategoryId,
-                    ProductImages = product?.ProductImages?.Select(pi => url + pi.Path)?.ToList()?? new List<string>(),
+                    ProductImages = product?.ProductImages?.Select(pi => url + pi.Path)?.ToList() ?? new List<string>(),
                     ProductVariants = product?.ProductVariants
                         ?.GroupBy(pv => pv.VariantId, (key, g)
                             => g.Select(pvH => pvH.ToProductVariantDto()).ToList()
@@ -37,7 +36,6 @@ public static class ProductMapperExtension
                 Console.WriteLine(ex.Message);
                 return new ProductDto();
             }
-      
         }
 
         public AdminProductsDto ToAdminDto(string url)
@@ -85,12 +83,9 @@ public static class ProductMapperExtension
                    && dto.ProductVariants == null
                    && dto.Images == null
                    && dto.Deletedimages == null
-                   && dto.DeletedProductVariants==null
-                   && dto.Symbol ==null
-                ;    
+                   && dto.DeletedProductVariants == null
+                   && dto.Symbol == null
+                ;
         }
     }
-
-
-    
 }

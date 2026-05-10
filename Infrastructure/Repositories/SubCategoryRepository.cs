@@ -9,27 +9,27 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
 {
     public async Task<SubCategory?> GetSubCategory(Guid id)
     {
-       return await context.SubCategories.FindAsync(id);
+        return await context.SubCategories.FindAsync(id);
     }
 
     public async Task<List<SubCategory>> GetSubCategories(
         Guid storeId,
-        int  pageNumber,
+        int pageNumber,
         int pageSize
-        )
+    )
     {
         return await context
             .SubCategories
             .AsNoTracking()
-            .Where(su=>su.StoreId==storeId)
+            .Where(su => su.StoreId == storeId)
             .Skip((pageNumber - 1) * pageSize)
             .OrderDescending()
             .Take(pageSize)
             .ToListAsync();
     }
-    
+
     public async Task<List<SubCategory>> GetSubCategories(
-        int  pageNumber,
+        int pageNumber,
         int pageSize
     )
     {
@@ -53,8 +53,7 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
 
     public async Task<bool> IsExist(Guid id)
     {
-        return await context.SubCategories.AsNoTracking().AnyAsync(x=>x.Id==id)==true;
-
+        return await context.SubCategories.AsNoTracking().AnyAsync(x => x.Id == id) == true;
     }
 
     public async Task<bool> IsExist(Guid storeId, string name)
@@ -69,7 +68,6 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
         return await context.SubCategories
             .AsNoTracking()
             .AnyAsync(su => su.StoreId == storeId && su.Id == id);
-
     }
 
     public async Task<IEnumerable<SubCategory>> getAllAsync(int page, int length)
@@ -80,12 +78,12 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
             .Skip((page - 1) * length)
             .OrderDescending()
             .Take(length)
-            .ToListAsync(); 
+            .ToListAsync();
     }
 
-    public void  Add(SubCategory entity)
+    public void Add(SubCategory entity)
     {
-         context.SubCategories.Add(entity);
+        context.SubCategories.Add(entity);
     }
 
     public void Update(SubCategory entity)
@@ -93,10 +91,10 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
         context.SubCategories.Update(entity);
     }
 
-    public  void  Delete(Guid id)
+    public void Delete(Guid id)
     {
-         var subcategories=context.SubCategories.Where(su => su.Id == id)
+        var subcategories = context.SubCategories.Where(su => su.Id == id)
             .ToList();
-         context.SubCategories.RemoveRange(subcategories);
+        context.SubCategories.RemoveRange(subcategories);
     }
 }

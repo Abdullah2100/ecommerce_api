@@ -18,7 +18,7 @@ public class OrderRepository(AppDbContext context)
     )
     {
         var orders = await context.Orders
-            .Include(o=>o.PaymentType)
+            .Include(o => o.PaymentType)
             .Include(o => o.User)
             .Include(o => o.Items)
             .AsSplitQuery()
@@ -45,7 +45,7 @@ public class OrderRepository(AppDbContext context)
     public async Task<IEnumerable<Order>> GetOrders(int page, int length)
     {
         var orders = await context.Orders
-            .Include(o=>o.PaymentType)
+            .Include(o => o.PaymentType)
             .Include(o => o.User)
             .Include(o => o.Items)
             .AsSplitQuery()
@@ -99,7 +99,7 @@ public class OrderRepository(AppDbContext context)
     {
         return await context
             .Orders
-            .Include(o=>o.PaymentType)
+            .Include(o => o.PaymentType)
             .OrderBy(x => Guid.NewGuid())
             .Take(randomNumber)
             .ToListAsync();
@@ -108,7 +108,7 @@ public class OrderRepository(AppDbContext context)
     public async Task<Order?> GetOrder(Guid id)
     {
         var order = await context.Orders
-            .Include(o=>o.PaymentType)
+            .Include(o => o.PaymentType)
             .Include(o => o.User)
             .Include(o => o.Items)
             .AsSplitQuery()
@@ -130,7 +130,7 @@ public class OrderRepository(AppDbContext context)
     public async Task<Order?> GetOrder(Guid id, Guid userId)
     {
         var order = await context.Orders
-            .Include(o=>o.PaymentType)
+            .Include(o => o.PaymentType)
             .Include(o => o.User)
             .Include(o => o.Items)
             .AsSplitQuery()
@@ -150,7 +150,7 @@ public class OrderRepository(AppDbContext context)
 
     public async Task<int> GetOrders()
     {
-       return await context.Orders.CountAsync();
+        return await context.Orders.CountAsync();
     }
 
     public async Task<bool> IsExist(Guid id)
@@ -169,7 +169,7 @@ public class OrderRepository(AppDbContext context)
             );
     }
 
-    public async Task<bool> IsValidTotalPrice(decimal totalPrice, List<CreateOrderItemDto> items,string symbol)
+    public async Task<bool> IsValidTotalPrice(decimal totalPrice, List<CreateOrderItemDto> items, string symbol)
     {
         bool isAmbiguous = false;
         decimal realPrice = 0;
@@ -186,7 +186,7 @@ public class OrderRepository(AppDbContext context)
                 var productVariantPrice =
                     await context.ProductVariants.FirstOrDefaultAsync(product =>
                         product.ProductId == product.Id && product.Id == item.ProductVariant[i]);
-                
+
                 if (productVariantPrice is null)
                 {
                     isAmbiguous = true;
@@ -194,8 +194,10 @@ public class OrderRepository(AppDbContext context)
                 }
 
                 //varientPrice = varientPrice * productVariantPrice.Percentage;
-                variantPrice +=  productVariantPrice?.Percentage ?? product!.Price;
-            };
+                variantPrice += productVariantPrice?.Percentage ?? product!.Price;
+            }
+
+            ;
 
             if (isAmbiguous == true)
             {
@@ -208,7 +210,9 @@ public class OrderRepository(AppDbContext context)
                 break;
             }
 
-            realPrice += ConvertPriceFromCurrencyToAnother(((variantPrice!=0 ?variantPrice : product.Price) * item.Quantity),product.Symbol,symbol,currencies);
+            realPrice += ConvertPriceFromCurrencyToAnother(
+                ((variantPrice != 0 ? variantPrice : product.Price) * item.Quantity), product.Symbol, symbol,
+                currencies);
         }
 
         if (isAmbiguous)
@@ -223,7 +227,7 @@ public class OrderRepository(AppDbContext context)
     {
         var orders =
             await context.Orders
-                .Include(o=>o.PaymentType)
+                .Include(o => o.PaymentType)
                 .Include(o => o.Items)
                 .Include(o => o.User)
                 .AsSplitQuery()
@@ -279,7 +283,7 @@ public class OrderRepository(AppDbContext context)
     public async Task<IEnumerable<Order>> GetOrderBelongToDelivery(Guid deliveryId, int pageNum, int pageSize)
     {
         var orders = await context.Orders
-            .Include(o=>o.PaymentType)
+            .Include(o => o.PaymentType)
             .Include(o => o.User)
             .Include(o => o.Items)
             .AsSplitQuery()
@@ -340,27 +344,28 @@ public class OrderRepository(AppDbContext context)
         result.DeliveryId = null;
     }
 
-    public decimal ConvertPriceFromCurrencyToAnother(decimal price, string productSymbol,string currentSymbol, List<Currency> currencies)
+    public decimal ConvertPriceFromCurrencyToAnother(decimal price, string productSymbol, string currentSymbol,
+        List<Currency> currencies)
     {
+        var currentCurrency = currencies.First(x => x.Symbol == currentSymbol);
+        var productCurrency = currencies.First(x => x.Symbol == productSymbol);
 
-            var  currentCurrency = currencies.First(x => x.Symbol == currentSymbol);
-            var  productCurrency = currencies.First(x => x.Symbol == productSymbol);
-
-            switch (currentCurrency.IsDefault && !productCurrency.IsDefault) {
-                case true:
-                    return price / (productCurrency.Value);
-                default:
+        switch (currentCurrency.IsDefault && !productCurrency.IsDefault)
+        {
+            case true:
+                return price / (productCurrency.Value);
+            default:
+            {
+                switch (currentCurrency == productCurrency)
                 {
-                    switch (currentCurrency== productCurrency) {
-                        case true: return price;
-                        default:
-                        {
-                           return (price/productCurrency.Value)* currentCurrency.Value;
-                        }
+                    case true: return price;
+                    default:
+                    {
+                        return (price / productCurrency.Value) * currentCurrency.Value;
                     }
                 }
             }
-
+        }
     }
 
     public void Add(Order entity)
@@ -381,7 +386,7 @@ public class OrderRepository(AppDbContext context)
 
     public void Delete(List<Order> orders)
     {
-       context.Orders.RemoveRange(orders); 
+        context.Orders.RemoveRange(orders);
     }
 
 

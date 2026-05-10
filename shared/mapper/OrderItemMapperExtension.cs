@@ -19,18 +19,19 @@ public static class OrderItemMapperExtension
                 Product = item.ToOrderProductDto(url),
                 Quantity = item?.Quantity ?? 0,
                 OrderStatusName = item.Order.Status.ToOrderStatusName(),
-                Address = item.Store?.Addresses==null ||item.Store.Addresses.Count<1? new List<AddressWithTitleDto>():
-                    item.Store?.Addresses.Select(ad=>
-                        new AddressWithTitleDto() 
+                Address = item.Store?.Addresses == null || item.Store.Addresses.Count < 1
+                    ? new List<AddressWithTitleDto>()
+                    : item.Store?.Addresses.Select(ad =>
+                        new AddressWithTitleDto()
                         {
                             Longitude = ad?.Longitude,
                             Latitude = ad?.Latitude,
-                            Title = ad?.Title??"",
+                            Title = ad?.Title ?? "",
                         }
                     ).ToList(),
-                ProductVariant =item.OrderProductsVariants==null||item.OrderProductsVariants.Count<1?new List<OrderVariantDto>():
-                
-                    item
+                ProductVariant = item.OrderProductsVariants == null || item.OrderProductsVariants.Count < 1
+                    ? new List<OrderVariantDto>()
+                    : item
                         ?.OrderProductsVariants
                         ?.Select(ost => ost.ToOrderVariantDto())
                         .ToList()
@@ -39,7 +40,7 @@ public static class OrderItemMapperExtension
 
         public DeliveryOrderItemDto ToDeliveryOrderItemDto(string url)
         {
-            return new DeliveryOrderItemDto 
+            return new DeliveryOrderItemDto
             {
                 Id = item.Id,
                 OrderId = item.OrderId,

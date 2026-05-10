@@ -14,9 +14,7 @@ public static class OrderExperientialExtension
             {
                 Name = orderProductsVariant.ProductVariant?.Product?.Name,
                 VariantName = orderProductsVariant.ProductVariant?.Variant?.Name,
-
             };
         }
     }
-
 }

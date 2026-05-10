@@ -1,11 +1,9 @@
 using System.Security.Claims;
-using api.application.Result;
-using api.Presentation.dto;
-using api.Presentation.dto.Response;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.application.Interface;
 
 public interface IRefreshTokenServices
 {
-    Task<AuthDto?> GenerateRefreshToken(string token,Claim? id,Claim? issuAt,Claim? expireAt);
+    Task<IActionResult> GenerateRefreshToken(string token, Claim? id, Claim? issueAt, Claim? expireAt);
 }

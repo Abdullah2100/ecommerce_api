@@ -18,10 +18,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Stripe;
+
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
-
-
 
 
 builder.Services.AddOptions();
@@ -34,16 +33,12 @@ builder.Services.AddKeyedScoped<IMessageService, NotificationServices>(EnMessage
 builder.Services.AddScoped<IAuthenticationService, AuthenticationServices>();
 
 
-
-
-
-
 //ifile serverice
 builder.Services.AddTransient<IFileServices, FileServices>();
 
 
 //unitofwork
-builder.Services.AddTransient<IUnitOfWork,UnitOfWork>();
+builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 
 
 //services
@@ -52,7 +47,7 @@ builder.Services.AddTransient<IStoreServices, StoreServices>();
 builder.Services.AddTransient<ICategoryServices, CategoryServices>();
 builder.Services.AddTransient<ISubCategoryServices, SubCategoryServices>();
 builder.Services.AddTransient<IVariantServices, VariantServices>();
-builder.Services.AddTransient<IBannerSerivces, BannerSerivces>();
+builder.Services.AddTransient<IBannerServices, BannerServices>();
 builder.Services.AddTransient<IGeneralSettingServices, GeneralSettingServices>();
 builder.Services.AddTransient<IDeliveryServices, DeliveryServices>();
 builder.Services.AddTransient<IProductServices, ProductServices>();
@@ -61,24 +56,23 @@ builder.Services.AddTransient<IOrderItemServices, OrderItemServices>();
 builder.Services.AddTransient<IRefreshTokenServices, RefreshTokenServices>();
 builder.Services.AddTransient<IAnalyseServices, AnalyseServices>();
 builder.Services.AddTransient<ICurrencyServices, CurrencyServices>();
-builder.Services.AddTransient<IPaymentTypeServices,PaymentTypeServices>();
+builder.Services.AddTransient<IPaymentTypeServices, PaymentTypeServices>();
 
 //payment 
-builder.Services.AddTransient<IPaymentServices,StripPaymentServices>();
+builder.Services.AddTransient<IPaymentServices, StripPaymentServices>();
 
 
- var fireBaseConfig = Path.Combine(
-     Directory.GetCurrentDirectory(), 
-     "librarynotification-notification.json"
- );
+var fireBaseConfig = Path.Combine(
+    Directory.GetCurrentDirectory(),
+    "librarynotification-notification.json"
+);
 
- var firebaseCredential = GoogleCredential.FromFile(fireBaseConfig);
+var firebaseCredential = GoogleCredential.FromFile(fireBaseConfig);
 FirebaseApp.Create(new AppOptions()
 {
-     Credential = firebaseCredential
- });
+    Credential = firebaseCredential
+});
 
- 
 
 var corsName = "AllowAllOrigins";
 builder.Services.AddCors(options =>
@@ -87,17 +81,15 @@ builder.Services.AddCors(options =>
     {
         policy
             .WithOrigins("http://localhost:3000")
-            .AllowAnyMethod()           
+            .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
-        
     });
 });
 
-builder.Services.AddControllers(
-    option=>
-        option.Filters.Add(new CustomResultFilter())
-    );
+builder.Services.AddControllers(option =>
+    option.Filters.Add(new CustomResultFilter())
+);
 builder.Services.AddSignalR(option =>
     option.EnableDetailedErrors = true
 );
@@ -163,14 +155,14 @@ app.UseStaticFiles(new StaticFileOptions
         Path.Combine(builder.Environment.ContentRootPath, "images")),
     RequestPath = "/StaticFiles"
 });
-app.UseRouting();  
+app.UseRouting();
 app.UseCors(corsName);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<BannerHub>("/bannerHub");
-app.MapHub<OrderHub>("/orderHub"); 
-app.MapHub<OrderItemHub>("/orderItemHub"); 
-app.MapHub<StoreHub>("/storeHub"); 
+app.MapHub<OrderHub>("/orderHub");
+app.MapHub<OrderItemHub>("/orderItemHub");
+app.MapHub<StoreHub>("/storeHub");
 app.ConfigureExceptionHandler();
 app.Run();

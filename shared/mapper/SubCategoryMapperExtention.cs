@@ -5,7 +5,6 @@ using api.Presentation.dto.Response;
 
 namespace api.shared.mapper;
 
-
 public static class SubCategoryMapperExtensions
 {
     public static SubCategoryDto ToDto(this SubCategory subCategory)
@@ -22,10 +21,10 @@ public static class SubCategoryMapperExtensions
         };
     }
 
-    
+
     extension(UpdateSubCategoryDto dto)
     {
-        public  bool IsEmpty()
+        public bool IsEmpty()
         {
             if (dto == null)
                 throw new ArgumentNullException(nameof(dto));

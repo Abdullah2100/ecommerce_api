@@ -20,7 +20,7 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
             .Banner
             .Update(entity);
     }
-    
+
     public Task<int> GetBannerCount()
     {
         return context.Banner.CountAsync();
@@ -35,11 +35,10 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
 
     public void Delete(Guid id)
     {
-
         var banner = context
             .Banner
             .FirstOrDefault(ba => ba.Id == id);
-        if(banner is null )return;
+        if (banner is null) return;
 
         context.Remove(banner);
     }
@@ -54,7 +53,7 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
         return await context
             .Banner
             .AsNoTracking()
-            .FirstOrDefaultAsync(ba=>ba.Id==id);
+            .FirstOrDefaultAsync(ba => ba.Id == id);
     }
 
     public async Task<Banner?> GetBanner(Guid id, Guid storeId)

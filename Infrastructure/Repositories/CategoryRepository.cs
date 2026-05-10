@@ -7,18 +7,16 @@ namespace api.Infrastructure.Repositories;
 
 public class CategoryRepository(AppDbContext context) : ICategoryRepository
 {
- 
-
-    public void  Add(Category entity)
+    public void Add(Category entity)
     {
-         context.Categories.Add(entity);
+        context.Categories.Add(entity);
     }
 
-    public void  Update(Category entity)
+    public void Update(Category entity)
     {
         context.Categories.Update(entity);
     }
-    
+
 
     public async Task<Category?> GetCategory(Guid id)
     {
@@ -33,21 +31,21 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
             .Skip((page - 1) * length)
             .Take(length)
             .OrderDescending()
-            .ToListAsync(); 
+            .ToListAsync();
     }
 
     public async Task<int> GetCategoriesCount()
     {
-       return await context.Categories.CountAsync();
+        return await context.Categories.CountAsync();
     }
 
     public async Task<List<Category>> GetCategories(int randomNumber)
     {
-       return await context
-           .Categories
-           .OrderBy(x => Guid.NewGuid())
-           .Take(randomNumber)
-           .ToListAsync();
+        return await context
+            .Categories
+            .OrderBy(x => Guid.NewGuid())
+            .Take(randomNumber)
+            .ToListAsync();
     }
 
     public async Task<bool> IsExist(Guid id)
@@ -66,23 +64,23 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
             .AnyAsync(e => e.Name == name);
     }
 
-    public async Task<bool> IsExist(string name,Guid id)
+    public async Task<bool> IsExist(string name, Guid id)
     {
         return await context
             .Categories
             .AsNoTracking()
             .AnyAsync(e => e.Name == name && e.Id != id);
     }
-    
-    public  void Delete(Guid id)
+
+    public void Delete(Guid id)
     {
-        var category= context.Categories.FirstOrDefault(ca => ca.Id == id);
+        var category = context.Categories.FirstOrDefault(ca => ca.Id == id);
         if (category is null) throw new ArgumentNullException();
         context.Categories.Remove(category);
     }
 
     public void Delete(List<Category> categories)
     {
-       context.Categories.RemoveRange(categories); 
+        context.Categories.RemoveRange(categories);
     }
 }

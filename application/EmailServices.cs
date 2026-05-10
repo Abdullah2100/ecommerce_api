@@ -5,7 +5,7 @@ using api.Infrastructure;
 
 namespace api.application;
 
-public class EmailServices(IConfig config) : IMessageService 
+public class EmailServices(IConfig config) : IMessageService
 {
     public async Task<bool> SendingMessage(string message, string to)
     {

@@ -1,14 +1,13 @@
-using api.application.Result;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.application.Interface;
 
 public interface IVariantServices
 {
-   Task<VariantDto?> CreateVariant(CreateVariantDto variantDto,Guid adminId); 
-   Task<VariantDto?> UpdateVariant(UpdateVariantDto variantDto,Guid adminId); 
-   Task<bool> DeleteVariant(Guid vairantId,Guid adminId); 
-   Task<List<VariantDto>> GetVariants(int page,int pageSize);
-   Task<int?> GetVariantPage(Guid adminId, int variantPerPage);
+    Task<IActionResult> CreateVariant(CreateVariantDto variantDto, Guid adminId);
+    Task<IActionResult> UpdateVariant(UpdateVariantDto variantDto, Guid adminId);
+    Task<IActionResult> DeleteVariant(Guid variantId, Guid adminId);
+    Task<IActionResult> GetVariants(int page, int pageSize);
+    Task<IActionResult> GetVariantPage(Guid adminId, int variantPerPage);
 }

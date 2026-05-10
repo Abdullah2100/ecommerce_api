@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace api.domain.entity;
 
-public class Product:GeneralShredInfo
+public class Product : GeneralShredInfo
 {
     public string Name { get; set; }
     public string Description { get; set; }

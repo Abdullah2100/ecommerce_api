@@ -15,10 +15,8 @@ namespace api.Presentation.controller;
 public class CurrencyController(
     ICurrencyServices currencyServices,
     IAuthenticationService authenticationService
-
-    ) : ControllerBase
+) : ControllerBase
 {
-    
     [HttpPost("")]
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -28,7 +26,7 @@ public class CurrencyController(
     public async Task<IActionResult> CreateCurrency([FromBody] CreateCurrencyDto currencyDto)
     {
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
- 
+
         var result = await currencyServices.CreateCurrency(id, currencyDto);
 
         return result.IsSuccessful switch
@@ -46,11 +44,10 @@ public class CurrencyController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateCurrency([FromBody] UpdateCurrencyDto currencyDto)
     {
-    
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
 
-        var result = await currencyServices.UpdateCurrency( id,currencyDto);
+        var result = await currencyServices.UpdateCurrency(id, currencyDto);
 
         return result.IsSuccessful switch
         {
@@ -68,7 +65,7 @@ public class CurrencyController(
     public async Task<IActionResult> DeleteCurrency(Guid currencyId)
     {
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
- 
+
         var result = await currencyServices.DeleteCurrency(id, currencyId);
 
         return result.IsSuccessful switch
@@ -87,7 +84,7 @@ public class CurrencyController(
     {
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
-        var result = await currencyServices.GetCurrency(pageNumber,25);
+        var result = await currencyServices.GetCurrency(pageNumber, 25);
 
         return result.IsSuccessful switch
         {
@@ -95,6 +92,4 @@ public class CurrencyController(
             _ => StatusCode(result.StatusCode, result.Message)
         };
     }
-    
-
 }

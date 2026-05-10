@@ -212,7 +212,7 @@ public class VariantServices(IUnitOfWork unitOfWork)
 
     {
         User? store = await unitOfWork.UserRepository.GetUser(adminId);
-        
+
         var isValide = store.IsValidateFunc();
 
         if (isValide is not null)
@@ -239,7 +239,7 @@ public class VariantServices(IUnitOfWork unitOfWork)
     {
         var varients = (await unitOfWork.VarientRepository
             .GetVarients(page, pageSize));
-        
+
         List<VariantDto> variantDtos = varients
             .Select(va => va.ToDto())
             .ToList();

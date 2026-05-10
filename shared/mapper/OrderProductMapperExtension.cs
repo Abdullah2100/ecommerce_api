@@ -14,8 +14,7 @@ public static class OrderProductMapperExtension
             {
                 Id = orderItem.ProductId,
                 Name = orderItem.Product.Name,
-                Thumbnail=url+orderItem.Product.Thumbnail
-
+                Thumbnail = url + orderItem.Product.Thumbnail
             };
         }
     }

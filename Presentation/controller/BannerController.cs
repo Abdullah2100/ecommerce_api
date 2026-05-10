@@ -13,11 +13,9 @@ namespace api.Presentation.controller;
 [ApiController]
 [Route("api/Banner")]
 public class BannerController(
-    IBannerSerivces bannerServices,
+    IBannerServices bannerServices,
     IAuthenticationService authenticationService) : ControllerBase
 {
- 
-
     //this method for dashboard only
     [HttpGet("{pageNumber:int}")]
     [GetUserIdFromUserClaims]
@@ -26,7 +24,6 @@ public class BannerController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetBannerRandom(int pageNumber)
     {
-
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
 
@@ -54,6 +51,4 @@ public class BannerController(
             _ => StatusCode(result.StatusCode, result.Message)
         };
     }
-    
-    
 }

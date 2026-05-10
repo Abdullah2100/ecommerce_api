@@ -36,7 +36,7 @@ namespace api.application.Services
                         return null;
                     }
                 }
-                
+
 
                 var fileFullName = Path.Combine(filePath, ClsUtil.GenerateGuid() + GetFileExtention(file));
 

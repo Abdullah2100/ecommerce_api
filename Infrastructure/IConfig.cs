@@ -1,7 +1,6 @@
 namespace api.Infrastructure;
 
 public interface IConfig
-{ 
-    public  string GetKey(string key);
-    
+{
+    public string GetKey(string key);
 }

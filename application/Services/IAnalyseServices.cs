@@ -7,12 +7,12 @@ using api.shared.mapper;
 
 namespace api.application.Services;
 
-public class AnalyseServices(IUnitOfWork unitOfWork):IAnalyseServices
+public class AnalyseServices(IUnitOfWork unitOfWork) : IAnalyseServices
 {
     public async Task<AnalyzesOrderDto?>> GetMonthAnalysis(Guid adminId)
     {
         User? user = await unitOfWork.UserRepository.GetUser(adminId);
-        
+
         var isValid = user.IsValidateFunc();
         if (isValid is not null)
         {
@@ -24,24 +24,22 @@ public class AnalyseServices(IUnitOfWork unitOfWork):IAnalyseServices
             );
         }
 
-        var  result = await unitOfWork.AnalyseRepository.GetMonthAnalysis();
-        if (result is  null)
+        var result = await unitOfWork.AnalyseRepository.GetMonthAnalysis();
+        if (result is null)
         {
             return new Result<AnalyzesOrderDto?>(
                 data: null,
                 message: "Could not calculate analayes",
                 isSuccessful: false,
-                statusCode:404 
+                statusCode: 404
             );
         }
-        
+
         return new Result<AnalyzesOrderDto?>(
             data: result,
             message: null,
             isSuccessful: true,
-            statusCode:200 
+            statusCode: 200
         );
     }
-
-
 }

@@ -13,27 +13,27 @@ public class UnitOfWork : IUnitOfWork
     )
     {
         _context = context;
-        AddressRepository= new AddressRepository( _context );
-        BannerRepository = new BannerRepository( _context );
-        CategoryRepository = new CategoryRepository( _context );
-        DeliveryRepository = new DeliveryRepository( _context );
-        GeneralSettingRepository = new GeneralSettingRepository( _context );
-        OrderItemRepository = new OrderItemRepository( _context );
-        ProductVariantRepository =  new ProductVariantRepository( _context );
-        ProductImageRepository = new ProductImageRepository( _context );
+        AddressRepository = new AddressRepository(_context);
+        BannerRepository = new BannerRepository(_context);
+        CategoryRepository = new CategoryRepository(_context);
+        DeliveryRepository = new DeliveryRepository(_context);
+        GeneralSettingRepository = new GeneralSettingRepository(_context);
+        OrderItemRepository = new OrderItemRepository(_context);
+        ProductVariantRepository = new ProductVariantRepository(_context);
+        ProductImageRepository = new ProductImageRepository(_context);
         ProductRepository = new ProductRepository(context);
-        OrderRepository = new OrderRepository( _context);
-        PasswordRepository = new ReseatPasswordRepository( _context );
-        StoreRepository = new StoreRepository( _context );
-        SubCategoryRepository = new SubCategoryRepository( _context );
-        UserRepository = new UserRepository( _context );
-        VarientRepository =  new VarientRepository( _context );
+        OrderRepository = new OrderRepository(_context);
+        PasswordRepository = new ReseatPasswordRepository(_context);
+        StoreRepository = new StoreRepository(_context);
+        SubCategoryRepository = new SubCategoryRepository(_context);
+        UserRepository = new UserRepository(_context);
+        VarientRepository = new VarientRepository(_context);
         OrderProductVariantRepository = new OrderProductVariantRepository(context);
-        AnalyseRepository = new AnalyseRepository( _context );
-        CurrencyRepository = new CurrencyRepository( _context );
-        PaymentTypeRepository = new  PaymentTypeRepository( _context );
+        AnalyseRepository = new AnalyseRepository(_context);
+        CurrencyRepository = new CurrencyRepository(_context);
+        PaymentTypeRepository = new PaymentTypeRepository(_context);
     }
-    
+
     public void Dispose()
     {
         _context.Dispose();
@@ -49,7 +49,6 @@ public class UnitOfWork : IUnitOfWork
         try
         {
             return await _context.SaveChangesAsync();
-
         }
         catch (Exception ex)
         {

@@ -26,7 +26,7 @@ public static class StoreMapperExtention
             };
         }
     }
-    
+
     extension(UpdateStoreDto dto)
     {
         public bool IsEmpty()

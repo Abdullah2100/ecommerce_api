@@ -5,10 +5,8 @@ using Microsoft.AspNetCore.Diagnostics;
 
 namespace api.shared.midleware;
 
-
 public static class ExceptionHandlerMiddlewareExtension
 {
-
     public static void ConfigureExceptionHandler(this IApplicationBuilder app)
     {
         app.UseExceptionHandler(appError =>
@@ -29,4 +27,4 @@ public static class ExceptionHandlerMiddlewareExtension
             });
         });
     }
- } 
+}

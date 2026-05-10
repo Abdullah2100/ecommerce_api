@@ -14,10 +14,9 @@ namespace api.application
     }
 
 
-
     public class AuthenticationServices(IConfig config) : IAuthenticationService
     {
-       public string GenerateToken(Guid id, string email, EnTokenMode tokenType)
+        public string GenerateToken(Guid id, string email, EnTokenMode tokenType)
         {
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
             string key = config.GetKey("credentials:key");
@@ -47,7 +46,5 @@ namespace api.application
             SecurityToken? token = tokenHandler.CreateToken(tokenDescip);
             return tokenHandler.WriteToken(token);
         }
-
-       
     }
 }

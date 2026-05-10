@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace api.domain.entity;
 
-public class Order:GeneralShredInfo
+public class Order : GeneralShredInfo
 {
     public decimal Longitude { get; set; }
     public decimal Latitude { get; set; }
@@ -13,11 +13,11 @@ public class Order:GeneralShredInfo
     public int Status { get; set; }
     public int DistanceToUser { get; set; } = 0;
     public int DistanceFee { get; set; } = 0;
-    public bool IsFail {get; set;} = false;
+    public bool IsFail { get; set; } = false;
     public Guid PaymentTypeId { get; set; }
     public Guid? DeliveryId { get; set; } = null;
     public PaymentType PaymentType { get; set; }
     public User User { get; set; }
     public Delivery? DeliveredBy { get; set; } = null;
-    public ICollection<OrderItem> Items { get; set; }=new List<OrderItem>();
+    public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
 }

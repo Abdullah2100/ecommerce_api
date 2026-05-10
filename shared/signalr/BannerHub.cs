@@ -10,7 +10,7 @@ public class BannerHub : Hub
     {
         await Clients.All.SendAsync("createdBanner", banner);
     }
-    
+
     public async Task SendDeletedBannerEvent(Guid bannerId)
     {
         await Clients.All.SendAsync("deletedOrder", bannerId);

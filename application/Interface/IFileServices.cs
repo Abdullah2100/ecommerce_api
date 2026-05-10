@@ -2,7 +2,6 @@ using api.util;
 
 namespace api.application.Interface;
 
-
 public interface IFileServices
 {
     Task<string?> SaveFile(IFormFile file, EnImageType type);

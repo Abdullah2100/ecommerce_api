@@ -8,6 +8,7 @@ public enum EnOrderItemStatusDto
     Cancelled,
     TookByDelivery
 }
+
 public class UpdateOrderItemStatusDto
 {
     [Required] public Guid Id { get; set; }

@@ -1,7 +1,5 @@
 namespace api.Presentation.dto.Response
 {
-
-
     public class OrderItemDto
     {
         public Guid Id { get; set; }
@@ -12,6 +10,6 @@ namespace api.Presentation.dto.Response
         public List<AddressWithTitleDto>? Address { get; set; } = null;
         public OrderProductDto? Product { get; set; }
         public List<OrderVariantDto>? ProductVariant { get; set; } = null;
-        public String OrderItemStatus { get; set; } = ""; 
+        public String OrderItemStatus { get; set; } = "";
     }
 }

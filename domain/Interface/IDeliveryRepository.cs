@@ -4,20 +4,18 @@ using api.Presentation.dto.Response;
 
 namespace api.domain.Interface;
 
-public interface IDeliveryRepository:IRepository<Delivery>
+public interface IDeliveryRepository : IRepository<Delivery>
 {
-    
     Task<Delivery?> GetDelivery(Guid id);
     Task<Delivery?> GetDeliveryByUserId(Guid userId);
-    Task<List<Delivery>?> GetDeliveriesByBelongTo(Guid belongToId,int page, int size);
+    Task<List<Delivery>?> GetDeliveriesByBelongTo(Guid belongToId, int page, int size);
     Task<List<Delivery>?> GetDeliveries(int page, int size);
     Task<int> GetDeliveriesPage(int deliveryPerSize);
-    
-    
+
+
     Task<DeliveryAnalyseDto> GetDeliveryAnalys(Guid id);
-    
+
     Task<bool> IsExistByUserId(Guid userId);
 
     void Delete(Guid id);
-
 }

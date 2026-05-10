@@ -18,36 +18,36 @@ public class StoreServices(
     IFileServices fileServices,
     IUnitOfWork unitOfWork,
     IHubContext<StoreHub> hubContext
-
 )
     : IStoreServices
 {
-
     public async Task<List<StoreDto>?>> GetStores(Guid adminId, string prefix, int pageSize)
     {
-       /* User? user = await unitOfWork.UserRepository
-            .GetUser(adminId);
+        /* User? user = await unitOfWork.UserRepository
+             .GetUser(adminId);
 
-        var isValide = user.IsValidateFunc(true);
+         var isValide = user.IsValidateFunc(true);
 
-        if (isValide is not null)
-        {
-            return new Result<List<StoreDto>?>(
-                isSuccessful: false,
-                data: null,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
+         if (isValide is not null)
+         {
+             return new Result<List<StoreDto>?>(
+                 isSuccessful: false,
+                 data: null,
+                 message: isValide.Message,
+                 statusCode: isValide.StatusCode
+             );
+         }
+         */
+
+
+        var stores = (await unitOfWork.StoreRepository
+                .GetStores(prefix, pageSize)
             );
-        }
-        */
+        List<StoreDto> storeToDto = stores == null
+            ? new List<StoreDto>()
+            : stores.Select(st => st.ToDto(config.GetKey("url_file")))
+                .ToList();
 
-
-       var stores = (await unitOfWork.StoreRepository
-               .GetStores(prefix, pageSize)
-           );
-        List<StoreDto> storeToDto = stores==null?new List<StoreDto>() :stores.Select(st => st.ToDto(config.GetKey("url_file")))
-            .ToList();
-        
         return new Result<List<StoreDto>?>
         (
             data: storeToDto,
@@ -57,7 +57,7 @@ public class StoreServices(
         );
     }
 
- 
+
     private void DeleteStoreImage(string? wallperper, string? smallImage)
     {
         if (wallperper is not null)
@@ -311,9 +311,9 @@ public class StoreServices(
 
     public async Task<int?>> GetStorePage(Guid adminId, int storePerPage)
 
-{
+    {
         User? store = await unitOfWork.UserRepository.GetUser(adminId);
-        
+
         var isValide = store.IsValidateFunc();
 
         if (isValide is not null)
@@ -463,9 +463,9 @@ public class StoreServices(
                 data: null,
                 message: "this store is belong to admin you could not block it ",
                 statusCode: 400
-            ); 
+            );
         }
-        
+
         unitOfWork.StoreRepository.Update(store);
         int result = await unitOfWork.SaveChanges();
         if (result == 0)
@@ -476,7 +476,7 @@ public class StoreServices(
                 isSuccessful: false,
                 statusCode: 400
             );
-        
+
         await hubContext.Clients.All.SendAsync("storeStatus", new StoreStatusDto
         {
             StoreId = storeId,

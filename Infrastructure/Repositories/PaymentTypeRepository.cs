@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace api.Infrastructure.Repositories;
 
-public class PaymentTypeRepository(AppDbContext context):IPaymentTypeRepository
+public class PaymentTypeRepository(AppDbContext context) : IPaymentTypeRepository
 {
     public void Add(PaymentType entity)
     {
-           context.PaymentTypes.Add(entity);
+        context.PaymentTypes.Add(entity);
     }
 
     public void Update(PaymentType entity)
@@ -21,7 +21,7 @@ public class PaymentTypeRepository(AppDbContext context):IPaymentTypeRepository
     {
         return await context.PaymentTypes.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
     }
-    
+
     public async Task<List<PaymentType>> GetPaymentTypes(int pageNum, int pageSie)
     {
         return await context.PaymentTypes.AsNoTracking()
@@ -30,10 +30,9 @@ public class PaymentTypeRepository(AppDbContext context):IPaymentTypeRepository
             .ToListAsync();
     }
 
-    public async Task<bool> IsExistPaymentType(string name,Guid id)
+    public async Task<bool> IsExistPaymentType(string name, Guid id)
     {
         return await context.PaymentTypes.AsNoTracking().AnyAsync(x => x.Name == name && x.Id != id);
-
     }
 
     public async Task<bool> IsExistPaymentType(Guid id)

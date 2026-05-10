@@ -1,16 +1,15 @@
-using api.application.Result;
 using api.Presentation.dto;
 using api.Presentation.dto.Request;
-using api.Presentation.dto.Response;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.application.Interface;
 
 public interface IGeneralSettingServices
 {
-   Task<GeneralSettingDto?> CreateGeneralSetting(Guid adminId, GeneralSettingDto settingDto);
-   Task<GeneralSettingDto?> UpdateGeneralSetting(Guid id ,Guid adminId,UpdateGeneralSettingDto settingDto);
-   
-   Task<bool> DeleteGeneralSetting(Guid id,Guid adminId);
-   
-   Task<List<GeneralSettingDto>> GetGeneralSettings(int pageNum, int pageSize);
+    Task<IActionResult> CreateGeneralSetting(Guid adminId, GeneralSettingDto settingDto);
+    Task<IActionResult> UpdateGeneralSetting(Guid id, Guid adminId, UpdateGeneralSettingDto settingDto);
+
+    Task<IActionResult> DeleteGeneralSetting(Guid id, Guid adminId);
+
+    Task<IActionResult> GetGeneralSettings(int pageNum, int pageSize);
 }

@@ -38,16 +38,15 @@ public class DeliveryController(
 
     [HttpPost("")]
     [GetUserIdFromUserClaims]
-
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> CreateDelivery
-    ([FromForm] CreateDeliveryDto delivery)
+        ([FromForm] CreateDeliveryDto delivery)
     {
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
- 
+
 
         var result = await deliveryServices.CreateDelivery(
             id,
@@ -63,14 +62,13 @@ public class DeliveryController(
 
     [HttpGet("me")]
     [GetUserIdFromUserClaims]
-
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDelivery()
     {
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
- 
+
         var result = await deliveryServices.GetDelivery(id);
 
         return result.IsSuccessful switch
@@ -83,14 +81,13 @@ public class DeliveryController(
 
     [HttpPut()]
     [GetUserIdFromUserClaims]
-
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateDeliveryInfo([FromForm] UpdateDeliveryDto delivery)
     {
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
- 
+
 
         var result = await deliveryServices.UpdateDelivery(delivery, id);
 
@@ -104,14 +101,13 @@ public class DeliveryController(
 
     [HttpGet("all/{pageNumber:int}")]
     [GetUserIdFromUserClaims]
-
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDeivery(int pageNumber)
     {
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
- 
+
 
         var result = await deliveryServices.GetDeliveries(id, pageNumber, 25);
 
@@ -125,7 +121,6 @@ public class DeliveryController(
 
     [HttpPatch("{status:bool}")]
     [GetUserIdFromUserClaims]
-
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -171,7 +166,6 @@ public class DeliveryController(
 
     [HttpGet("me/{pageNumber:int}")]
     [GetUserIdFromUserClaims]
-
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -185,7 +179,7 @@ public class DeliveryController(
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
 
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
- 
+
 
         var result = await orderServices.GetOrdersByDeliveryId(
             id, pageNumber, 25);
@@ -200,7 +194,6 @@ public class DeliveryController(
 
     [HttpPatch("{orderId:guid}")]
     [GetUserIdFromUserClaims]
-
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -208,7 +201,7 @@ public class DeliveryController(
     public async Task<IActionResult> UpdateOrderDeliveryId(Guid orderId)
     {
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
- 
+
         var result = await orderServices.SubmitOrderToDelivery(orderId, id);
 
         return result.IsSuccessful switch
@@ -221,7 +214,6 @@ public class DeliveryController(
 
     [HttpDelete("{orderId:guid}")]
     [GetUserIdFromUserClaims]
-
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -229,7 +221,7 @@ public class DeliveryController(
     public async Task<IActionResult> RenameOrderBelongToDelivery(Guid orderId)
     {
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
- 
+
         var result = await orderServices.CancelOrderFromDelivery(orderId, id);
 
         return result.IsSuccessful switch

@@ -7,9 +7,9 @@ namespace api.Infrastructure.Repositories;
 
 public class StoreRepository(AppDbContext context) : IStoreRepository
 {
-     public void  Add(Store entity)
+    public void Add(Store entity)
     {
-         context.Stores.Add(entity);
+        context.Stores.Add(entity);
     }
 
     public void Update(Store entity)
@@ -27,9 +27,9 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
         context.Stores.Update(storeData);
     }
 
-    public void  Delete(Guid id)
+    public void Delete(Guid id)
     {
-        Store? store =  context.Stores.Find(id);
+        Store? store = context.Stores.Find(id);
         if (store == null) throw new ArgumentNullException();
         store.IsBlock = !store.IsBlock;
     }
@@ -73,18 +73,18 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
             .ToListAsync();
         return store;
     }
- public async Task<List<Store>> GetStores(string prefix, int length)
+
+    public async Task<List<Store>> GetStores(string prefix, int length)
     {
-        
-      var stores =  await context
+        var stores = await context
             .Stores
-            .Include(st=>st.user)
+            .Include(st => st.user)
             .AsSplitQuery()
             .AsNoTracking()
             .Where(x => x.Name.StartsWith(prefix))
             .Take(length)
             .ToListAsync();
-        
+
         foreach (var store in stores)
         {
             store.Addresses = await context
@@ -94,7 +94,7 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
                 .ToListAsync();
         }
 
-        return stores; 
+        return stores;
     }
 
 
@@ -132,7 +132,7 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
             .AsNoTracking()
             .CountAsync();
         if (count == 0) return 0;
-        count =(int) Math.Ceiling((double)count / storePerPage);
+        count = (int)Math.Ceiling((double)count / storePerPage);
         return count;
     }
 
@@ -149,7 +149,7 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
         return await context
             .Stores
             .AsNoTracking()
-            .AnyAsync(st => st.Name == name&& st.Id != id);
+            .AnyAsync(st => st.Name == name && st.Id != id);
     }
 
     public async Task<bool> IsExist(Guid id)

@@ -294,7 +294,7 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> ReseatPassword([FromBody] CreateRecreatePasswordDto data)
     {
-        var result = await userServices.ReseatePassword(data);
+        var result = await userServices.RecreatePassword(data);
 
 
         return result.IsSuccessful switch

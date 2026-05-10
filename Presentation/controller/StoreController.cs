@@ -14,7 +14,7 @@ namespace api.Presentation.controller;
 [Route("api/store")]
 public class StoreController(
     IStoreServices storeServices,
-    IBannerSerivces bannerServices,
+    IBannerServices bannerServices,
     ISubCategoryServices subCategoryServices,
     IAuthenticationService authenticationService
 )
@@ -282,8 +282,8 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteSubCategory
-    (Guid storeId, Guid subCategoryId)
-    
+        (Guid storeId, Guid subCategoryId)
+
     {
         var result = await subCategoryServices.DeleteSubCategory(
             storeId: storeId,

@@ -1,16 +1,11 @@
-using api.application.Result;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
-using api.Presentation.dto.Response;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.application.Interface;
 
 public interface IOrderItemServices
 {
-    
-    Task<List<OrderItemDto>> GetOrderItmes(Guid storeId, int pageNum, int pageSize);
-    
-    Task<int> UpdateOrderItmesStatus(Guid userId, UpdateOrderItemStatusDto orderItemsStatusDto );
-    
+    Task<IActionResult> GetOrderItems(Guid storeId, int pageNum, int pageSize);
 
+    Task<IActionResult> UpdateOrderItemsStatus(Guid userId, UpdateOrderItemStatusDto orderItemsStatusDto);
 }

@@ -21,7 +21,6 @@ public class UserService(
 {
     public async Task<AuthDto?>> Signup(SignupDto signupDto)
     {
-       
         string? validationResult = ClsValidation
             .ValidateInput(
                 signupDto.Email,
@@ -40,7 +39,7 @@ public class UserService(
             );
         }
 
-        bool isExistByEmail =await unitOfWork.UserRepository.IsExistByEmail(signupDto.Email);
+        bool isExistByEmail = await unitOfWork.UserRepository.IsExistByEmail(signupDto.Email);
         if (isExistByEmail)
         {
             return new Result<AuthDto?>
@@ -82,7 +81,7 @@ public class UserService(
             Name = signupDto.Name,
             Phone = signupDto.Phone,
             Password = ClsUtil.HashingText(signupDto.Password),
-            IsUser = (signupDto.Role?? EnRole.User)==EnRole.User,
+            IsUser = (signupDto.Role ?? EnRole.User) == EnRole.User,
             DeviceToken = signupDto.DeviceToken ?? "",
             Thumbnail = "",
             CreatedAt = DateTime.Now,
@@ -151,7 +150,7 @@ public class UserService(
                 data: null,
                 message: "",
                 statusCode: 200
-            ); 
+            );
 
 
         string token = "", refreshToken = "";
@@ -231,7 +230,7 @@ public class UserService(
         );
     }
 
-    public async Task<int?>> GetUsersPages(Guid id,int pageLenght)
+    public async Task<int?>> GetUsersPages(Guid id, int pageLenght)
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(id);
@@ -248,13 +247,13 @@ public class UserService(
         }
 
         var userPages = await unitOfWork.UserRepository.GetUserCount();
-        var pageUserCount = userPages>0?(int)Math.Ceiling((double)userPages/pageLenght):0;
+        var pageUserCount = userPages > 0 ? (int)Math.Ceiling((double)userPages / pageLenght) : 0;
         return new Result<int?>(
             isSuccessful: true,
             data: pageUserCount,
-            message:  "",
+            message: "",
             statusCode: 200
-        ); 
+        );
     }
 
     public async Task<bool>> BlockOrUnBlockUser(Guid id, Guid userId)
@@ -297,7 +296,7 @@ public class UserService(
                 data: false,
                 message: "you could not block admin user ",
                 statusCode: 400
-            ); 
+            );
         }
 
         unitOfWork.UserRepository.Update(user);
@@ -327,7 +326,7 @@ public class UserService(
     public async Task<UserInfoDto?>> UpdateUser(
         UpdateUserInfoDto userDto,
         Guid id,
-       bool isUpdateWillBeTop=false)
+        bool isUpdateWillBeTop = false)
     {
         if (userDto.IsEmpty())
             return new Result<UserInfoDto?>
@@ -401,8 +400,8 @@ public class UserService(
         user.Phone = userDto.Phone ?? user.Phone;
         user.UpdatedAt = DateTime.Now;
         user.Password = hashedPassword ?? user.Password;
-        
-         unitOfWork.UserRepository.Update(user);
+
+        unitOfWork.UserRepository.Update(user);
 
         if (isUpdateWillBeTop)
         {
@@ -412,9 +411,9 @@ public class UserService(
                 message: "",
                 isSuccessful: true,
                 statusCode: 200
-            );  
+            );
         }
-        
+
         int result = await unitOfWork.SaveChanges();
 
         if (result == 0)
@@ -804,7 +803,7 @@ public class UserService(
             );
         }
 
-        
+
         var sendMessageService = sp.GetRequiredKeyedService<IMessageService>(EnMessageService.Email);
         bool emailSendResult = await sendMessageService.SendingMessage(message: otp, otp);
 
@@ -883,7 +882,7 @@ public class UserService(
         );
     }
 
-    public async Task<AuthDto?>> ReseatePassword(CreateRecreatePasswordDto otp)
+    public async Task<AuthDto?>> RecreatePassword(CreateRecreatePasswordDto otp)
     {
         bool isExistUser = await unitOfWork.UserRepository
             .IsExistByEmail(otp.Email);
@@ -929,7 +928,7 @@ public class UserService(
 
         unitOfWork.UserRepository.Update(user);
         int result = await unitOfWork.SaveChanges();
-        
+
         if (result == 0)
         {
             return new Result<AuthDto?>
@@ -947,7 +946,7 @@ public class UserService(
         token = authenticationService.GenerateToken(
             id: user.Id,
             email: user.Email
-            );
+        );
 
         refreshToken = authenticationService.GenerateToken(
             id: user.Id,

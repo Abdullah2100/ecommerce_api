@@ -10,16 +10,13 @@ namespace api.Infrastructure.Repositories;
 
 public class DeliveryRepository(
     AppDbContext context
-    ) : IDeliveryRepository
+) : IDeliveryRepository
 {
-
-    
-
-    public void  Add(Delivery entity)
+    public void Add(Delivery entity)
     {
-       //  context.Address.AddAsync(entity.Address!);
+        //  context.Address.AddAsync(entity.Address!);
 
-         context.Deliveries.Add(new Delivery
+        context.Deliveries.Add(new Delivery
         {
             DeviceToken = entity.DeviceToken,
             Id = entity.Id,
@@ -28,34 +25,30 @@ public class DeliveryRepository(
             Thumbnail = entity.Thumbnail,
             BelongTo = entity.BelongTo
         });
-
-
     }
 
-    public void  Update(Delivery entity)
+    public void Update(Delivery entity)
     {
- 
-            context.Deliveries.Update(new Delivery
-            {
-                DeviceToken = entity.DeviceToken,
-                Id = entity.Id,
-                CreatedAt = DateTime.Now,
-                UserId = entity.UserId,
-                Thumbnail = entity.Thumbnail,
-            });
-       
+        context.Deliveries.Update(new Delivery
+        {
+            DeviceToken = entity.DeviceToken,
+            Id = entity.Id,
+            CreatedAt = DateTime.Now,
+            UserId = entity.UserId,
+            Thumbnail = entity.Thumbnail,
+        });
     }
 
-    public void  Delete(Guid id)
+    public void Delete(Guid id)
     {
         Delivery? entity = context.Deliveries.Find(id);
-        if (entity is null)throw new  ArgumentNullException();
+        if (entity is null) throw new ArgumentNullException();
         entity.IsBlocked = !entity.IsBlocked;
     }
 
     public async Task<Delivery?> GetDelivery(Guid id)
     {
-        var delivery =(await context
+        var delivery = (await context
             .Deliveries
             .Include(de => de.User)
             .AsNoTracking()
@@ -69,21 +62,21 @@ public class DeliveryRepository(
 
     public async Task<Delivery?> GetDeliveryByUserId(Guid userId)
     {
-        var delivery= (await context
+        var delivery = (await context
             .Deliveries
             .AsNoTracking()
             .Include(de => de.User)
             .FirstOrDefaultAsync(de => de.UserId == userId));
-        
+
         if (delivery is null) return null;
         delivery.Address = await context
             .Address
             .AsNoTracking()
             .FirstOrDefaultAsync(ad => ad.OwnerId == delivery.Id);
-        return delivery; 
+        return delivery;
     }
 
-    public async Task<List<Delivery>?> GetDeliveriesByBelongTo(Guid belongToId,int page, int size)
+    public async Task<List<Delivery>?> GetDeliveriesByBelongTo(Guid belongToId, int page, int size)
     {
         List<Delivery> deliveries = await context
             .Deliveries
@@ -104,7 +97,7 @@ public class DeliveryRepository(
 
     public async Task<List<Delivery>?> GetDeliveries(int page, int size)
     {
-        var delivery= (await context
+        var delivery = (await context
             .Deliveries
             .AsNoTracking()
             .Include(de => de.User)
@@ -112,8 +105,8 @@ public class DeliveryRepository(
             .Take(page)
             .Skip((page - 1) * size)
             .ToListAsync());
-        
-        return delivery;  
+
+        return delivery;
     }
 
     public async Task<int> GetDeliveriesPage(int deliveryPerSize)

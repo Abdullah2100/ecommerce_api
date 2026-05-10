@@ -1,14 +1,11 @@
-using api.application.Result;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
-using api.Presentation.dto.Response;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.application.Interface;
 
-
 public interface IPaymentTypeServices
 {
-    public Task<PaymentTypeDto?> Create(CreatePaymentTypeDto paymentTypeDto,Guid adminId);
-    public Task<PaymentTypeDto?> Update(UpdatePaymentTypeDto paymentTypeDto, Guid adminId);
-    public Task<List<PaymentTypeDto>?> GetPaymentTypes(int pageNum, int pageSie = 25);
+    public Task<IActionResult> Create(CreatePaymentTypeDto paymentTypeDto, Guid adminId);
+    public Task<IActionResult> Update(UpdatePaymentTypeDto paymentTypeDto, Guid adminId);
+    public Task<IActionResult> GetPaymentTypes(int pageNum, int pageSie = 25);
 }

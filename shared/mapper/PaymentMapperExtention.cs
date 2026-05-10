@@ -16,7 +16,7 @@ public static class PaymentMapperExtension
                 CreatedAt = currency.CreatedAt,
                 UpdatedAt = currency.UpdatedAt,
                 Name = currency.Name,
-                Value= currency.Value,
+                Value = currency.Value,
                 Symbol = currency.Symbol,
                 IsDefault = currency.IsDefault
             };

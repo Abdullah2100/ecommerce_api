@@ -47,7 +47,7 @@ public class OrderServices(
             );
         }
 
-        if (!(await unitOfWork.OrderRepository.IsValidTotalPrice(orderDto.TotalPrice, orderDto.Items,orderDto.Symbol)))
+        if (!(await unitOfWork.OrderRepository.IsValidTotalPrice(orderDto.TotalPrice, orderDto.Items, orderDto.Symbol)))
         {
             return new Result<OrderDto?>
             (
@@ -58,8 +58,9 @@ public class OrderServices(
             );
         }
 
-        PaymentType? paymentType = (await unitOfWork.PaymentTypeRepository.GetPaymentTypeGetPayment(orderDto.PaymentTypeId));
-       
+        PaymentType? paymentType =
+            (await unitOfWork.PaymentTypeRepository.GetPaymentTypeGetPayment(orderDto.PaymentTypeId));
+
         if (paymentType is null)
         {
             return new Result<OrderDto?>
@@ -68,24 +69,24 @@ public class OrderServices(
                 message: "payment type is not exist ",
                 isSuccessful: false,
                 statusCode: 400
-            ); 
+            );
         }
-        
-        
+
+
         // to continue the  payment if it is not cash
 
         if (paymentType?.Name?.ToLower() != "Cash")
         {
             var stripPayment = new PaymentServices(new StripPaymentServices());
-            var isPassed = await stripPayment.IsValidatePayment(orderDto.PaymentId??"");
-           if(!isPassed)
-            return new Result<OrderDto?>
-            (
-                data: null,
-                message: "payment  is not successfully",
-                isSuccessful: false,
-                statusCode: 400
-            ); 
+            var isPassed = await stripPayment.IsValidatePayment(orderDto.PaymentId ?? "");
+            if (!isPassed)
+                return new Result<OrderDto?>
+                (
+                    data: null,
+                    message: "payment  is not successfully",
+                    isSuccessful: false,
+                    statusCode: 400
+                );
         }
 
 
@@ -98,9 +99,7 @@ public class OrderServices(
             unitOfWork.OrderRepository.Delete(orders.ToList());
         }
         //end
-        
-        
-        
+
 
         var id = ClsUtil.GenerateGuid();
         Order? order = new Order
@@ -144,7 +143,7 @@ public class OrderServices(
                 Price = item.Price,
             };
             unitOfWork.OrderItemRepository.Add(orderItem);
-            
+
             if (orderProductsVariants is not null)
                 unitOfWork.OrderProductVariantRepository.Add(orderProductsVariants);
         }
@@ -169,7 +168,6 @@ public class OrderServices(
         await unitOfWork.SaveChanges();
         if (isSavedDistance == false)
         {
-            
             return new Result<OrderDto?>
             (
                 data: null,
@@ -591,7 +589,6 @@ public class OrderServices(
     {
         try
         {
-            
             var messageServe = sp.GetRequiredKeyedService<IMessageService>(EnMessageService.Notification);
 
             var orderItems = order.Items.ToList();
@@ -622,7 +619,7 @@ public class OrderServices(
             var userMessage = this.UserMessage(status);
             if (!string.IsNullOrEmpty(userMessage))
             {
-                await messageServe.SendingMessage(userMessage, order.User?.DeviceToken??"");
+                await messageServe.SendingMessage(userMessage, order.User?.DeviceToken ?? "");
             }
         }
         catch (System.Exception e)
@@ -649,7 +646,7 @@ public class OrderServices(
             {
                 case 0:
                 {
-                    await messageServe.SendingMessage(deliveryMessage, delivery?.DeviceToken??"");
+                    await messageServe.SendingMessage(deliveryMessage, delivery?.DeviceToken ?? "");
                 }
                     break;
 
@@ -661,7 +658,7 @@ public class OrderServices(
 
                 case 5:
                 {
-                    await messageServe.SendingMessage(deliveryMessage, delivery?.DeviceToken??"");
+                    await messageServe.SendingMessage(deliveryMessage, delivery?.DeviceToken ?? "");
                 }
                     break;
             }

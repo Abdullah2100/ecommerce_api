@@ -7,35 +7,35 @@ sealed class ClsValidation
     public static string? ValidateInput(string? phone,
         string? email,
         string? password,
-        bool? isNeedValidateOther=true,
+        bool? isNeedValidateOther = true,
         string username = "",
         string name = "")
     {
-        if (email !=  null && !IsValidEmail(email))
+        if (email != null && !IsValidEmail(email))
             return "ادخل ايميل صحيح";
-        if (password !=  null && !IsValidPassword(password))
+        if (password != null && !IsValidPassword(password))
             return "ادخل كلمة مرور مناسبة";
-        if (phone !=  null && !IsValidPhone(phone))
+        if (phone != null && !IsValidPhone(phone))
             return "ادخل رقم هاتف صحيح";
-        if (isNeedValidateOther==true&&username.Length <= 0)
+        if (isNeedValidateOther == true && username.Length <= 0)
             return "اسم المستخدم لا يمكن ان يكون فارغا";
-        if (isNeedValidateOther==true&&name.Length <= 0)
+        if (isNeedValidateOther == true && name.Length <= 0)
             return "الاسم لا يمكو ان يكون فارغا";
         return null;
     }
-    
+
     public static string? ValidateInput(
-        string? email=null,
-        String? password=null,
-        string? phone=null)
+        string? email = null,
+        String? password = null,
+        string? phone = null)
     {
-        if (email !=  null && !IsValidEmail(email))
+        if (email != null && !IsValidEmail(email))
             return "ادخل ايميل صحيح";
-        if (password !=  null && !IsValidPassword(password))
+        if (password != null && !IsValidPassword(password))
             return "ادخل كلمة مرور مناسبة";
-        if (phone !=  null && !IsValidPhone(phone))
+        if (phone != null && !IsValidPhone(phone))
             return "ادخل رقم هاتف صحيح";
-       
+
         return null;
     }
 

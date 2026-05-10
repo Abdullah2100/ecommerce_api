@@ -39,7 +39,7 @@ public static class UserMapperExtension
         }
 
 
-        private string? IsHasStore()
+        private Tuple<string, int>? IsHasStore()
         {
             switch (user.Store is not null)
             {
@@ -47,7 +47,7 @@ public static class UserMapperExtension
                 {
                     if (user.Store.IsBlock)
                     {
-                        return "store is Blocked";
+                        return new Tuple<string, int>("store is Blocked", 403);
                     }
 
                     return null;
@@ -57,7 +57,7 @@ public static class UserMapperExtension
                 {
                     if (user.Store is null)
                     {
-                        return "you must has store before done this operation";
+                        return new("you must has store before done this operation", 409);
                     }
 
                     return null;
@@ -68,12 +68,12 @@ public static class UserMapperExtension
 
     extension(User? user)
     {
-        public string? IsValidateFunc(bool? isAdmin = true,
+        public Tuple<string, int>? IsValidateFunc(bool? isAdmin = true,
             bool isStore = false)
         {
             if (user is null)
             {
-                return "user not found";
+                return new Tuple<string, int>("user not found", 404);
             }
 
 
@@ -86,7 +86,7 @@ public static class UserMapperExtension
                 {
                     if (user.IsBlocked)
                     {
-                        return "user is blocked";
+                        return new Tuple<string, int>("user is blocked", 403);
                     }
 
                     //check if user has store
@@ -96,7 +96,7 @@ public static class UserMapperExtension
                 {
                     if (user is { IsUser: false, IsBlocked: true })
                     {
-                        return "user not havs the permission";
+                        return new Tuple<string, int>("user not has the permission", 403);
                     }
 
                     //check if admin has store

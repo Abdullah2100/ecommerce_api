@@ -7,6 +7,7 @@ using api.Presentation.dto.Request;
 using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.util;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.application.Services;
 
@@ -17,32 +18,21 @@ public class CategoryServices(
     IFileServices fileService)
     : ICategoryServices
 {
-    public async Task<CategoryDto?>> CreateCategory(CreateCategoryDto categoryDto, Guid adminId)
+    public async Task<IActionResult> CreateCategory(CreateCategoryDto categoryDto, Guid adminId)
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(adminId);
 
-        var isValid = user.IsValidateFunc(true);
-        if (isValid is not null)
+        var validationResult = user.IsValidateFunc();
+        if (validationResult is not null)
         {
-            return new Result<CategoryDto?>
-            (
-                data: null,
-                message: isValid.Message,
-                isSuccessful: false,
-                statusCode: isValid.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
         if (await unitOfWork.CategoryRepository.IsExist(categoryDto.Name))
         {
-            return new Result<CategoryDto?>
-            (
-                data: null,
-                message: "there are category with the same name",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("there are category with the same name")
+                { StatusCode = StatusCodes.Status409Conflict };
         }
 
         string? imagePath = await fileService
@@ -50,13 +40,10 @@ public class CategoryServices(
                 EnImageType.Category);
 
         if (imagePath is null)
-            return new Result<CategoryDto?>
-            (
-                data: null,
-                message: "there error while saving image to server",
-                isSuccessful: false,
-                statusCode: 400
-            );
+
+            return new ObjectResult("there error while saving image to server")
+                { StatusCode = StatusCodes.Status500InternalServerError };
+
         Guid categoryId = ClsUtil.GenerateGuid();
 
         Category category = new Category
@@ -72,66 +59,45 @@ public class CategoryServices(
 
         if (result == 0)
         {
-            return new Result<CategoryDto?>
-            (
-                data: null,
-                message: "error while adding category",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            fileService.DeleteFile(imagePath);
+
+            return new ObjectResult("error while adding category")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        return new Result<CategoryDto?>
-        (
-            data: category?.ToDto(config.GetKey("url_file")),
-            message: "",
-            isSuccessful: true,
-            statusCode: 201
-        );
+
+        var categoryToDto = category?.ToDto(config.GetKey("url_file"));
+        return new ObjectResult(categoryToDto)
+            { StatusCode = StatusCodes.Status201Created };
     }
 
-    public async Task<CategoryDto?>> UpdateCategory(UpdateCategoryDto categoryDto, Guid adminId)
+    public async Task<IActionResult> UpdateCategory(UpdateCategoryDto categoryDto, Guid adminId)
     {
         if (categoryDto.IsEmpty())
-            return new Result<CategoryDto?>
-            (
-                data: null,
-                message: "no change found",
-                isSuccessful: false,
-                statusCode: 200
-            );
+            return new ObjectResult("no change found")
+                { StatusCode = StatusCodes.Status200OK };
+
 
         User? user = await unitOfWork.UserRepository
             .GetUser(adminId);
 
-        var isValid = user.IsValidateFunc(true);
-        if (isValid is not null)
+        var validationResult = user.IsValidateFunc();
+        if (validationResult is not null)
         {
-            return new Result<CategoryDto?>
-            (
-                data: null,
-                message: isValid.Message,
-                isSuccessful: false,
-                statusCode: isValid.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
         if (categoryDto.Name is not null)
             if (await unitOfWork.CategoryRepository.IsExist(categoryDto.Name, categoryDto.Id))
             {
-                return new Result<CategoryDto?>
-                (
-                    data: null,
-                    message: "there are category with the same name",
-                    isSuccessful: false,
-                    statusCode: 400
-                );
+                return new ObjectResult("there are category with the same name")
+                    { StatusCode = StatusCodes.Status409Conflict };
             }
-        
-        
+
+
         //this for production to prevent category create overload on vps to keep the size of vps fit 
-        int categoryCount =await unitOfWork.CategoryRepository.GetCategoriesCount();
-        
+        int categoryCount = await unitOfWork.CategoryRepository.GetCategoriesCount();
+
         if (categoryCount > 20)
         {
             var bannersRandom = await unitOfWork.CategoryRepository.GetCategories(20);
@@ -146,13 +112,7 @@ public class CategoryServices(
 
         if (category is null)
         {
-            return new Result<CategoryDto?>
-            (
-                data: null,
-                message: "category not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("category not found") { StatusCode = StatusCodes.Status404NotFound };
         }
 
         string? image = null;
@@ -161,12 +121,11 @@ public class CategoryServices(
         {
             if (categoryDto?.Image is not null)
                 fileService.DeleteFile(category.Image);
-            image = await fileService 
+            image = await fileService
                 .SaveFile(categoryDto!.Image!,
                     EnImageType.Category);
-            
-            fileService.DeleteFile(category.Image);
 
+            fileService.DeleteFile(category.Image);
         }
 
         category.Name = categoryDto?.Name ?? category.Name;
@@ -178,86 +137,57 @@ public class CategoryServices(
 
         if (result == 0)
         {
-            return new Result<CategoryDto?>
-            (
-                data: null,
-                message: "error while update category",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            if (image != null)
+                fileService.DeleteFile(image);
+
+            return new ObjectResult("error while update category")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
 
-        return new Result<CategoryDto?>
-        (
-            data: category.ToDto(config.GetKey("url_file")),
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 
-    public async Task<bool>> DeleteCategory(Guid categoryId, Guid adminId)
+    public async Task<IActionResult> DeleteCategory(Guid categoryId, Guid adminId)
     {
         User? user = await unitOfWork.UserRepository
             .GetUser(adminId);
-        var isValid = user.IsValidateFunc(true);
-        if (isValid is not null)
+        var validationResult = user.IsValidateFunc(true);
+        if (validationResult is not null)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: isValid.Message,
-                isSuccessful: false,
-                statusCode: isValid.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        if (!(await unitOfWork.CategoryRepository.IsExist(categoryId)))
+        var category = await unitOfWork.CategoryRepository.GetCategory(categoryId);
+        if (category is null)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "category not found",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("category not found") { StatusCode = StatusCodes.Status404NotFound };
         }
 
-        unitOfWork.CategoryRepository.Delete(categoryId);
-        int result = await unitOfWork.SaveChanges();
+        fileService.DeleteFile(category.Image);
         
+        unitOfWork.CategoryRepository.Delete(categoryId);
+        
+        int result = await unitOfWork.SaveChanges();
+
         if (result == 0)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "error while delete category",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while delete category")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        return new Result<bool>
-        (
-            data: true,
-            message: "",
-            isSuccessful: true,
-            statusCode: 204
-        );
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 
-    public async Task<List<CategoryDto>>> GetCategories(int pageNumber, int pageSize)
+    public async Task<IActionResult> GetCategories(int pageNumber, int pageSize)
     {
         List<CategoryDto> categories = (await unitOfWork.CategoryRepository.GetCategories(pageNumber, pageSize))
             .Select(ca => ca.ToDto(config.GetKey("url_file")))
             .ToList();
-        return new Result<List<CategoryDto>>
-        (
-            data: categories,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
+
     }
 }

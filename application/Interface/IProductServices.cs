@@ -1,21 +1,18 @@
-using api.application.Result;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
-using api.Presentation.dto.Response;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.application.Interface;
 
 public interface IProductServices
 {
-    Task<List<ProductDto>> GetProductsByStoreId(Guid storeId,int pageNum,int pageSize);
-    Task<List<ProductDto>> GetProductsByCategoryId(Guid categryId,int pageNum,int pageSize);
-    Task<List<ProductDto>> GetProducts(Guid storeId,Guid subCategoryId,int pageNum,int pageSize);
-    Task<List<ProductDto>> GetProducts(int pageNum,int pageSize);
-    Task<List<AdminProductsDto>> GetProductsForAdmin(Guid adminId, int pageNum, int pageSize);
-    
-    Task<int> GetProductsPagesForAdmin(Guid adminId,int lenght);
-    Task<ProductDto?>CreateProducts(Guid userId,CreateProductDto productDto);
-    Task<ProductDto?> UpdateProducts(Guid userId,UpdateProductDto productDto);
-    Task<bool> DeleteProducts(Guid userId,Guid storeId,Guid id);
-    
+    Task<IActionResult> GetProductsByStoreId(Guid storeId, int pageNum, int pageSize);
+    Task<IActionResult> GetProductsByCategoryId(Guid categoryId, int pageNum, int pageSize);
+    Task<IActionResult> GetProducts(Guid storeId, Guid subCategoryId, int pageNum, int pageSize);
+    Task<IActionResult> GetProducts(int pageNum, int pageSize);
+    Task<IActionResult> GetProductsForAdmin(Guid adminId, int pageNum, int pageSize);
+
+    Task<IActionResult> GetProductsPagesForAdmin(Guid adminId, int length);
+    Task<IActionResult> CreateProducts(Guid userId, CreateProductDto productDto);
+    Task<IActionResult> UpdateProducts(Guid userId, UpdateProductDto productDto);
+    Task<IActionResult> DeleteProducts(Guid userId, Guid storeId, Guid id);
 }

@@ -14,9 +14,9 @@ public class PaymentTypeServices(
     IUnitOfWork unitOfWork,
     IFileServices fileServices,
     IConfig config
-    ):IPaymentTypeServices
+) : IPaymentTypeServices
 {
-    public async Task<PaymentTypeDto?>> Create(CreatePaymentTypeDto paymentTypeDto,Guid adminId)
+    public async Task<PaymentTypeDto?>> Create(CreatePaymentTypeDto paymentTypeDto, Guid adminId)
     {
         User? admin = await unitOfWork.UserRepository.GetUser(adminId);
         var validation = admin.IsValidateFunc();
@@ -40,8 +40,8 @@ public class PaymentTypeServices(
                 data: null,
                 message: "could not save payement image to api",
                 isSuccessful: false,
-                statusCode: 404 
-            ); 
+                statusCode: 404
+            );
         }
 
         PaymentType paymentType = new PaymentType()
@@ -52,10 +52,10 @@ public class PaymentTypeServices(
             Thumbnail = thembnail,
             UserId = adminId
         };
-        
+
         unitOfWork.PaymentTypeRepository.Add(paymentType);
         var result = await unitOfWork.SaveChanges();
-       
+
         if (result == 0)
         {
             return new Result<PaymentTypeDto?>
@@ -63,8 +63,8 @@ public class PaymentTypeServices(
                 data: null,
                 message: "could not save payment type to system",
                 isSuccessful: false,
-                statusCode: 404 
-            ); 
+                statusCode: 404
+            );
         }
 
         var paymentDto = paymentType.ToDto(config.GetKey("url_file"));
@@ -74,10 +74,10 @@ public class PaymentTypeServices(
             message: "",
             isSuccessful: true,
             statusCode: 201
-        ); 
+        );
     }
 
-    public async Task<PaymentTypeDto?>> Update(UpdatePaymentTypeDto paymentTypeDto,Guid adminId)
+    public async Task<PaymentTypeDto?>> Update(UpdatePaymentTypeDto paymentTypeDto, Guid adminId)
     {
         User? admin = await unitOfWork.UserRepository.GetUser(adminId);
         var validation = admin.IsValidateFunc();
@@ -102,12 +102,13 @@ public class PaymentTypeServices(
                 message: validation.Message,
                 isSuccessful: false,
                 statusCode: validation.StatusCode
-            ); 
+            );
         }
-        
-        var isAlreadyExist = await unitOfWork.PaymentTypeRepository.IsExistPaymentType(paymentTypeDto.Name, paymentTypeDto.Id);
-        
-        if (isAlreadyExist== true)
+
+        var isAlreadyExist =
+            await unitOfWork.PaymentTypeRepository.IsExistPaymentType(paymentTypeDto.Name, paymentTypeDto.Id);
+
+        if (isAlreadyExist == true)
         {
             return new Result<PaymentTypeDto?>
             (
@@ -115,29 +116,31 @@ public class PaymentTypeServices(
                 message: "this payment type name is  already in use ",
                 isSuccessful: false,
                 statusCode: 400
-            ); 
+            );
         }
-        
 
-        string? thembnail = paymentTypeDto.Thumbnail == null ? null: await fileServices.SaveFile(paymentTypeDto.Thumbnail, EnImageType.Payment);
 
-        paymentType.Name =  paymentTypeDto.Name ?? paymentType.Name;
-        paymentType.Thumbnail =  thembnail ?? paymentType.Thumbnail;
-        paymentType.IsHashCheckOperation =  paymentTypeDto.IsHashCheckOperation?? paymentType.IsHashCheckOperation;
-        
+        string? thembnail = paymentTypeDto.Thumbnail == null
+            ? null
+            : await fileServices.SaveFile(paymentTypeDto.Thumbnail, EnImageType.Payment);
+
+        paymentType.Name = paymentTypeDto.Name ?? paymentType.Name;
+        paymentType.Thumbnail = thembnail ?? paymentType.Thumbnail;
+        paymentType.IsHashCheckOperation = paymentTypeDto.IsHashCheckOperation ?? paymentType.IsHashCheckOperation;
+
         unitOfWork.PaymentTypeRepository.Update(paymentType);
         var result = await unitOfWork.SaveChanges();
-       
+
         if (result == 0)
         {
-            fileServices.DeleteFile(thembnail??"");
+            fileServices.DeleteFile(thembnail ?? "");
             return new Result<PaymentTypeDto?>
             (
                 data: null,
                 message: "could not update payment type to system",
                 isSuccessful: false,
-                statusCode: 404 
-            ); 
+                statusCode: 404
+            );
         }
 
         var paymentDto = paymentType.ToDto(config.GetKey("url_file"));
@@ -147,7 +150,7 @@ public class PaymentTypeServices(
             message: "",
             isSuccessful: true,
             statusCode: 200
-        ); 
+        );
     }
 
     public async Task<List<PaymentTypeDto>?>> GetPaymentTypes(int pageNum, int pageSie = 25)
@@ -161,6 +164,6 @@ public class PaymentTypeServices(
             message: "",
             isSuccessful: true,
             statusCode: 200
-        ); 
+        );
     }
 }

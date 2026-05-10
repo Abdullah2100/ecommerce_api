@@ -31,7 +31,7 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
             .Users
             .Include(u => u.Store)
             .AsNoTracking()
-            .FirstOrDefaultAsync(u =>  u.Email == email);
+            .FirstOrDefaultAsync(u => u.Email == email);
         if (user == null) return null;
 
         user.Addresses = await dbContext
@@ -100,7 +100,7 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
                 .ToListAsync();
         }
 
-        return users; 
+        return users;
     }
 
     public async Task<User?> GetUser(string username, string password)
@@ -156,20 +156,20 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
             );
     }
 
-  
-    public void  Add(User entity)
+
+    public void Add(User entity)
     {
-         dbContext.Users.Add(entity);
+        dbContext.Users.Add(entity);
     }
 
-    public void  Update(User entity)
+    public void Update(User entity)
     {
-         dbContext.Users.Update(entity);
+        dbContext.Users.Update(entity);
     }
 
-    public void  Delete(Guid id)
+    public void Delete(Guid id)
     {
-        User? user =  dbContext.Users.Find(id);
+        User? user = dbContext.Users.Find(id);
         if (user == null) throw new ArgumentNullException();
         user.IsBlocked = true;
     }

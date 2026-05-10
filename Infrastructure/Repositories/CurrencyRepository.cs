@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace api.Infrastructure.Repositories;
 
-public class CurrencyRepository(AppDbContext context):ICurrencyRepository
+public class CurrencyRepository(AppDbContext context) : ICurrencyRepository
 {
     public void Add(Currency entity)
     {
@@ -16,21 +16,21 @@ public class CurrencyRepository(AppDbContext context):ICurrencyRepository
     {
         context.Update(entity);
     }
-    
-    public async Task<Currency?> GetCurrencies(Guid id )
+
+    public async Task<Currency?> GetCurrencies(Guid id)
     {
         Currency? element = await context.Payments
             .AsNoTracking()
-            .FirstOrDefaultAsync(x=>x.Id == id);
-    return element;
+            .FirstOrDefaultAsync(x => x.Id == id);
+        return element;
     }
 
-    public Task<List<Currency> > GetCurrencies(int randomNumber)
+    public Task<List<Currency>> GetCurrencies(int randomNumber)
     {
-       return context.Currencies
-           .OrderBy(x => Guid.NewGuid())
-           .Take(randomNumber)
-           .ToListAsync();
+        return context.Currencies
+            .OrderBy(x => Guid.NewGuid())
+            .Take(randomNumber)
+            .ToListAsync();
     }
 
     public Task<int> GetCurrenciesCount()
@@ -38,11 +38,11 @@ public class CurrencyRepository(AppDbContext context):ICurrencyRepository
         return context.Currencies.CountAsync();
     }
 
-    public async Task<List<Currency>> GetAll(int pageNum,int pageSize)
+    public async Task<List<Currency>> GetAll(int pageNum, int pageSize)
     {
         return await context.Payments
             .AsNoTracking()
-            .Skip((pageNum-1)*pageSize)
+            .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
     }
@@ -62,8 +62,8 @@ public class CurrencyRepository(AppDbContext context):ICurrencyRepository
 
     public async Task<bool> isExist(string symbol)
     {
-       return await context.Payments
-           .AsNoTracking()
-           .AnyAsync(x => x.Symbol == symbol);
+        return await context.Payments
+            .AsNoTracking()
+            .AnyAsync(x => x.Symbol == symbol);
     }
 }

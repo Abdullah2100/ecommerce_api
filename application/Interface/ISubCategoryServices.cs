@@ -1,17 +1,15 @@
-using api.application.Result;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
-using api.Presentation.dto.Response;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.application.Interface;
 
 public interface ISubCategoryServices
 {
-    Task<SubCategoryDto?> CreateSubCategory(Guid storeId,CreateSubCategoryDto subCategoryDto);
-    Task<SubCategoryDto?> UpdateSubCategory(Guid storeId,UpdateSubCategoryDto subCategoryDto);
-    
-    Task<bool> DeleteSubCategory(Guid id,Guid storeId);
-    
-    Task<List<SubCategoryDto>> GetSubCategories(Guid id, int page, int length);
-    Task<List<SubCategoryDto>> GetSubCategoryAll(Guid adminId, int page, int length);
+    Task<IActionResult> CreateSubCategory(Guid storeId, CreateSubCategoryDto subCategoryDto);
+    Task<IActionResult> UpdateSubCategory(Guid storeId, UpdateSubCategoryDto subCategoryDto);
+
+    Task<IActionResult> DeleteSubCategory(Guid id, Guid storeId);
+
+    Task<IActionResult> GetSubCategories(Guid id, int page, int length);
+    Task<IActionResult> GetSubCategoryAll(Guid adminId, int page, int length);
 }

@@ -53,23 +53,23 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
             .FirstOrDefault(ad => ad.OwnerId == ownerId && ad.Id == id);
         if (currentAddress == null) throw new ArgumentNullException();
         currentAddress.IsCurrent = true;
-        
     }
 
-    public  void MakeAddressNotCurrentToId(Guid ownerId)
+    public void MakeAddressNotCurrentToId(Guid ownerId)
     {
-        var address =  context.Address
+        var address = context.Address
             .Where(ad => ad.OwnerId == ownerId);
         foreach (var currentAddress in address)
         {
-           currentAddress.IsCurrent = false; 
+            currentAddress.IsCurrent = false;
         }
+
         context.UpdateRange(address);
     }
 
     public void Delete(Guid id)
     {
-        var address= context
+        var address = context
             .Address
             .FirstOrDefault(x => x.Id == id);
         if (address is null) throw new ArgumentNullException();

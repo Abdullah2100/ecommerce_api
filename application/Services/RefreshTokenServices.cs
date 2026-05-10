@@ -45,7 +45,7 @@ public class RefreshTokenServices(
         var idHolder = Guid.Parse(id.Value);
         User? user = await unitOfWork.UserRepository
             .GetUser(idHolder);
-        
+
         Delivery? delivery = await unitOfWork.DeliveryRepository.GetDelivery(idHolder);
 
         var validation = user.IsValidateFunc(false);
@@ -73,11 +73,11 @@ public class RefreshTokenServices(
 
         var tokenHolder = authenticationService.GenerateToken(
             id: idHolder,
-            email: (user?.Email??delivery?.User?.Email) ?? string.Empty);
+            email: (user?.Email ?? delivery?.User?.Email) ?? string.Empty);
 
         var refreshTokenHolder = authenticationService.GenerateToken(
             id: idHolder,
-            email: user?.Email?? (delivery?.User?.Email) ?? string.Empty,
+            email: user?.Email ?? (delivery?.User?.Email) ?? string.Empty,
             EnTokenMode.RefreshToken);
 
         return new Result<AuthDto?>(

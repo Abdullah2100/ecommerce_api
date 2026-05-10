@@ -5,14 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace api.Infrastructure.Repositories;
 
-public class OrderItemRepository(AppDbContext context) :IOrderItemRepository 
+public class OrderItemRepository(AppDbContext context) : IOrderItemRepository
 {
-  
-
     //orderitmes
-    
-
-
 
 
     public async Task<IEnumerable<OrderItem>> GetOrderItems(
@@ -28,7 +23,7 @@ public class OrderItemRepository(AppDbContext context) :IOrderItemRepository
             .Include(oi => oi.Store)
             .AsSplitQuery()
             .AsNoTracking()
-            .Where(o => o.StoreId == storeId && ((int)o.Order.Status)>1 )
+            .Where(o => o.StoreId == storeId && ((int)o.Order.Status) > 1)
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
             .OrderDescending()
@@ -60,11 +55,11 @@ public class OrderItemRepository(AppDbContext context) :IOrderItemRepository
 
     public void Add(OrderItem entity)
     {
-        context.OrderItems.Add(entity:entity);
+        context.OrderItems.Add(entity: entity);
     }
 
     public void Update(OrderItem entity)
     {
-        context.Update(entity:entity);
+        context.Update(entity: entity);
     }
 }

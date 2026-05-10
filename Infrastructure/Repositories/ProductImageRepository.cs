@@ -20,7 +20,7 @@ public class ProductImageRepository(AppDbContext context) : IProductImageReposit
         for (int i = 0; i < images.Count; i++)
         {
             var imagePath = ClsUtil.RemoveAdditionalPath(images[i]);
-            var result = context.ProductImages.FirstOrDefault(pi => pi.Path ==imagePath && pi.ProductId == id);
+            var result = context.ProductImages.FirstOrDefault(pi => pi.Path == imagePath && pi.ProductId == id);
             if (result is not null)
                 context.ProductImages.Remove(result);
         }
@@ -43,7 +43,7 @@ public class ProductImageRepository(AppDbContext context) : IProductImageReposit
             .Select(pi => pi.Path)
             .ToListAsync();
     }
-    
+
 
     public void Add(ProductImage entity)
     {

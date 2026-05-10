@@ -12,7 +12,6 @@ namespace api.application.Services;
 
 public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
 {
-    
     public async Task<CurrencyDto?>> CreateCurrency(Guid adminId, CreateCurrencyDto currencyDto)
     {
         User? admin = await unitOfWork.UserRepository.GetUser(adminId);
@@ -28,19 +27,19 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
                 statusCode: isValide.StatusCode
             );
         }
-        
-        
+
+
         //this for production to keep the currency under 25 items
         int currenciesLength = await unitOfWork.CurrencyRepository.GetCurrenciesCount();
         if (currenciesLength > 25)
         {
             var curreinces = await unitOfWork.CurrencyRepository.GetCurrencies(25);
-            
+
             unitOfWork.CurrencyRepository.Delete(curreinces);
         }
         //end
 
-        
+
         Currency currency = new Currency
         {
             Id = ClsUtil.GenerateGuid(),
@@ -48,11 +47,11 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
             Symbol = currencyDto.Symbol,
             Name = currencyDto.Name,
             Value = currencyDto.Value,
-            IsDefault =currencyDto.IsDefault 
+            IsDefault = currencyDto.IsDefault
         };
         unitOfWork.CurrencyRepository.Add(currency);
         var result = await unitOfWork.SaveChanges();
-        
+
         if (result == 0)
         {
             return new Result<CurrencyDto?>(
@@ -103,7 +102,7 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
 
         currency.Name = currencyDto.Name ?? currency.Name;
         currency.Symbol = currencyDto.Symbol ?? currency.Symbol;
-        currency.Value = currencyDto.Value??currency.Value;
+        currency.Value = currencyDto.Value ?? currency.Value;
         currency.UpdatedAt = DateTime.Now;
 
         unitOfWork.CurrencyRepository.Update(currency);
@@ -175,17 +174,16 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
             statusCode: 200);
     }
 
-    public async Task<List<CurrencyDto>>> GetCurrency(int pageNum,int pageSize)
+    public async Task<List<CurrencyDto>>> GetCurrency(int pageNum, int pageSize)
     {
-             
         var payments = await unitOfWork.CurrencyRepository.GetAll(pageNum, pageSize);
-        
+
         var paymentToDto = payments.Select(payment => payment.ToPaymentDto()).ToList();
         return new Result<List<CurrencyDto>>(
             isSuccessful: true,
             data: paymentToDto,
-            message:"", 
-            statusCode:200 
-        ); 
+            message: "",
+            statusCode: 200
+        );
     }
 }

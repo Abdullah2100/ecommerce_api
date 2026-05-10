@@ -10,7 +10,7 @@ public static class OrderMapperExtension
     {
         public DeliveryOrderDto ToDeliveryDto(string url)
         {
-            return new DeliveryOrderDto 
+            return new DeliveryOrderDto
             {
                 Id = order.Id,
                 DeliveryFee = order.DistanceFee,
@@ -20,10 +20,10 @@ public static class OrderMapperExtension
                 Status = order.Status,
                 TotalPrice = order.TotalPrice,
                 UserPhone = order.User.Phone,
-                IsAllreadyPayed = order.PaymentType.Name!="Cash",
+                IsAllreadyPayed = order.PaymentType.Name != "Cash",
                 OrderItems = order
                     .Items
-                    .Select(it=>it.ToDeliveryOrderItemDto(url))
+                    .Select(it => it.ToDeliveryOrderItemDto(url))
                     .ToList()
             };
         }
@@ -40,11 +40,11 @@ public static class OrderMapperExtension
                 Status = order.Status.ToOrderStatusName(),
                 TotalPrice = order.TotalPrice,
                 Symbol = order.Symbol,
-                IsAlreadyPayed = order.PaymentType.Name!="Cash",
+                IsAlreadyPayed = order.PaymentType.Name != "Cash",
                 UserPhone = order.User.Phone,
                 OrderItems = order
                     .Items
-                    .Select(it=>it.ToOrderItemDto(url))
+                    .Select(it => it.ToOrderItemDto(url))
                     .ToList()
             };
         }

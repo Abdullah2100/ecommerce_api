@@ -15,7 +15,7 @@ public static class PaymentTypeMapperExtension
                 Id = paymentType.Id,
                 Name = paymentType.Name,
                 IsHashCheckOperation = paymentType.IsHashCheckOperation,
-                Thumbnail =url+ paymentType.Thumbnail
+                Thumbnail = url + paymentType.Thumbnail
             };
         }
     }

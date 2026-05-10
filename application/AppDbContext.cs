@@ -29,8 +29,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     public DbSet<Delivery> Deliveries { get; set; }
     public DbSet<Currency> Payments { get; set; }
-public DbSet<Currency> Currencies { get; set; }
-public DbSet<PaymentType> PaymentTypes { get; set; }
+    public DbSet<Currency> Currencies { get; set; }
+    public DbSet<PaymentType> PaymentTypes { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -39,12 +39,8 @@ public DbSet<PaymentType> PaymentTypes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Currency>(cu =>
-        {
-            cu.HasIndex(c => new { c.Name }).IsUnique();
-        });
-        modelBuilder.Entity<User>(
-            user =>
+        modelBuilder.Entity<Currency>(cu => { cu.HasIndex(c => new { c.Name }).IsUnique(); });
+        modelBuilder.Entity<User>(user =>
             {
                 user.HasIndex(u => new { email = u.Email, phone = u.Phone }).IsUnique();
 
@@ -98,13 +94,13 @@ public DbSet<PaymentType> PaymentTypes { get; set; }
                 .WithOne(sub => sub.Store)
                 .HasForeignKey(sub => sub.StoreId)
                 .HasPrincipalKey(stc => stc.Id);
-          //      .OnDelete(DeleteBehavior.Restrict);
+            //      .OnDelete(DeleteBehavior.Restrict);
 
-          st.HasMany(sto => sto.Banners)
-              .WithOne(bn => bn.Store)
-              .HasForeignKey(ban => ban.StoreId)
-              .HasPrincipalKey(sto => sto.Id);
-          //  .OnDelete(DeleteBehavior.Restrict);
+            st.HasMany(sto => sto.Banners)
+                .WithOne(bn => bn.Store)
+                .HasForeignKey(ban => ban.StoreId)
+                .HasPrincipalKey(sto => sto.Id);
+            //  .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<SubCategory>(sub => { });
@@ -121,7 +117,7 @@ public DbSet<PaymentType> PaymentTypes { get; set; }
                 .WithMany(sub => sub.Products)
                 .HasForeignKey(pro => pro.SubcategoryId)
                 .HasPrincipalKey(sub => sub.Id);
-              //  .OnDelete(DeleteBehavior.Restrict);
+            //  .OnDelete(DeleteBehavior.Restrict);
             pr.HasOne(pro => pro.Store)
                 .WithMany(st => st.Products)
                 .HasForeignKey(pro => pro.StoreId)
@@ -130,7 +126,6 @@ public DbSet<PaymentType> PaymentTypes { get; set; }
                 .WithOne(pim => pim.Product)
                 .HasForeignKey(pim => pim.ProductId)
                 .HasPrincipalKey(pro => pro.Id);
-            
         });
 
         modelBuilder.Entity<Variant>(va =>
@@ -144,20 +139,18 @@ public DbSet<PaymentType> PaymentTypes { get; set; }
         });
 
         modelBuilder.Entity<Order>(or =>
-        {
-            or.HasOne<User>(ord => ord.User)
-                .WithMany(u => u.Orders)
-                .HasForeignKey(ord => ord.UserId)
-                .HasPrincipalKey(u => u.Id);
+            {
+                or.HasOne<User>(ord => ord.User)
+                    .WithMany(u => u.Orders)
+                    .HasForeignKey(ord => ord.UserId)
+                    .HasPrincipalKey(u => u.Id);
 
-            or.HasMany(ord => ord.Items)
-                .WithOne(orIt => orIt.Order)
-                .HasForeignKey(ord => ord.OrderId)
-                .HasPrincipalKey(orIt => orIt.Id);
-            
-             
-        })
-        ;
+                or.HasMany(ord => ord.Items)
+                    .WithOne(orIt => orIt.Order)
+                    .HasForeignKey(ord => ord.OrderId)
+                    .HasPrincipalKey(orIt => orIt.Id);
+            })
+            ;
 
         modelBuilder.Entity<OrderItem>(oIt =>
         {
@@ -180,8 +173,7 @@ public DbSet<PaymentType> PaymentTypes { get; set; }
                 .HasPrincipalKey(or => or.Id);
         });
 
-      
+
         base.OnModelCreating(modelBuilder);
     }
-    
 }
