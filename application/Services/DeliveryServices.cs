@@ -1,12 +1,11 @@
 using api.application.Interface;
-using api.application.Result;
 using api.domain.entity;
 using api.Infrastructure;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.util;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.application.Services;
 
@@ -18,7 +17,6 @@ public enum EnBelongToType
 
 public class DeliveryServices(
     IConfig config,
-    IWebHostEnvironment host,
     IUnitOfWork unitOfWork,
     IFileServices fileServices,
     IUserServices userServices,
@@ -26,71 +24,45 @@ public class DeliveryServices(
 )
     : IDeliveryServices
 {
-    public async Task<AuthDto?>> Login(LoginDto loginDto)
+    public async Task<IActionResult> Login(LoginDto loginDto)
     {
         if (string.IsNullOrWhiteSpace(loginDto.DeviceToken))
-            return new Result<AuthDto?>
-            (
-                data: null,
-                message: "you should login from phone",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("you should login from phone") { StatusCode = StatusCodes.Status403Forbidden };
 
-        User? user = await unitOfWork.UserRepository
+
+        var user = await unitOfWork.UserRepository
             .GetUser(
                 loginDto.Username,
                 ClsUtil.HashingText(loginDto.Password));
 
 
-        var isValide = user.IsValidateFunc(isAdmin: false);
+        var validationResult = user.IsValidateFunc(isAdmin: false);
 
-        if (isValide is not null)
+        if (validationResult is not null)
         {
-            return new Result<AuthDto?>
-            (
-                data: null,
-                message: isValide.Message,
-                isSuccessful: false,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        Delivery? delivery = await unitOfWork.DeliveryRepository.GetDeliveryByUserId(user.Id);
+        var delivery = await unitOfWork.DeliveryRepository.GetDeliveryByUserId(user!.Id);
 
         if (delivery is null)
         {
-            return new Result<AuthDto?>
-            (
-                data: null,
-                message: "delivery not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("delivery not found") { StatusCode = StatusCodes.Status404NotFound };
         }
 
 
         if (delivery.IsBlocked)
-            return new Result<AuthDto?>
-            (
-                data: null,
-                message: "delivery is blocked",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("delivery is blocked") { StatusCode = StatusCodes.Status403Forbidden };
+
         delivery.DeviceToken = loginDto.DeviceToken;
 
         unitOfWork.DeliveryRepository.Update(delivery);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
+
         if (result == 0)
         {
-            return new Result<AuthDto?>
-            (
-                data: null,
-                message: "error while adding delivery",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while adding delivery")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
 
@@ -104,16 +76,11 @@ public class DeliveryServices(
             email: delivery.User.Email,
             EnTokenMode.RefreshToken);
 
-        return new Result<AuthDto?>(
-            isSuccessful: true,
-            data: new AuthDto { RefreshToken = refreshToken, Token = token },
-            message: "",
-            statusCode: 200
-        );
+        return new ObjectResult(new AuthDto { RefreshToken = refreshToken, Token = token }) { StatusCode = 200 };
     }
 
 
-    public async Task<DeliveryDto?>> CreateDelivery(
+    public async Task<IActionResult> CreateDelivery(
         Guid userId,
         CreateDeliveryDto deliveryDto
     )
@@ -128,32 +95,20 @@ public class DeliveryServices(
 
         if ((admin is not null && user?.IsUser == false) || store != null)
         {
-            return new Result<DeliveryDto?>
-            (
-                data: null,
-                message: admin?.Message ?? store?.Message,
-                isSuccessful: false,
-                statusCode: admin?.StatusCode ?? store!.StatusCode
-            );
+            return new ObjectResult(admin?.Item1 ?? store?.Item1) { StatusCode = admin?.Item2 ?? store?.Item2 };
         }
 
 
         if (await unitOfWork.DeliveryRepository.IsExistByUserId(deliveryDto.UserId))
         {
-            return new Result<DeliveryDto?>
-            (
-                data: null,
-                message: "delivery already exists",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("delivery already exists") { StatusCode = StatusCodes.Status409Conflict };
         }
 
 
-        string? deliveryThumnail = null;
+        string? thumbnail = null;
         if (deliveryDto.Thumbnail is not null)
         {
-            deliveryThumnail = await fileServices
+            thumbnail = await fileServices
                 .SaveFile(
                     deliveryDto.Thumbnail,
                     EnImageType.Delivery);
@@ -162,7 +117,7 @@ public class DeliveryServices(
 
         var addressId = ClsUtil.GenerateGuid();
         var id = ClsUtil.GenerateGuid();
-        Address address = new Address
+        var address = new Address
         {
             Id = addressId,
             Title = "my Place",
@@ -170,237 +125,161 @@ public class DeliveryServices(
             OwnerId = id
         };
 
-        Delivery? delivery = new Delivery
+        var delivery = new Delivery
         {
             Id = id,
             CreatedAt = DateTime.Now,
             UserId = deliveryDto.UserId,
-            Thumbnail = deliveryThumnail,
+            Thumbnail = thumbnail,
             Address = address,
             BelongTo = user?.Store?.Id ?? userId
         };
 
         unitOfWork.DeliveryRepository.Add(delivery);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<DeliveryDto?>
-            (
-                data: null,
-                message: "error while adding delivery",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            if (thumbnail != null)
+                fileServices.DeleteFile(thumbnail);
+            return new ObjectResult("error while adding delivery")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         delivery = await unitOfWork.DeliveryRepository.GetDelivery(id);
 
-        if (delivery is null)
-        {
-            return new Result<DeliveryDto?>
-            (
-                data: null,
-                message: "delivery is not found ",
-                isSuccessful: false,
-                statusCode: 404
-            );
-        }
 
-        return new Result<DeliveryDto?>
-        (
-            data: delivery?.ToDto(config.GetKey("url_file")),
-            message: "",
-            isSuccessful: true,
-            statusCode: 201
-        );
+        var deliveryToDot = delivery?.ToDto(config.GetKey("url_file"));
+
+        return new ObjectResult(deliveryToDot)
+            { StatusCode = StatusCodes.Status201Created };
     }
 
-    public async Task<DeliveryDto?>> UpdateDeliveryStatus(Guid id, bool status)
+    public async Task<IActionResult> UpdateDeliveryStatus(Guid id, bool status)
     {
-        Delivery? delivery = await unitOfWork.DeliveryRepository
+        var delivery = await unitOfWork.DeliveryRepository
             .GetDelivery(id);
         if (delivery is null)
         {
-            return new Result<DeliveryDto?>
-            (
-                data: null,
-                message: "delivery not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("delivery not found")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         if (delivery.IsBlocked)
         {
-            return new Result<DeliveryDto?>
-            (
-                data: null,
-                message: "delivery is blocked",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("delivery is blocked")
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         delivery.IsBlocked = status;
 
         unitOfWork.DeliveryRepository.Update(delivery);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<DeliveryDto?>
-            (
-                data: null,
-                message: "error while update delivery",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while update delivery")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        return new Result<DeliveryDto?>
-        (
-            data: delivery?.ToDto(config.GetKey("url_file")),
-            message: "",
-            isSuccessful: true,
-            statusCode: 201
-        );
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 
 
-    public async Task<DeliveryDto?>> GetDelivery(Guid id)
+    public async Task<IActionResult> GetDelivery(Guid id)
     {
-        Delivery? delivery = await unitOfWork.DeliveryRepository
+        var delivery = await unitOfWork.DeliveryRepository
             .GetDelivery(id);
 
-        var isValid = delivery.IsValidated();
+        var validationResult = delivery.IsValidated();
 
-        if (isValid is not null)
+        if (validationResult is not null)
         {
-            return new Result<DeliveryDto?>
-            (
-                data: null,
-                message: isValid.Message,
-                isSuccessful: false,
-                statusCode: isValid.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        var deliveryDto = delivery.ToDto(config.GetKey("url_file"));
-        deliveryDto.Analyse = await unitOfWork.DeliveryRepository.GetDeliveryAnalys(delivery.Id);
+        var deliveryDto = delivery?.ToDto(config.GetKey("url_file"));
+        deliveryDto?.Analyse = await unitOfWork.DeliveryRepository.GetDeliveryAnalys(delivery!.Id!);
 
-        return new Result<DeliveryDto?>
-        (
-            data: deliveryDto,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+        return new ObjectResult(deliveryDto)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
     }
 
 
-    public async Task<List<DeliveryDto>>> GetDeliveries(
+    public async Task<IActionResult> GetDeliveries(
         Guid belongToId,
         int pageNumber,
         int pageSize
     )
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(belongToId);
 
-        EnBelongToType belongType = EnBelongToType.Admin;
-
-        switch (user?.IsUser == false)
+        EnBelongToType belongType = (user?.IsUser == false) switch
         {
-            case true:
-            {
-                belongType = EnBelongToType.Admin;
-            }
-                break;
-            default:
-            {
-                belongType = EnBelongToType.Store;
-            }
-                break;
-        }
+            true => EnBelongToType.Admin,
+            _ => EnBelongToType.Store
+        };
 
-        Guid id = Guid.NewGuid();
+        var id = Guid.NewGuid();
         switch (belongType)
         {
             case EnBelongToType.Store:
             {
-                var isValidated = user.IsValidateFunc(isStore: true);
-                if (isValidated is not null)
+                var validationResult = user.IsValidateFunc(isStore: true);
+                if (validationResult is not null)
                 {
-                    return new Result<List<DeliveryDto>>
-                    (
-                        data: new List<DeliveryDto>(),
-                        message: isValidated.Message,
-                        isSuccessful: false,
-                        statusCode: isValidated.StatusCode
-                    );
+                   
+                    return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
                 }
 
-                id = user.Store.Id;
+                id = user!.Store!.Id!;
             }
                 break;
             case EnBelongToType.Admin:
             {
-                var isValidated = user.IsValidateFunc();
-                if (isValidated is not null)
+                var validationResult = user.IsValidateFunc();
+                if (validationResult is not null)
                 {
-                    return new Result<List<DeliveryDto>>
-                    (
-                        data: new List<DeliveryDto>(),
-                        message: isValidated.Message,
-                        isSuccessful: false,
-                        statusCode: isValidated.StatusCode
-                    );
+                    return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
                 }
 
-                id = user.Id;
+                id = user!.Id;
             }
                 break;
         }
 
 
-        List<DeliveryDto>? deliveryDto = (await unitOfWork.DeliveryRepository
+        var deliveryDto = (await unitOfWork.DeliveryRepository
                 .GetDeliveriesByBelongTo(id, pageNumber, pageSize))
             ?.Select((de) => de.ToDto(config.GetKey("url_file")))
-            ?.ToList();
+            .ToList();
 
-        if (deliveryDto is not null)
-            foreach (var delivery in deliveryDto)
-            {
-                delivery.Analyse = await unitOfWork.DeliveryRepository.GetDeliveryAnalys(delivery.Id);
-            }
+        if (deliveryDto is null) return new ObjectResult(deliveryDto) { StatusCode = StatusCodes.Status200OK };
+        
+        foreach (var delivery in deliveryDto)
+        {
+            delivery.Analyse = await unitOfWork.DeliveryRepository.GetDeliveryAnalys(delivery.Id);
+        }
 
-        return new Result<List<DeliveryDto>>
-        (
-            data: deliveryDto,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+
+        return new ObjectResult(deliveryDto) { StatusCode = StatusCodes.Status200OK };
     }
 
 
-    public async Task<DeliveryDto>> UpdateDelivery(UpdateDeliveryDto deliveryDto, Guid id)
+    public async Task<IActionResult> UpdateDelivery(UpdateDeliveryDto deliveryDto, Guid id)
     {
-        Delivery? delivery = await unitOfWork.DeliveryRepository
+        var delivery = await unitOfWork.DeliveryRepository
             .GetDelivery(id);
 
-        var isValidated = delivery.IsValidated();
+        var validationResult = delivery.IsValidated();
 
-        if (isValidated is not null)
+        if (validationResult is not null)
         {
-            return new Result<DeliveryDto>
-            (
-                data: null,
-                message: isValidated.Message,
-                isSuccessful: false,
-                statusCode: isValidated.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
 
@@ -436,15 +315,15 @@ public class DeliveryServices(
 
         if (deliveryDto.Thumbnail is not null)
         {
-            var previuse = delivery?.Thumbnail;
-            if (previuse is not null)
-                fileServices.DeleteFile(filePath: previuse);
+            var previous = delivery?.Thumbnail;
+            if (previous is not null)
+                fileServices.DeleteFile(filePath: previous);
 
             string? newThumbNail = null;
             newThumbNail = await fileServices.SaveFile(file: deliveryDto.Thumbnail, type: EnImageType.Delivery);
             delivery?.Thumbnail = newThumbNail;
 
-            unitOfWork.DeliveryRepository.Update(delivery);
+            unitOfWork.DeliveryRepository.Update(delivery!);
         }
 
         if (userUpdateData.IsUpdateAnyFeild() is true)
@@ -455,37 +334,6 @@ public class DeliveryServices(
         var result = await unitOfWork.SaveChanges();
 
 
-        if (result < 1)
-        {
-            return new Result<DeliveryDto>
-            (
-                data: null,
-                message: "Something went wrong",
-                isSuccessful: false,
-                statusCode: 404
-            );
-        }
-
-
-        delivery = await unitOfWork.DeliveryRepository.GetDelivery(delivery!.Id);
-
-        if (delivery is null)
-        {
-            return new Result<DeliveryDto>
-            (
-                data: null,
-                message: "Delivery not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
-        }
-
-        return new Result<DeliveryDto>
-        (
-            data: delivery?.ToDto(config.GetKey("url_file")),
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+        return result < 1 ? new ObjectResult("Something went wrong") { StatusCode = StatusCodes.Status500InternalServerError } : new ObjectResult(null) { StatusCode = StatusCodes.Status204NoContent };
     }
 }

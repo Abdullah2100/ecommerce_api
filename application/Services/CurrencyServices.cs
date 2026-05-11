@@ -1,46 +1,30 @@
 using api.application.Interface;
 using api.domain.entity;
 using api.Infrastructure;
-using api.Presentation.dto;
-using api.application.Result;
 using api.Presentation.dto.Request;
 using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.util;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.application.Services;
 
 public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
 {
-    public async Task<CurrencyDto?>> CreateCurrency(Guid adminId, CreateCurrencyDto currencyDto)
+    public async Task<IActionResult> CreateCurrency(Guid adminId, CreateCurrencyDto currencyDto)
     {
-        User? admin = await unitOfWork.UserRepository.GetUser(adminId);
+        var admin = await unitOfWork.UserRepository.GetUser(adminId);
 
-        var isValide = admin.IsValidateFunc(true);
+        var validationResult = admin.IsValidateFunc(true);
 
-        if (isValide is not null)
+        if (validationResult is not null)
         {
-            return new Result<CurrencyDto?>(
-                isSuccessful: false,
-                data: null,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
 
-        //this for production to keep the currency under 25 items
-        int currenciesLength = await unitOfWork.CurrencyRepository.GetCurrenciesCount();
-        if (currenciesLength > 25)
-        {
-            var curreinces = await unitOfWork.CurrencyRepository.GetCurrencies(25);
 
-            unitOfWork.CurrencyRepository.Delete(curreinces);
-        }
-        //end
-
-
-        Currency currency = new Currency
+        var currency = new Currency
         {
             Id = ClsUtil.GenerateGuid(),
             CreatedAt = DateTime.Now,
@@ -54,49 +38,30 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
 
         if (result == 0)
         {
-            return new Result<CurrencyDto?>(
-                isSuccessful: false,
-                data: null,
-                message: "Could not Save Payment Image",
-                statusCode: 400
-            );
+            return new ObjectResult("Could not Save New Currency")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        CurrencyDto? paymentToDto = currency.ToPaymentDto();
-        return new Result<CurrencyDto?>(
-            isSuccessful: true,
-            data: paymentToDto,
-            message: "",
-            statusCode: 201
-        );
+        var currencyToDto = currency.ToPaymentDto();
+        return new ObjectResult(currencyToDto) { StatusCode = StatusCodes.Status201Created };
     }
 
-    public async Task<CurrencyDto?>> UpdateCurrency(Guid adminId, UpdateCurrencyDto currencyDto)
+    public async Task<IActionResult> UpdateCurrency(Guid adminId, UpdateCurrencyDto currencyDto)
     {
-        User? admin = await unitOfWork.UserRepository.GetUser(adminId);
+        var admin = await unitOfWork.UserRepository.GetUser(adminId);
 
-        var isValide = admin.IsValidateFunc(true);
+        var validationResult = admin.IsValidateFunc(true);
 
-        if (isValide is not null)
+        if (validationResult is not null)
         {
-            return new Result<CurrencyDto?>(
-                isSuccessful: false,
-                data: null,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        Currency? currency = await unitOfWork.CurrencyRepository.GetCurrencies(currencyDto.Id);
+        var currency = await unitOfWork.CurrencyRepository.GetCurrencies(currencyDto.Id);
 
         if (currency is null)
         {
-            return new Result<CurrencyDto?>(
-                isSuccessful: false,
-                data: null,
-                message: "payment is not found",
-                statusCode: 404
-            );
+            return new ObjectResult("Currency is not found") { StatusCode = StatusCodes.Status404NotFound };
         }
 
 
@@ -109,81 +74,51 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
         var result = await unitOfWork.SaveChanges();
         if (result == 0)
         {
-            return new Result<CurrencyDto?>(
-                isSuccessful: false,
-                data: null,
-                message: "Could not Save Payment Image",
-                statusCode: 400
-            );
+            return new ObjectResult("Could not Update Currency")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        return new Result<CurrencyDto?>(
-            isSuccessful: true,
-            data: currency.ToPaymentDto(),
-            message: "",
-            statusCode: 200
-        );
+        return new ObjectResult(null) { StatusCode = StatusCodes.Status204NoContent };
     }
 
-    public async Task<bool>> DeleteCurrency(Guid adminId, Guid id)
+    public async Task<IActionResult> DeleteCurrency(Guid adminId, Guid id)
     {
-        User? admin = await unitOfWork.UserRepository.GetUser(adminId);
+        var admin = await unitOfWork.UserRepository.GetUser(adminId);
 
-        var isValide = admin.IsValidateFunc(true);
+        var validationResult = admin.IsValidateFunc(true);
 
-        if (isValide is not null)
+        if (validationResult is not null)
         {
-            return new Result<bool>(
-                isSuccessful: false,
-                data: false,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        Currency? payment = await unitOfWork.CurrencyRepository.GetCurrencies(id);
+        var currency = await unitOfWork.CurrencyRepository.GetCurrencies(id);
 
-        if (payment is null)
+        if (currency is null)
         {
-            return new Result<bool>(
-                isSuccessful: false,
-                data: false,
-                message: "payment is not found",
-                statusCode: 404
-            );
+            return new ObjectResult("currency not found") { StatusCode = StatusCodes.Status404NotFound };
         }
 
 
-        await unitOfWork.CurrencyRepository.Delete(payment.Id);
+        await unitOfWork.CurrencyRepository.Delete(currency.Id);
         var result = await unitOfWork.SaveChanges();
         if (result == 0)
         {
-            return new Result<bool>(
-                isSuccessful: false,
-                data: false,
-                message: "Could not delete Payment",
-                statusCode: 400
-            );
+            return new ObjectResult("Could not Delete Currency")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
 
-        return new Result<bool>(
-            isSuccessful: true,
-            data: true,
-            message: "",
-            statusCode: 200);
+        return new ObjectResult(null) { StatusCode = StatusCodes.Status204NoContent };
     }
 
-    public async Task<List<CurrencyDto>>> GetCurrency(int pageNum, int pageSize)
+    public async Task<IActionResult> GetCurrency(int pageNum, int pageSize)
     {
         var payments = await unitOfWork.CurrencyRepository.GetAll(pageNum, pageSize);
 
         var paymentToDto = payments.Select(payment => payment.ToPaymentDto()).ToList();
-        return new Result<List<CurrencyDto>>(
-            isSuccessful: true,
-            data: paymentToDto,
-            message: "",
-            statusCode: 200
-        );
+        return new ObjectResult(paymentToDto)
+            { StatusCode = StatusCodes.Status200OK };
+
     }
 }

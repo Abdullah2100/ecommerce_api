@@ -23,7 +23,7 @@ public class BannerServices(
         CreateBannerDto bannerDto
     )
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(userId);
 
         var validation = user.IsValidateFunc(false, true);
@@ -34,19 +34,6 @@ public class BannerServices(
         }
 
 
-        /*this to remove some banner to be away from overload of banner to keep vps fit to size
-        int bannersCount = await unitOfWork.BannerRepository.GetBannerCount();
-        if (bannersCount > 20)
-        {
-            var bannersRandom = await unitOfWork.BannerRepository.GetBanners(20);
-            var imagesList = bannersRandom.Select(b => b.Image).ToList();
-            fileServices.DeleteFile(imagesList);
-            unitOfWork.BannerRepository.Delete(bannersRandom);
-        }*/
-        //end 
-
-
-        //this for api  to prevent user have more that 20 banners
         var storeBannerCount = await unitOfWork.BannerRepository
             .GetBannerCount(user?.Store?.Id ?? ClsUtil.GenerateGuid());
 
@@ -56,7 +43,7 @@ public class BannerServices(
         }
 
 
-        string? image = await fileServices.SaveFile(
+        var image = await fileServices.SaveFile(
             bannerDto.Image,
             EnImageType.Banner);
 
@@ -65,7 +52,7 @@ public class BannerServices(
             return new ObjectResult("error while saving banner  image") { StatusCode = 500 };
         }
 
-        Banner banner = new Banner
+        var banner = new Banner
         {
             Id = ClsUtil.GenerateGuid(),
             EndAt = bannerDto.EndAt,
@@ -92,7 +79,7 @@ public class BannerServices(
 
     public async Task<IActionResult> DeleteBanner(Guid id, Guid userId)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(userId);
 
         var validation = user.IsValidateFunc(false, true);
@@ -102,7 +89,7 @@ public class BannerServices(
         }
 
 
-        Banner? banner = await unitOfWork.BannerRepository
+        var banner = await unitOfWork.BannerRepository
             .GetBanner(id);
 
 
@@ -117,7 +104,7 @@ public class BannerServices(
         }
 
         unitOfWork.BannerRepository.Delete(id);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
@@ -137,7 +124,7 @@ public class BannerServices(
         int pageNumber,
         int pageSize)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(adminId);
         var validation = user.IsValidateFunc();
         if (validation is not null)
@@ -146,7 +133,7 @@ public class BannerServices(
         }
 
 
-        List<BannerDto> banners = (await unitOfWork.BannerRepository
+        var banners = (await unitOfWork.BannerRepository
                 .GetBanners(pageNumber, pageSize)
             )
             .Select(ba => ba.ToDto(config.GetKey("url_file")))
@@ -161,7 +148,7 @@ public class BannerServices(
         int pageSize
     )
     {
-        List<BannerDto> banners = (await unitOfWork.BannerRepository
+        var banners = (await unitOfWork.BannerRepository
                 .GetBanners(storeId, pageNumber, pageSize))
             .Select(ba => ba.ToDto(config.GetKey("url_file")))
             .ToList();
@@ -173,7 +160,7 @@ public class BannerServices(
         int randomLenght
     )
     {
-        List<BannerDto> banners = (await unitOfWork.BannerRepository
+        var banners = (await unitOfWork.BannerRepository
                 .GetBanners(randomLenght))
             .Select(ba => ba.ToDto(config.GetKey("url_file")))
             .ToList();

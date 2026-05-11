@@ -7,6 +7,7 @@ using api.Presentation.dto.Request;
 using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.shared.signalr;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
 namespace api.application.Services;
@@ -19,7 +20,7 @@ public class OrderItemServices(
 )
     : IOrderItemServices
 {
-    public async Task<List<OrderItemDto>>> GetOrderItems(
+    public async Task<IActionResult> GetOrderItems(
         Guid storeId,
         int pageNum,
         int pageSize)

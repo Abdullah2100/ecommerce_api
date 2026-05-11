@@ -7,7 +7,7 @@ namespace api.application.Services
     {
         private static readonly string LocalPath = "images";
 
-        private static string GetFileExtention(IFormFile filename) => Path.GetExtension(filename.FileName);
+        private static string GetFileExtension(IFormFile filename) => Path.GetExtension(filename.FileName);
 
         private static bool CreateDirectory(string dir)
         {
@@ -25,7 +25,6 @@ namespace api.application.Services
 
         public async Task<string?> SaveFile(IFormFile file, EnImageType type)
         {
-            // string filePath = localPath + type.ToString()+"/";
             string filePath = Path.Combine(host.ContentRootPath, LocalPath, type.ToString());
             try
             {
@@ -38,7 +37,7 @@ namespace api.application.Services
                 }
 
 
-                var fileFullName = Path.Combine(filePath, ClsUtil.GenerateGuid() + GetFileExtention(file));
+                var fileFullName = Path.Combine(filePath, ClsUtil.GenerateGuid() + GetFileExtension(file));
 
                 await using (var stream = new FileStream(fileFullName, FileMode.Create))
                 {
@@ -56,10 +55,11 @@ namespace api.application.Services
 
         public async Task<List<string>?> SaveFile(List<IFormFile> file, EnImageType type)
         {
-            List<string> images = new List<string>();
-            for (int i = 0; i < file.Count; i++)
+            List<string> images = [];
+            
+            foreach (var t in file)
             {
-                string? path = await SaveFile(file[i], type);
+                var path = await SaveFile(t, type);
                 if (path is null)
                 {
                     DeleteFile(images);

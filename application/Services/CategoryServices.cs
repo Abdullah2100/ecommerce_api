@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace api.application.Services;
 
 public class CategoryServices(
-    IWebHostEnvironment host,
     IConfig config,
     IUnitOfWork unitOfWork,
     IFileServices fileService)
@@ -35,7 +34,7 @@ public class CategoryServices(
                 { StatusCode = StatusCodes.Status409Conflict };
         }
 
-        string? imagePath = await fileService
+        var imagePath = await fileService
             .SaveFile(categoryDto.Image,
                 EnImageType.Category);
 
@@ -44,9 +43,9 @@ public class CategoryServices(
             return new ObjectResult("there error while saving image to server")
                 { StatusCode = StatusCodes.Status500InternalServerError };
 
-        Guid categoryId = ClsUtil.GenerateGuid();
+        var categoryId = ClsUtil.GenerateGuid();
 
-        Category category = new Category
+        var category = new Category
         {
             Id = categoryId,
             Name = categoryDto.Name,
@@ -55,7 +54,7 @@ public class CategoryServices(
             OwnerId = user!.Id
         };
         unitOfWork.CategoryRepository.Add(category);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
@@ -78,7 +77,7 @@ public class CategoryServices(
                 { StatusCode = StatusCodes.Status200OK };
 
 
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(adminId);
 
         var validationResult = user.IsValidateFunc();
@@ -95,19 +94,9 @@ public class CategoryServices(
             }
 
 
-        //this for production to prevent category create overload on vps to keep the size of vps fit 
-        int categoryCount = await unitOfWork.CategoryRepository.GetCategoriesCount();
+        
 
-        if (categoryCount > 20)
-        {
-            var bannersRandom = await unitOfWork.CategoryRepository.GetCategories(20);
-            var imagesList = bannersRandom.Select(b => b.Image).ToList();
-            fileService.DeleteFile(imagesList);
-            unitOfWork.CategoryRepository.Delete(bannersRandom);
-        }
-        //end
-
-        Category? category = await unitOfWork.CategoryRepository.GetCategory(categoryDto.Id);
+        var category = await unitOfWork.CategoryRepository.GetCategory(categoryDto.Id);
 
 
         if (category is null)
@@ -133,25 +122,22 @@ public class CategoryServices(
         category.UpdatedAt = DateTime.Now;
 
         unitOfWork.CategoryRepository.Update(category);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
-        if (result == 0)
-        {
-            if (image != null)
-                fileService.DeleteFile(image);
+        if (result != 0)
+            return new ObjectResult(null)
+                { StatusCode = StatusCodes.Status204NoContent };
 
-            return new ObjectResult("error while update category")
-                { StatusCode = StatusCodes.Status500InternalServerError };
-        }
+        if (image != null)
+            fileService.DeleteFile(image);
 
-
-        return new ObjectResult(null)
-            { StatusCode = StatusCodes.Status204NoContent };
+        return new ObjectResult("error while update category")
+            { StatusCode = StatusCodes.Status500InternalServerError };
     }
 
     public async Task<IActionResult> DeleteCategory(Guid categoryId, Guid adminId)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(adminId);
         var validationResult = user.IsValidateFunc(true);
         if (validationResult is not null)
@@ -166,10 +152,10 @@ public class CategoryServices(
         }
 
         fileService.DeleteFile(category.Image);
-        
+
         unitOfWork.CategoryRepository.Delete(categoryId);
-        
-        int result = await unitOfWork.SaveChanges();
+
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
@@ -183,11 +169,10 @@ public class CategoryServices(
 
     public async Task<IActionResult> GetCategories(int pageNumber, int pageSize)
     {
-        List<CategoryDto> categories = (await unitOfWork.CategoryRepository.GetCategories(pageNumber, pageSize))
+        var categories = (await unitOfWork.CategoryRepository.GetCategories(pageNumber, pageSize))
             .Select(ca => ca.ToDto(config.GetKey("url_file")))
             .ToList();
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
-
     }
 }

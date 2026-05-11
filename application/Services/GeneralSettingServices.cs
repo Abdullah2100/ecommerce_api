@@ -1,51 +1,34 @@
 using api.application.Interface;
-using api.application.Result;
 using api.domain.entity;
 using api.Infrastructure;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.util;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.application.Services;
 
-public class GeneralSettingServices(
-    IUnitOfWork unitOfWork
-)
-    : IGeneralSettingServices
+public class GeneralSettingServices(IUnitOfWork unitOfWork) : IGeneralSettingServices
 {
-    public async Task<GeneralSettingDto?>> CreateGeneralSetting(
-        Guid adminId,
-        GeneralSettingDto settingDto)
+    public async Task<IActionResult> CreateGeneralSetting(Guid adminId, GeneralSettingDto settingDto)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(adminId);
 
-        var validation = user.IsValidateFunc();
-        if (validation is not null)
+        var validationResult = user.IsValidateFunc();
+        if (validationResult is not null)
         {
-            return new Result<GeneralSettingDto?>
-            (
-                data: null,
-                message: validation.Message,
-                isSuccessful: false,
-                statusCode: validation.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
         if (await unitOfWork.GeneralSettingRepository.IsExist(settingDto.Name))
         {
-            return new Result<GeneralSettingDto?>
-            (
-                data: null,
-                message: "there are  generalsetting with the same name",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("there are general setting with the same name")
+                { StatusCode = StatusCodes.Status409Conflict };
         }
 
-        GeneralSetting generalSetting = new GeneralSetting
+        var generalSetting = new GeneralSetting
         {
             CreatedAt = DateTime.Now,
             Id = ClsUtil.GenerateGuid(),
@@ -53,68 +36,46 @@ public class GeneralSettingServices(
             Value = settingDto.Value
         };
         unitOfWork.GeneralSettingRepository.Add(generalSetting);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
 
         if (result == 0)
         {
-            return new Result<GeneralSettingDto?>
-            (
-                data: null,
-                message: "error while adding generalsetting",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while adding general setting")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        return new Result<GeneralSettingDto?>
-        (
-            data: generalSetting?.ToDto(),
-            message: "",
-            isSuccessful: true,
-            statusCode: 201
-        );
+        var generalSettingToDto = generalSetting?.ToDto();
+
+        return new ObjectResult(generalSettingToDto)
+            { StatusCode = StatusCodes.Status201Created };
     }
 
-    public async Task<GeneralSettingDto?>> UpdateGeneralSetting(
+
+    public async Task<IActionResult> UpdateGeneralSetting(
         Guid id, Guid adminId,
         UpdateGeneralSettingDto settingDto
     )
     {
         if (settingDto.IsEmpty())
-            return new Result<GeneralSettingDto?>
-            (
-                data: null,
-                message: "no change found",
-                isSuccessful: false,
-                statusCode: 200
-            );
+            return new ObjectResult("no change found")
+                { StatusCode = StatusCodes.Status200OK };
 
-        User? user = await unitOfWork.UserRepository
+
+        var user = await unitOfWork.UserRepository
             .GetUser(adminId);
 
-        var validation = user.IsValidateFunc();
-        if (validation is not null)
+        var validationResult = user.IsValidateFunc();
+        if (validationResult is not null)
         {
-            return new Result<GeneralSettingDto?>
-            (
-                data: null,
-                message: validation.Message,
-                isSuccessful: false,
-                statusCode: validation.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        GeneralSetting? generalSetting = await unitOfWork.GeneralSettingRepository.GetGeneralSetting(id);
+        var generalSetting = await unitOfWork.GeneralSettingRepository.GetGeneralSetting(id);
+
         if (generalSetting is null)
         {
-            return new Result<GeneralSettingDto?>
-            (
-                data: null,
-                message: "no generalsetting found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("no general setting found") { StatusCode = StatusCodes.Status404NotFound };
         }
 
         generalSetting.Name = settingDto.Name ?? generalSetting.Name;
@@ -122,92 +83,61 @@ public class GeneralSettingServices(
         generalSetting.UpdatedAt = DateTime.Now;
 
         unitOfWork.GeneralSettingRepository.Add(generalSetting);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
 
         if (result == 0)
         {
-            return new Result<GeneralSettingDto?>
-            (
-                data: null,
-                message: "error while update generalsetting",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while update general setting")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        return new Result<GeneralSettingDto?>
-        (
-            data: generalSetting?.ToDto(),
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 
-    public async Task<bool>> DeleteGeneralSetting(Guid id, Guid adminId)
+    public async Task<IActionResult> DeleteGeneralSetting(Guid id, Guid adminId)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(adminId);
-        var validation = user.IsValidateFunc();
-        if (validation is not null)
+        var validationResult = user.IsValidateFunc();
+
+        if (validationResult is not null)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: validation.Message,
-                isSuccessful: false,
-                statusCode: validation.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
         if (!(await unitOfWork.GeneralSettingRepository.IsExist(id)))
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "generalSetting not found",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("generalSetting not found") { StatusCode = StatusCodes.Status404NotFound };
         }
 
         unitOfWork.GeneralSettingRepository.Delete(id);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
 
         if (result == 0)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "error while delete generalsetting",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while delete general setting")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        return new Result<bool>
-        (
-            data: false,
-            message: "",
-            isSuccessful: true,
-            statusCode: 204
-        );
+
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 
-    public async Task<List<GeneralSettingDto>>> GetGeneralSettings(int pageNum, int pageSize)
+    public async Task<IActionResult> GetGeneralSettings(int pageNum, int pageSize)
     {
-        List<GeneralSettingDto> categories =
+        var categoriesToDto =
             (await unitOfWork.GeneralSettingRepository.Getgenralsettings(pageNum, pageSize))
             .Select(ca => ca.ToDto())
             .ToList();
-        return new Result<List<GeneralSettingDto>>
-        (
-            data: categories,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+
+        return new ObjectResult(categoriesToDto)
+            { StatusCode = StatusCodes.Status200OK };
     }
+    
+    
 }

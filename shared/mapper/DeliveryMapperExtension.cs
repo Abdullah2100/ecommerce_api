@@ -27,28 +27,16 @@ public static class DeliveryMapperExtension
 
     extension(Delivery? delivery)
     {
-        public Result<DeliveryDto>? IsValidated()
+        public Tuple<string, int>? IsValidated()
         {
             if (delivery is null)
             {
-                return new Result<DeliveryDto>
-                (
-                    data: null,
-                    message: "delivery not found",
-                    isSuccessful: false,
-                    statusCode: 404
-                );
+                return new Tuple<string, int>("delivery not found", 404);
             }
 
             if (delivery.IsBlocked)
             {
-                return new Result<DeliveryDto>
-                (
-                    data: null,
-                    message: "delivery is blocked",
-                    isSuccessful: false,
-                    statusCode: 404
-                );
+                return new Tuple<string, int>("delivery is blocked", 403);
             }
 
             return null;
