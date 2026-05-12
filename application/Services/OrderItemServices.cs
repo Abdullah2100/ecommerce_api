@@ -1,8 +1,6 @@
 using api.application.Interface;
-using api.application.Result;
 using api.domain.entity;
 using api.Infrastructure;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using api.Presentation.dto.Response;
 using api.shared.mapper;
@@ -25,48 +23,33 @@ public class OrderItemServices(
         int pageNum,
         int pageSize)
     {
-        User? user = await unitOfWork.UserRepository.GetUser(storeId);
+        var user = await unitOfWork.UserRepository.GetUser(storeId);
 
-        var isValidate = user.IsValidateFunc(isAdmin: false, isStore: true);
-        if (isValidate is not null)
+        var validationResult = user.IsValidateFunc(isAdmin: false, isStore: true);
+        if (validationResult is not null)
         {
-            return new Result<List<OrderItemDto>>(
-                data: new List<OrderItemDto>(),
-                message: isValidate.Message,
-                isSuccessful: false,
-                statusCode: isValidate.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        List<OrderItemDto> orderItems = (await unitOfWork.OrderItemRepository
-                .GetOrderItems(storeId: user.Store.Id, pageNum: pageNum, pageSize: pageSize))
+        var orderItems = (await unitOfWork.OrderItemRepository
+                .GetOrderItems(storeId: user!.Store!.Id, pageNum: pageNum, pageSize: pageSize))
             .Select(p => p.ToOrderItemDto(config.GetKey("url_file")))
             .ToList();
 
-        return new Result<List<OrderItemDto>>
-        (
-            data: orderItems,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+        return new ObjectResult(orderItems)
+            { StatusCode = StatusCodes.Status200OK };
     }
 
-    public async Task<int>> UpdateOrderItemsStatus(
+    public async Task<IActionResult> UpdateOrderItemsStatus(
         Guid userId,
         UpdateOrderItemStatusDto orderItemsStatusDto)
     {
-        OrderItem? orderItem = await unitOfWork.OrderItemRepository.GetOrderItem(orderItemsStatusDto.Id);
+        var orderItem = await unitOfWork.OrderItemRepository.GetOrderItem(orderItemsStatusDto.Id);
 
         if (orderItem is null)
         {
-            return new Result<int>
-            (
-                data: 0,
-                message: "orderItem not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("OrderItem not Found")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         ;
@@ -79,20 +62,15 @@ public class OrderItemServices(
 
         unitOfWork.OrderItemRepository.Update(orderItem);
 
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<int>
-            (
-                data: 0,
-                message: "error while update orderItme status",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while update orderItem status")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        OrderItemsStatusEvent statusEvent = new OrderItemsStatusEvent
+        var statusEvent = new OrderItemsStatusEvent
         {
             OrderId = orderItem.OrderId,
             OrderItemId = orderItem.Id,
@@ -101,12 +79,7 @@ public class OrderItemServices(
         await hubContext.Clients.All.SendAsync("orderItemsStatusChange", statusEvent);
 
 
-        return new Result<int>
-        (
-            data: 1,
-            message: "",
-            isSuccessful: true,
-            statusCode: 204
-        );
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 }

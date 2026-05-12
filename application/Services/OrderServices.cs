@@ -8,6 +8,7 @@ using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.shared.signalr;
 using api.util;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
 namespace api.application.Services;
@@ -19,7 +20,7 @@ public class OrderServices(
     IServiceProvider sp)
     : IOrderServices
 {
-    public static readonly List<string> OrderStatus = new List<string>
+    private static readonly List<string> OrderStatus = new List<string>
     {
         "Rejected",
         "Inprogress",
@@ -30,46 +31,30 @@ public class OrderServices(
     };
 
 
-    public async Task<OrderDto?>> CreateOrder(Guid userId, CreateOrderDto orderDto)
+    public async Task<IActionResult> CreateOrder(Guid userId, CreateOrderDto orderDto)
     {
-        User? user = await unitOfWork.UserRepository.GetUser(userId);
+        var user = await unitOfWork.UserRepository.GetUser(userId);
 
-        var isValidated = user.IsValidateFunc(isAdmin: false);
+        var validationResult = user.IsValidateFunc(isAdmin: false);
 
-        if (isValidated is not null)
+        if (validationResult is not null)
         {
-            return new Result<OrderDto?>
-            (
-                data: null,
-                message: isValidated.Message,
-                isSuccessful: false,
-                statusCode: isValidated.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
         if (!(await unitOfWork.OrderRepository.IsValidTotalPrice(orderDto.TotalPrice, orderDto.Items, orderDto.Symbol)))
         {
-            return new Result<OrderDto?>
-            (
-                data: null,
-                message: "order totalPrice is not valid",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("order totalPrice is not valid")
+                { StatusCode = StatusCodes.Status409Conflict };
         }
 
-        PaymentType? paymentType =
+        var paymentType =
             (await unitOfWork.PaymentTypeRepository.GetPaymentTypeGetPayment(orderDto.PaymentTypeId));
 
         if (paymentType is null)
         {
-            return new Result<OrderDto?>
-            (
-                data: null,
-                message: "payment type is not exist ",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("payment type is not exist ")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
 
@@ -80,18 +65,13 @@ public class OrderServices(
             var stripPayment = new PaymentServices(new StripPaymentServices());
             var isPassed = await stripPayment.IsValidatePayment(orderDto.PaymentId ?? "");
             if (!isPassed)
-                return new Result<OrderDto?>
-                (
-                    data: null,
-                    message: "payment  is not successfully",
-                    isSuccessful: false,
-                    statusCode: 400
-                );
+                return new ObjectResult("payment  is not successfully")
+                    { StatusCode = StatusCodes.Status404NotFound };
         }
 
 
         //  this for production is used to keep order under 40 order on vps
-        int ordersCount = await unitOfWork.OrderRepository.GetOrders();
+        var ordersCount = await unitOfWork.OrderRepository.GetOrders();
 
         if (ordersCount > 40)
         {
@@ -102,7 +82,7 @@ public class OrderServices(
 
 
         var id = ClsUtil.GenerateGuid();
-        Order? order = new Order
+        var order = new Order
         {
             Id = id,
             PaymentTypeId = orderDto.PaymentTypeId,
@@ -121,7 +101,7 @@ public class OrderServices(
         foreach (var item in orderDto.Items)
         {
             var orderItemId = ClsUtil.GenerateGuid();
-            List<OrderProductsVariant>? orderProductsVariants =
+            var orderProductsVariants =
                 item.ProductVariant == null || item.ProductVariant.Count == 0
                     ? null
                     : item.ProductVariant
@@ -133,7 +113,7 @@ public class OrderServices(
                         })
                         .ToList();
 
-            OrderItem orderItem = new OrderItem
+            var orderItem = new OrderItem
             {
                 Id = orderItemId,
                 OrderId = id,
@@ -149,44 +129,29 @@ public class OrderServices(
         }
 
 
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
 
         if (result == 0)
         {
-            return new Result<OrderDto?>
-            (
-                data: null,
-                message: "error while create order",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while create order")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         var isSavedDistance = await unitOfWork.OrderRepository.IsSavedDistanceToOrder(order.Id);
-        // this line to save delete order if is deleted
         await unitOfWork.SaveChanges();
-        if (isSavedDistance == false)
+
+        if (!isSavedDistance)
         {
-            return new Result<OrderDto?>
-            (
-                data: null,
-                message: "could not calculate  distance distance to user ",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("could not calculate  distance distance to user ")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         order = await unitOfWork.OrderRepository.GetOrder(order.Id);
         if (order is null)
         {
-            return new Result<OrderDto?>
-            (
-                data: null,
-                message: "error while create order",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while create order")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         var dtoOrder = order.ToDto(config.GetKey("url_file"));
@@ -194,97 +159,68 @@ public class OrderServices(
         await SendNotification(order, 1);
 
 
-        return new Result<OrderDto?>
-        (
-            data: dtoOrder,
-            message: "",
-            isSuccessful: true,
-            statusCode: 201
-        );
+        return new ObjectResult(dtoOrder)
+            { StatusCode = StatusCodes.Status201Created };
     }
 
 
-    public async Task<List<OrderDto>>> GetMyOrders(Guid userId, int pageNum, int pageSize)
+    public async Task<IActionResult> GetMyOrders(Guid userId, int pageNum, int pageSize)
     {
-        List<OrderDto> orders = (await unitOfWork.OrderRepository
+        var orders = (await unitOfWork.OrderRepository
                 .GetOrders(userId, pageNum, pageSize))
             .Select(o => o.ToDto(config.GetKey("url_file")))
             .ToList();
 
-        return new Result<List<OrderDto>>
-        (
-            data: orders,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+
+        return new ObjectResult(orders)
+            { StatusCode = StatusCodes.Status200OK };
     }
 
     //for admin dashboard
-    public async Task<AdminOrderDto?>> GetOrders(Guid userId, int pageNum, int pageSize)
+    public async Task<IActionResult> GetOrders(Guid userId, int pageNum, int pageSize)
     {
-        User? delivery = await unitOfWork.UserRepository.GetUser(userId);
+        var delivery = await unitOfWork.UserRepository.GetUser(userId);
 
-        var isValid = delivery.IsValidateFunc();
+        var validationResult = delivery.IsValidateFunc();
 
-        if (isValid is not null)
+        if (validationResult is not null)
         {
-            return new Result<AdminOrderDto?>
-            (
-                data: null,
-                message: isValid.Message,
-                isSuccessful: false,
-                statusCode: isValid.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        List<OrderDto> orders = (await unitOfWork.OrderRepository
+        var orders = (await unitOfWork.OrderRepository
                 .GetOrders(pageNum, pageSize))
             .Select(o => o.ToDto(config.GetKey("url_file")))
             .ToList();
 
-        int orderPages = (int)Math.Ceiling((double)orders.Count / pageSize);
+        var orderPages = (int)Math.Ceiling((double)orders.Count / pageSize);
 
         var holder = new AdminOrderDto { Orders = orders, pageNum = orderPages };
-        return new Result<AdminOrderDto?>
-        (
-            data: holder,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+
+        return new ObjectResult(holder)
+            { StatusCode = StatusCodes.Status200OK };
     }
 
-    public async Task<bool>> UpdateOrderStatus(Guid id, int status)
+    public async Task<IActionResult> UpdateOrderStatus(Guid id, int status)
     {
-        Order? order = await unitOfWork.OrderRepository
+        var order = await unitOfWork.OrderRepository
             .GetOrder(id);
 
         if (order is null)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "order not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("order not found")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         order.Status = status;
 
         unitOfWork.OrderRepository.Update(order);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "error while update order status",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while update order status")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         await hubContext.Clients.All.SendAsync("orderStatus", new UpdateOrderStatusEventDto
@@ -293,157 +229,102 @@ public class OrderServices(
             Status = OrderStatus[status]
         });
 
-        //this for notification operation for all user at the system
 
         await SendNotification(order, status);
-        return new Result<bool>
-        (
-            data: true,
-            message: "",
-            isSuccessful: true,
-            statusCode: 204
-        );
+
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 
-    public async Task<bool>> DeleteOrder(Guid id, Guid userId)
+    public async Task<IActionResult> DeleteOrder(Guid id, Guid userId)
     {
-        Order? order = await unitOfWork.OrderRepository.GetOrder(id, userId);
+        var order = await unitOfWork.OrderRepository.GetOrder(id, userId);
         if (order is null)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "order not found ",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("order not found")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         unitOfWork.OrderRepository.Delete(id);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
+
         if (result == 0)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "error while delete order",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while delete order")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        return new Result<bool>
-        (
-            data: true,
-            message: "",
-            isSuccessful: true,
-            statusCode: 204
-        );
+
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 
 
     // for delivery 
-    public async Task<List<OrderDto>>> GetOrdersByDeliveryId(Guid deliveryId, int pageNum, int pageSize)
+    public async Task<IActionResult> GetOrdersByDeliveryId(Guid deliveryId, int pageNum, int pageSize)
     {
-        Delivery? delivery = await unitOfWork.DeliveryRepository.GetDelivery(deliveryId);
+        var delivery = await unitOfWork.DeliveryRepository.GetDelivery(deliveryId);
 
-        var isValid = delivery.IsValidated();
+        var validationResult = delivery.IsValidated();
 
-        if (isValid is not null)
+        if (validationResult is not null)
         {
-            return new Result<List<OrderDto>>
-            (
-                data: new List<OrderDto>(),
-                message: isValid.Message,
-                isSuccessful: false,
-                statusCode: isValid.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        List<OrderDto> orders = (await unitOfWork.OrderRepository
+        var orders = (await unitOfWork.OrderRepository
                 .GetOrderBelongToDelivery(deliveryId, pageNum, pageSize))
             .Select(o => o.ToDto(config.GetKey("url_file")))
             .ToList();
 
-        return new Result<List<OrderDto>>
-        (
-            data: orders,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+
+        return new ObjectResult(orders) { StatusCode = StatusCodes.Status200OK };
     }
 
-    public async Task<List<OrderDto>>> GetOrdersNotBelongToDeliveries(Guid deliveryId, int pageNum, int pageSize)
+    public async Task<IActionResult> GetOrdersNotBelongToDeliveries(Guid deliveryId, int pageNum, int pageSize)
     {
-        Delivery? delivery = await unitOfWork.DeliveryRepository.GetDelivery(deliveryId);
+        var delivery = await unitOfWork.DeliveryRepository.GetDelivery(deliveryId);
 
-        var isValid = delivery.IsValidated();
-        if (isValid is not null)
+        var validationResult = delivery.IsValidated();
+        if (validationResult is not null)
         {
-            return new Result<List<OrderDto>>
-            (
-                data: new List<OrderDto>(),
-                message: isValid.Message,
-                isSuccessful: false,
-                statusCode: isValid.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        List<OrderDto> orders = (await unitOfWork.OrderRepository
+        var orders = (await unitOfWork.OrderRepository
                 .GetOrderNoBelongToAnyDelivery(pageNum, pageSize))
             .Select(o => o.ToDto(config.GetKey("url_file")))
             .ToList();
 
-        return new Result<List<OrderDto>>
-        (
-            data: orders,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+
+        return new ObjectResult(orders)
+            { StatusCode = StatusCodes.Status200OK };
     }
 
 
-    public async Task<bool>> SubmitOrderToDelivery(Guid id, Guid deliveryId)
+    public async Task<IActionResult> SubmitOrderToDelivery(Guid id, Guid deliveryId)
     {
-        Delivery? delivery = await unitOfWork.DeliveryRepository.GetDelivery(deliveryId);
+        var delivery = await unitOfWork.DeliveryRepository.GetDelivery(deliveryId);
 
-        var isValid = delivery.IsValidated();
+        var validationResult = delivery.IsValidated();
 
-        if (isValid is not null)
+        if (validationResult is not null)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: isValid.Message,
-                isSuccessful: false,
-                statusCode: isValid.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
 
-        Order? order = await unitOfWork.OrderRepository.GetOrder(id);
+        var order = await unitOfWork.OrderRepository.GetOrder(id);
 
         if (order == null)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "Order not exists",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("Order not Found")
+                { StatusCode = StatusCodes.Status409Conflict };
         }
 
         if (order.DeliveryId != null)
-            return new Result<bool>
-            (
-                data: false,
-                message: "Order Delivered By another Delivery",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("Order Delivered By another Delivery")
+                { StatusCode = StatusCodes.Status409Conflict };
 
 
         order.DeliveryId = deliveryId;
@@ -456,16 +337,11 @@ public class OrderServices(
 
         if (result < 1)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "error while update order",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while update order")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        OrderTookByEvent eventHolder = new OrderTookByEvent
+        var eventHolder = new OrderTookByEvent
         {
             Id = id,
             DeliveryId = deliveryId
@@ -480,102 +356,70 @@ public class OrderServices(
 
 
         await SendNotification(order, status: 2);
-        return new Result<bool>
-        (
-            data: true,
-            message: "",
-            isSuccessful: true,
-            statusCode: 204
-        );
+
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 
-    public async Task<bool>> CancelOrderFromDelivery(Guid id, Guid deliveryId)
+    public async Task<IActionResult> CancelOrderFromDelivery(Guid id, Guid deliveryId)
     {
-        Delivery? delivery = await unitOfWork.DeliveryRepository.GetDelivery(deliveryId);
+        var delivery = await unitOfWork.DeliveryRepository.GetDelivery(deliveryId);
 
-        var isValid = delivery.IsValidated();
-        if (isValid is not null)
+        var validationResult = delivery.IsValidated();
+        if (validationResult is not null)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: isValid.Message,
-                isSuccessful: false,
-                statusCode: isValid.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        Order? order = await unitOfWork.OrderRepository.GetOrder(id);
+        var order = await unitOfWork.OrderRepository.GetOrder(id);
 
         if (order is null)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "order not found ",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("order not found ")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         if (!(await unitOfWork.OrderRepository.IsCanCancelOrder(id)))
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "order can not cancel some orderitems recived from stores by delivery ",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("order can not cancel some order items received from stores by delivery ")
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         unitOfWork.OrderRepository.RemoveOrderFromDelivery(id, deliveryId);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
 
         if (result == 0)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "error while remove order from delivery",
-                isSuccessful: false,
-                statusCode: 400
-            );
+           
+            return new ObjectResult("error while remove order from delivery")
+                { StatusCode = StatusCodes.Status500InternalServerError };
+
         }
 
         await hubContext.Clients.All.SendAsync("createdOrder", order.ToDto(config.GetKey("url_file")));
 
-        return new Result<bool>
-        (
-            data: true,
-            message: "",
-            isSuccessful: true,
-            statusCode: 204
-        );
+       
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
+
     }
 
-    public async Task<List<string>>> GetOrdersStatus(Guid adminId)
+    public async Task<IActionResult> GetOrdersStatus(Guid adminId)
     {
-        User? user = await unitOfWork.UserRepository.GetUser(adminId);
-        var isValide = user.IsValidateFunc();
+        var user = await unitOfWork.UserRepository.GetUser(adminId);
+        var validationResult = user.IsValidateFunc();
 
-        if (isValide is not null)
+        if (validationResult is not null)
         {
-            return new Result<List<string>>(
-                data: new List<string>(),
-                message: isValide.Message,
-                isSuccessful: false,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
+ 
         }
 
-        return new Result<List<string>>(
-            data: OrderStatus,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+       
+        return new ObjectResult(OrderStatus)
+            { StatusCode = StatusCodes.Status200OK };
+
     }
 
     private async Task SendNotification(Order order, int status)
@@ -593,11 +437,10 @@ public class OrderServices(
 
             var orderItems = order.Items.ToList();
 
-            for (int i = 0; i < orderItems.Count; i++)
+            foreach (var orderItem in orderItems)
             {
-                var orderItem = orderItems[i];
                 var cancelMessage = orderItem.Product.Name + " is Rejected For " + order.User.Name;
-                var storeMessage = this.StoreMessage(status, cancelMessage);
+                var storeMessage = StoreMessage(status, cancelMessage);
                 if (!string.IsNullOrEmpty(storeMessage) && orderItem.Store.user.DeviceToken is not null)
                 {
                     await messageServe.SendingMessage(storeMessage, orderItem.Store.user.DeviceToken);
@@ -616,7 +459,7 @@ public class OrderServices(
         {
             var messageServe = sp.GetRequiredKeyedService<IMessageService>(EnMessageService.Notification);
 
-            var userMessage = this.UserMessage(status);
+            var userMessage = UserMessage(status);
             if (!string.IsNullOrEmpty(userMessage))
             {
                 await messageServe.SendingMessage(userMessage, order.User?.DeviceToken ?? "");
@@ -634,7 +477,7 @@ public class OrderServices(
         {
             var messageServe = sp.GetRequiredKeyedService<IMessageService>(EnMessageService.Notification);
 
-            var deliveryMessage = this.DeliveryMessage(status);
+            var deliveryMessage = DeliveryMessage(status);
 
             Delivery? delivery = null;
             if (order.DeliveryId is not null)
@@ -693,7 +536,7 @@ public class OrderServices(
         }
     }
 
-    private string UserMessage(int status)
+    private static string UserMessage(int status)
     {
         return status switch
         {
@@ -707,7 +550,7 @@ public class OrderServices(
         };
     }
 
-    private string DeliveryMessage(int status)
+    private static string DeliveryMessage(int status)
     {
         return status switch
         {
@@ -718,7 +561,7 @@ public class OrderServices(
         };
     }
 
-    private string StoreMessage(int status, string customMessage = "")
+    private static string StoreMessage(int status, string customMessage = "")
     {
         return status switch
         {

@@ -1,13 +1,10 @@
 using api.application.Interface;
-using api.application.Result;
 using api.domain.entity;
 using api.Infrastructure;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
-using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.util;
-using Microsoft.CodeAnalysis.Elfie.Model;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.application.Services;
 
@@ -26,140 +23,110 @@ public class ProductServices(
             fileServices.DeleteFile(savedThumbnail);
     }
 
-    public async Task<List<ProductDto>>> GetProductsByStoreId(
+    public async Task<IActionResult> GetProductsByStoreId(
         Guid storeId,
         int pageNum,
         int pageSize
     )
     {
-        List<ProductDto> products = (await unitOfWork.ProductRepository
+        var productsToDto = (await unitOfWork.ProductRepository
                 .GetProducts(storeId, pageNum, pageSize))
             .Select((de) => de.ToDto(config.GetKey("url_file")))
             .ToList();
 
-        return new Result<List<ProductDto>>(
-            data: products,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+
+        return new ObjectResult(productsToDto)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
     }
 
-    public async Task<List<ProductDto>>> GetProductsByCategoryId(
+    public async Task<IActionResult> GetProductsByCategoryId(
         Guid categryId,
         int pageNum,
         int pageSize
     )
     {
-        List<ProductDto> products = (await unitOfWork.ProductRepository
+        var productsToDto = (await unitOfWork.ProductRepository
                 .GetProductsByCategory(categryId, pageNum, pageSize))
             .Select((de) => de.ToDto(config.GetKey("url_file")))
             .ToList();
 
-        return new Result<List<ProductDto>>(
-            data: products,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+        return new ObjectResult(productsToDto)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
     }
 
-    public async Task<List<ProductDto>>> GetProducts(
+    public async Task<IActionResult> GetProducts(
         Guid storeId,
         Guid subCategoryId,
         int pageNum,
         int pageSize
     )
     {
-        List<ProductDto> products = (await unitOfWork.ProductRepository
+        var productsToDto = (await unitOfWork.ProductRepository
                 .GetProducts(storeId, subCategoryId, pageNum, pageSize))
             .Select((de) => de.ToDto(config.GetKey("url_file")))
             .ToList();
 
-        return new Result<List<ProductDto>>(
-            data: products,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+        return new ObjectResult(productsToDto)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
     }
 
-    public async Task<List<ProductDto>>> GetProducts(
+    public async Task<IActionResult> GetProducts(
         int pageNum,
         int pageSize
     )
     {
         var products = (await unitOfWork.ProductRepository
             .GetProducts(pageNum, pageSize));
-        List<ProductDto> productDtos = products.Select((de) => de.ToDto(config.GetKey("url_file")))
+
+        var productsToDto = products.Select((de) => de.ToDto(config.GetKey("url_file")))
             .ToList();
 
-        return new Result<List<ProductDto>>(
-            data: productDtos,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+        return new ObjectResult(productsToDto)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
     }
 
-    public async Task<List<AdminProductsDto>>> GetProductsForAdmin(Guid adminId,
+    public async Task<IActionResult> GetProductsForAdmin(Guid adminId,
         int pageNum,
         int pageSize)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(adminId);
-        if (user is null)
-        {
-            return new Result<List<AdminProductsDto>>
-            (
-                data: new List<AdminProductsDto>(),
-                message: "user not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
-        }
 
-        if (user.IsUser == true)
+        var validationResult = user.IsValidateFunc(false);
+
+        if (validationResult is not null)
         {
-            return new Result<List<AdminProductsDto>>
-            (
-                data: new List<AdminProductsDto>(),
-                message: "not authorized user",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
 
-        List<AdminProductsDto> products = (await unitOfWork.ProductRepository
+        var productsToDto = (await unitOfWork.ProductRepository
                 .GetProducts(pageNum, pageSize))
             .Select((de) => de.ToAdminDto(config.GetKey("url_file")))
             .ToList();
 
 
-        return new Result<List<AdminProductsDto>>(
-            data: products,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+        return new ObjectResult(productsToDto)
+            { StatusCode = StatusCodes.Status200OK };
     }
 
-    public async Task<int>> GetProductsPagesForAdmin(Guid adminId, int length = 25)
+    public async Task<IActionResult> GetProductsPagesForAdmin(Guid adminId, int length = 25)
     {
         User? admin = await unitOfWork.UserRepository.GetUser(adminId);
 
-        var isValidate = admin.IsValidateFunc(false);
+        var validationResult = admin.IsValidateFunc(false);
 
-        if (isValidate is not null)
+        if (validationResult is not null)
         {
-            return new Result<int>
-            (
-                data: 0,
-                message: isValidate.Message,
-                isSuccessful: false,
-                statusCode: isValidate.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
 
@@ -167,265 +134,176 @@ public class ProductServices(
 
         var productsPerPage = productPageLength != null ? (int)Math.Ceiling((double)productPageLength / length) : 0;
 
-        return new Result<int>
-        (
-            data: productsPerPage,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+        return new ObjectResult(productsPerPage)
+            { StatusCode = StatusCodes.Status200OK };
     }
 
-    public async Task<ProductDto?>> CreateProducts(
+    public async Task<IActionResult> CreateProducts(
         Guid userId,
         CreateProductDto productDto
     )
     {
-        try
+        var user = await unitOfWork.UserRepository.GetUser(userId);
+
+        var validationResult = user.IsValidateFunc(false, true);
+
+        if (validationResult is not null)
         {
-            User? user = await unitOfWork.UserRepository.GetUser(userId);
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
+        }
 
-            var isValidate = user.IsValidateFunc(false, true);
 
-            if (isValidate is not null)
+        var isExistCurrency = await unitOfWork.CurrencyRepository.isExist(productDto.Symbol);
+
+        if (!isExistCurrency)
+        {
+            return new ObjectResult("Currency is Not Exist")
+                { StatusCode = StatusCodes.Status404NotFound };
+        }
+
+
+        var savedThumbnail = await fileServices.SaveFile(
+            productDto.Thumbnail,
+            EnImageType.Product);
+
+        var savedImage = await fileServices.SaveFile(
+            productDto.Images,
+            EnImageType.Product);
+
+        if (savedImage is null || savedThumbnail is null)
+        {
+            DeleteProductImages(savedImage, savedThumbnail);
+
+            return new ObjectResult("error while saving image ")
+                { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+
+
+        var id = ClsUtil.GenerateGuid();
+
+        var images = savedImage.Select(pi => new ProductImage
             {
-                return new Result<ProductDto?>
-                (
-                    data: null,
-                    message: isValidate.Message,
-                    isSuccessful: false,
-                    statusCode: isValidate.StatusCode
-                );
-            }
+                Id = ClsUtil.GenerateGuid(),
+                Path = pi,
+                ProductId = id
+            })
+            .ToList();
 
-            //this for production for keep the product under 40 product at the vps
-            int productCount = await unitOfWork.ProductRepository.GetProduct();
-            if (productCount > 40)
-            {
-                var productsList = (await unitOfWork.ProductRepository.GetProducts(40))?.ToList();
-                if (productsList is not null && productsList?.Count() > 0)
-                {
-                    var productImages = productsList?.Select(s => s.ProductImages?.Select(p => p.Path));
-                    var productImagesHolder = productImages?.SelectMany(value => value)?.ToList();
-                    if (productImagesHolder is not null)
+        if ((images.Count) > 20)
+        {
+            DeleteProductImages(savedImage, savedThumbnail);
+
+            return new ObjectResult("product image can maximum has 20 images")
+                { StatusCode = StatusCodes.Status403Forbidden };
+        }
+
+
+        List<ProductVariant>? productVariants = null;
+        if (productDto.ProductVariants is not null)
+            productVariants = productDto
+                .ProductVariants!.Select(pv =>
+                    new ProductVariant
                     {
-                        fileServices.DeleteFile(productImagesHolder);
-                    }
-
-                    unitOfWork.ProductRepository.Delete(productsList);
-                }
-            }
-            //end
-
-            bool isExistCurrency = await unitOfWork.CurrencyRepository.isExist(productDto.Symbol);
-
-            if (!isExistCurrency)
-            {
-                return new Result<ProductDto?>
-                (
-                    data: null,
-                    message: "Currency is Not Exist",
-                    isSuccessful: false,
-                    statusCode: 404
-                );
-            }
-
-
-            string? savedThumbnail = await fileServices.SaveFile(
-                productDto.Thumbnail,
-                EnImageType.Product);
-            List<string>? savedImage = await fileServices.SaveFile(
-                productDto.Images,
-                EnImageType.Product);
-
-            if (savedImage is null || savedThumbnail is null)
-            {
-                DeleteProductImages(savedImage, savedThumbnail);
-
-                return new Result<ProductDto?>
-                (
-                    data: null,
-                    message: "error while saving image ",
-                    isSuccessful: false,
-                    statusCode: 400
-                );
-            }
-
-
-            var id = ClsUtil.GenerateGuid();
-
-            List<ProductImage> images = savedImage.Select(pi => new ProductImage
-                {
-                    Id = ClsUtil.GenerateGuid(),
-                    Path = pi,
-                    ProductId = id
-                })
+                        Id = ClsUtil.GenerateGuid(),
+                        Name = pv.Name,
+                        Percentage = pv.Percentage,
+                        ProductId = id,
+                        VariantId = pv.VariantId,
+                        OrderProductsVariants = null
+                    })
                 .ToList();
 
-            if ((images.Count) > 20)
-            {
-                DeleteProductImages(savedImage, savedThumbnail);
-                return new Result<ProductDto?>
-                (
-                    data: null,
-                    message: "product image can maximum has 20 images",
-                    isSuccessful: false,
-                    statusCode: 404
-                );
-            }
-
-
-            List<ProductVariant>? productVariants = null;
-            if (productDto.ProductVariants is not null)
-                productVariants = productDto
-                    .ProductVariants!.Select(pv =>
-                        new ProductVariant
-                        {
-                            Id = ClsUtil.GenerateGuid(),
-                            Name = pv.Name,
-                            Percentage = pv.Percentage,
-                            ProductId = id,
-                            VariantId = pv.VariantId,
-                            OrderProductsVariants = null
-                        })
-                    .ToList();
-
-            if (productVariants is not null && productVariants.Count > 20)
-            {
-                DeleteProductImages(savedImage, savedThumbnail);
-
-                return new Result<ProductDto?>
-                (
-                    data: null,
-                    message: "productVariant  can maximum has 20 images",
-                    isSuccessful: false,
-                    statusCode: 404
-                );
-            }
-
-            var product = new Product
-            {
-                Id = id,
-                Name = productDto.Name,
-                Description = productDto.Description,
-                SubcategoryId = productDto.SubcategoryId,
-                StoreId = user!.Store!.Id,
-                Price = productDto.Price,
-                CreatedAt = DateTime.Now,
-                UpdatedAt = null,
-                Thumbnail = savedThumbnail,
-                Symbol = productDto.Symbol,
-            };
-
-            unitOfWork.ProductRepository.Add(product);
-            unitOfWork.ProductImageRepository.AddProductImage(images);
-            if (productVariants is not null)
-                unitOfWork.ProductVariantRepository.SaveProductVariants(productVariants);
-            int result = await unitOfWork.SaveChanges();
-
-            if (result == 0)
-            {
-                DeleteProductImages(savedImage, savedThumbnail);
-
-                return new Result<ProductDto?>
-                (
-                    data: null,
-                    message: "error while adding product",
-                    isSuccessful: false,
-                    statusCode: 400
-                );
-            }
-
-            product = await unitOfWork.ProductRepository.GetProduct(product.Id);
-
-            return new Result<ProductDto?>
-            (
-                data: product?.ToDto(config.GetKey("url_file")),
-                message: "",
-                isSuccessful: true,
-                statusCode: 201
-            );
-        }
-        catch (Exception ex)
+        if (productVariants is not null && productVariants.Count > 20)
         {
-            return new Result<ProductDto?>
-            (
-                data: null,
-                message: "",
-                isSuccessful: true,
-                statusCode: 201
-            );
+            DeleteProductImages(savedImage, savedThumbnail);
+
+            return new ObjectResult("productVariant  can maximum has 20 images")
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
+
+        var product = new Product
+        {
+            Id = id,
+            Name = productDto.Name,
+            Description = productDto.Description,
+            SubcategoryId = productDto.SubcategoryId,
+            StoreId = user!.Store!.Id,
+            Price = productDto.Price,
+            CreatedAt = DateTime.Now,
+            UpdatedAt = null,
+            Thumbnail = savedThumbnail,
+            Symbol = productDto.Symbol,
+        };
+
+        unitOfWork.ProductRepository.Add(product);
+        unitOfWork.ProductImageRepository.AddProductImage(images);
+
+        if (productVariants is not null)
+            await unitOfWork.ProductVariantRepository
+                .SaveProductVariants(productVariants);
+
+        var result = await unitOfWork.SaveChanges();
+
+        if (result == 0)
+        {
+            DeleteProductImages(savedImage, savedThumbnail);
+
+
+            return new ObjectResult("error while adding product")
+                { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+
+        product = await unitOfWork.ProductRepository.GetProduct(product.Id);
+
+        var productToDto = product?.ToDto(config.GetKey("url_file"));
+
+        return new ObjectResult(productToDto)
+            { StatusCode = StatusCodes.Status201Created };
     }
 
 
-    public async Task<ProductDto?>> UpdateProducts(
+    public async Task<IActionResult> UpdateProducts(
         Guid userId, UpdateProductDto productDto
     )
     {
         if (productDto.IsEmpty())
-            return new Result<ProductDto?>
-            (
-                data: null,
-                message: "",
-                isSuccessful: true,
-                statusCode: 201
-            );
+            return new ObjectResult("No Product Change Found")
+                { StatusCode = StatusCodes.Status400BadRequest };
 
-        User? user = await unitOfWork.UserRepository.GetUser(userId);
 
-        var isValidate = user.IsValidateFunc(false, true);
+        var user = await unitOfWork.UserRepository.GetUser(userId);
 
-        if (isValidate is not null)
+        var validationResult = user.IsValidateFunc(false, true);
+
+        if (validationResult is not null)
         {
-            return new Result<ProductDto?>
-            (
-                data: null,
-                message: isValidate.Message,
-                isSuccessful: false,
-                statusCode: isValidate.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
         if (productDto.Symbol is not null)
         {
-            bool isExistCurrency = await unitOfWork.CurrencyRepository.isExist(productDto.Symbol);
+            var isExistCurrency = await unitOfWork.CurrencyRepository.isExist(productDto.Symbol);
 
             if (!isExistCurrency)
             {
-                return new Result<ProductDto?>
-                (
-                    data: null,
-                    message: "Currency is Not Exist",
-                    isSuccessful: false,
-                    statusCode: 404
-                );
+                return new ObjectResult("Currency is Not Exist")
+                    { StatusCode = StatusCodes.Status404NotFound };
             }
         }
 
         if (productDto.SubcategoryId is not null &&
             !(await unitOfWork.SubCategoryRepository.IsExist((Guid)productDto!.SubcategoryId!)))
         {
-            return new Result<ProductDto?>
-            (
-                data: null,
-                message: "subCategory  is not found ",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("subCategory  is not found ")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
-        Product? product = await unitOfWork.ProductRepository.GetProduct(productDto.Id, productDto.StoreId);
+        var product = await unitOfWork.ProductRepository.GetProduct(productDto.Id, productDto.StoreId);
 
         if (product is null)
         {
-            return new Result<ProductDto?>
-            (
-                data: null,
-                message: "product is not found ",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("product is not found ")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         int result = 0;
@@ -439,7 +317,7 @@ public class ProductServices(
             fileServices.DeleteFile(productDto.Deletedimages);
         }
 
-        //delete preview productvarients
+        //delete preview product variants
         if (productDto.DeletedProductVariants is not null)
         {
             await Task.Run(() => unitOfWork.ProductVariantRepository.DeleteProductVariant(
@@ -470,25 +348,17 @@ public class ProductServices(
         if (savedImage is not null && (savedImage.Count + product?.ProductImages?.Count) > 20)
         {
             DeleteProductImages(savedImage.Select(value => value.Path).ToList(), savedThumbnail);
-            return new Result<ProductDto?>
-            (
-                data: null,
-                message: "product image can maximum has 20 images",
-                isSuccessful: false,
-                statusCode: 404
-            );
+
+            return new ObjectResult("product image can maximum has 20 images")
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         if ((savedImage?.Count + product?.ProductImages?.Count) < 1)
         {
             DeleteProductImages(savedImage?.Select(value => value.Path).ToList(), savedThumbnail);
-            return new Result<ProductDto?>
-            (
-                data: null,
-                message: "product image must  has 2 image at least ",
-                isSuccessful: false,
-                statusCode: 404
-            );
+
+            return new ObjectResult("product image must  has 2 image at least ")
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         List<ProductVariant>? productVariants = null;
@@ -510,13 +380,9 @@ public class ProductServices(
         {
             DeleteProductImages(savedImage?.Select(value => value.Path).ToList(), savedThumbnail);
 
-            return new Result<ProductDto?>
-            (
-                data: null,
-                message: "product image can maximum has 20 images",
-                isSuccessful: false,
-                statusCode: 404
-            );
+
+            return new ObjectResult("product variant can maximum has 20 variants")
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         if (productVariants is not null)
@@ -544,72 +410,50 @@ public class ProductServices(
         {
             DeleteProductImages(savedImage?.Select(value => value.Path).ToList(), savedThumbnail);
 
-            return new Result<ProductDto?>
-            (
-                data: null,
-                message: "error while updating product",
-                isSuccessful: false,
-                statusCode: 400
-            );
+
+            return new ObjectResult("error while updating product")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         product = await unitOfWork.ProductRepository.GetProduct(product.Id);
 
-        return new Result<ProductDto?>
-        (
-            data: product?.ToDto(config.GetKey("url_file")),
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+        var productToDto = product?.ToDto(config.GetKey("url_file"));
+
+
+        return new ObjectResult(productToDto)
+            { StatusCode = StatusCodes.Status500InternalServerError };
     }
 
-    public async Task<bool>> DeleteProducts(
+    public async Task<IActionResult> DeleteProducts(
         Guid userId,
         Guid storeId,
         Guid id
     )
     {
-        User? user = await unitOfWork.UserRepository.GetUser(userId);
+        var user = await unitOfWork.UserRepository.GetUser(userId);
 
-        var isValidate = user.IsValidateFunc(false, true);
+        var validationResult = user.IsValidateFunc(false, true);
 
-        if (isValidate is not null)
+        if (validationResult is not null)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: isValidate.Message,
-                isSuccessful: false,
-                statusCode: isValidate.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        Product? product = await unitOfWork.ProductRepository.GetProduct(id, user.Store.Id);
+        var product = await unitOfWork.ProductRepository.GetProduct(id, user.Store.Id);
 
         if (product is null || id != product.Id || product.Store.Id != storeId)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "product is not found ",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("product is not found ")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         unitOfWork.ProductRepository.Delete(product.Id);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "product had linke with some order",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("product had link with some order")
+                { StatusCode = StatusCodes.Status409Conflict };
         }
 
         if (product.ProductImages is not null)
@@ -618,15 +462,10 @@ public class ProductServices(
                 fileServices.DeleteFile(image.Path);
             }
 
-        if (product.Thumbnail is not null)
+        if (product?.Thumbnail is not null)
             fileServices.DeleteFile(product.Thumbnail);
 
-        return new Result<bool>
-        (
-            data: true,
-            message: "",
-            isSuccessful: true,
-            statusCode: 204
-        );
+        return new ObjectResult("product had link with some order")
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 }

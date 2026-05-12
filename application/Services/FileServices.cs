@@ -5,7 +5,7 @@ namespace api.application.Services
 {
     public class FileServices(IWebHostEnvironment host) : IFileServices
     {
-        private static readonly string LocalPath = "images";
+        private const string LocalPath = "images";
 
         private static string GetFileExtension(IFormFile filename) => Path.GetExtension(filename.FileName);
 
@@ -25,7 +25,7 @@ namespace api.application.Services
 
         public async Task<string?> SaveFile(IFormFile file, EnImageType type)
         {
-            string filePath = Path.Combine(host.ContentRootPath, LocalPath, type.ToString());
+            var filePath = Path.Combine(host.ContentRootPath, LocalPath, type.ToString());
             try
             {
                 if (!Directory.Exists(filePath))
@@ -78,14 +78,11 @@ namespace api.application.Services
             try
             {
                 var newFilPath = ClsUtil.RemoveAdditionalPath(filePath);
-                string fileRealPath = Path.Combine(host.ContentRootPath, "images/", newFilPath);
-                if (File.Exists(fileRealPath))
-                {
-                    File.Delete(fileRealPath);
-                    return true;
-                }
+                var fileRealPath = Path.Combine(host.ContentRootPath, "images/", newFilPath);
+                if (!File.Exists(fileRealPath)) return false;
+                File.Delete(fileRealPath);
+                return true;
 
-                return false;
             }
             catch (Exception ex)
             {

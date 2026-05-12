@@ -5,5 +5,5 @@ namespace api.application.Interface;
 
 public interface IRefreshTokenServices
 {
-    Task<IActionResult> GenerateRefreshToken(string token, Claim? id, Claim? issueAt, Claim? expireAt);
+    Task<IActionResult> GenerateRefreshToken(ClaimsPrincipal claimsPrincipal);
 }

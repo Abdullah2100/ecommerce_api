@@ -18,19 +18,19 @@ namespace api.application
     {
         public string GenerateToken(Guid id, string email, EnTokenMode tokenType)
         {
-            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-            string key = config.GetKey("credentials:key");
-            string issuer = config.GetKey("credentials:Issuer");
-            string audience = config.GetKey("credentials:Audience");
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = config.GetKey("credentials:key");
+            var issuer = config.GetKey("credentials:Issuer");
+            var audience = config.GetKey("credentials:Audience");
 
-            List<Claim> claims = new List<Claim>()
-            {
+            List<Claim> claims =
+            [
                 new(JwtRegisteredClaimNames.Jti, ClsUtil.GenerateGuid().ToString()),
                 new(JwtRegisteredClaimNames.NameId, id.ToString() ?? ""),
                 new(JwtRegisteredClaimNames.Email, email)
-            };
+            ];
 
-            SecurityTokenDescriptor tokenDescip = new SecurityTokenDescriptor
+            var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = ClsUtil.GenerateDateTime(tokenType),
@@ -43,8 +43,9 @@ namespace api.application
             };
 
 
-            SecurityToken? token = tokenHandler.CreateToken(tokenDescip);
+            var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
         }
-    }
+
+     }
 }
