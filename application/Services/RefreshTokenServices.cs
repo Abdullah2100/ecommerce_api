@@ -27,38 +27,38 @@ public class RefreshTokenServices(
         var issueAt = DateTimeOffset.FromFileTime(long.Parse(claimsPrincipal.FindFirst("iat")?.Value ?? "0"));
         var expireAt = DateTimeOffset.FromFileTime(long.Parse(claimsPrincipal.FindFirst("exp")?.Value ?? "0"));
 
-        if (value != null)
+        if (value == null)
+            return new ObjectResult("error Credentials") { StatusCode = StatusCodes.Status401Unauthorized };
+
+        var idHolder = Guid.Parse(value);
+        var user = await unitOfWork.UserRepository
+            .GetUser(idHolder);
+
+        var delivery = await unitOfWork.DeliveryRepository.GetDelivery(idHolder);
+
+        var validationResult = user.IsValidateFunc(false);
+        if (validationResult is not null && delivery is null)
         {
-            var idHolder = Guid.Parse(value);
-            var user = await unitOfWork.UserRepository
-                .GetUser(idHolder);
-
-            var delivery = await unitOfWork.DeliveryRepository.GetDelivery(idHolder);
-
-            var validationResult = user.IsValidateFunc(false);
-            if (validationResult is not null && delivery is null)
-            {
-                return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
-            }
-
-            if (!IsRefreshToken(issueAt, expireAt))
-            {
-                return new ObjectResult("send valid token ")
-                    { StatusCode = StatusCodes.Status400BadRequest };
-            }
-
-            var tokenHolder = authenticationService.GenerateToken(
-                id: idHolder,
-                email: (user?.Email ?? delivery?.User?.Email) ?? string.Empty);
-
-            var refreshTokenHolder = authenticationService.GenerateToken(
-                id: idHolder,
-                email: user?.Email ?? (delivery?.User?.Email) ?? string.Empty,
-                EnTokenMode.RefreshToken);
-
-
-            return new ObjectResult(new AuthDto { RefreshToken = refreshTokenHolder, Token = tokenHolder })
-                { StatusCode = StatusCodes.Status200OK };
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
+
+        if (!IsRefreshToken(issueAt, expireAt))
+        {
+            return new ObjectResult("send valid token ")
+                { StatusCode = StatusCodes.Status400BadRequest };
+        }
+
+        var tokenHolder = authenticationService.GenerateToken(
+            id: idHolder,
+            email: (user?.Email ?? delivery?.User?.Email) ?? string.Empty);
+
+        var refreshTokenHolder = authenticationService.GenerateToken(
+            id: idHolder,
+            email: user?.Email ?? (delivery?.User?.Email) ?? string.Empty,
+            EnTokenMode.RefreshToken);
+
+
+        return new ObjectResult(new AuthDto { RefreshToken = refreshTokenHolder, Token = tokenHolder })
+            { StatusCode = StatusCodes.Status200OK };
     }
 }

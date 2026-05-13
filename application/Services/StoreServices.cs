@@ -8,6 +8,7 @@ using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.shared.signalr;
 using api.util;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
 namespace api.application.Services;
@@ -21,117 +22,83 @@ public class StoreServices(
 )
     : IStoreServices
 {
-    public async Task<List<StoreDto>?>> GetStores(Guid adminId, string prefix, int pageSize)
+    public async Task<IActionResult> GetStores(Guid adminId, string prefix, int pageSize)
     {
-        /* User? user = await unitOfWork.UserRepository
-             .GetUser(adminId);
-
-         var isValide = user.IsValidateFunc(true);
-
-         if (isValide is not null)
-         {
-             return new Result<List<StoreDto>?>(
-                 isSuccessful: false,
-                 data: null,
-                 message: isValide.Message,
-                 statusCode: isValide.StatusCode
-             );
-         }
-         */
-
-
         var stores = (await unitOfWork.StoreRepository
                 .GetStores(prefix, pageSize)
             );
-        List<StoreDto> storeToDto = stores == null
-            ? new List<StoreDto>()
-            : stores.Select(st => st.ToDto(config.GetKey("url_file")))
-                .ToList();
+        var storeToDto = stores?
+            .Select(st => st.ToDto(config.GetKey("url_file")))
+            .ToList();
 
-        return new Result<List<StoreDto>?>
-        (
-            data: storeToDto,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+        return new ObjectResult(storeToDto)
+            { StatusCode = StatusCodes.Status200OK };
     }
 
 
-    private void DeleteStoreImage(string? wallperper, string? smallImage)
+    private void DeleteStoreImage(string? wallpaper, string? smallImage)
     {
-        if (wallperper is not null)
-            fileServices.DeleteFile(wallperper);
+        if (wallpaper is not null)
+            fileServices.DeleteFile(wallpaper);
         if (smallImage is not null)
             fileServices.DeleteFile(smallImage);
     }
 
-    public async Task<StoreDto?>> CreateStore(
+    public async Task<IActionResult> CreateStore(
         CreateStoreDto store,
         Guid userId)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(userId);
 
-        var isValide = user.IsValidateFunc();
+        var validationResult = user.IsValidateFunc();
 
-        if (isValide is not null)
+        if (validationResult is not null)
         {
-            return new Result<StoreDto?>(
-                isSuccessful: false,
-                data: null,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
 
         if (await unitOfWork.StoreRepository.IsExist(store.Name))
         {
-            return new Result<StoreDto?>
-            (
-                data: null,
-                message: "store already exist",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("store name have been already exist")
+                { StatusCode = StatusCodes.Status409Conflict };
         }
 
-        string? wallperper = null, smallImage = null;
+        string? wallpaper = null, smallImage = null;
 
         smallImage = await fileServices.SaveFile(
             store.SmallImage,
             EnImageType.Store);
-        wallperper = await fileServices.SaveFile(
+
+        wallpaper = await fileServices.SaveFile(
             store.WallpaperImage,
             EnImageType.Store);
 
 
-        if (smallImage is null || wallperper is null)
+        if (smallImage is null || wallpaper is null)
         {
-            DeleteStoreImage(wallperper, smallImage);
-            return new Result<StoreDto?>
-            (
-                data: null,
-                message: "error while saving store images",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            DeleteStoreImage(wallpaper, smallImage);
+
+            return new ObjectResult("error while saving store images")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        Guid id = ClsUtil.GenerateGuid();
-        Store? storeData = new Store
+        var id = ClsUtil.GenerateGuid();
+
+        var storeData = new Store
         {
             Id = id,
             Name = store.Name,
-            WallpaperImage = wallperper,
+            WallpaperImage = wallpaper,
             SmallImage = smallImage,
             IsBlock = user?.IsUser != false,
             UserId = userId,
             CreatedAt = DateTime.Now,
             UpdatedAt = null,
         };
-        Address address = new Address
+
+        var address = new Address
         {
             Id = ClsUtil.GenerateGuid(),
             IsCurrent = true,
@@ -153,83 +120,61 @@ public class StoreServices(
 
         if (result == 0)
         {
-            DeleteStoreImage(wallperper, smallImage);
-            fileServices.DeleteFile([wallperper, smallImage]);
-            return new Result<StoreDto?>
-            (
-                data: null,
-                message: "error while adding store",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            DeleteStoreImage(wallpaper, smallImage);
+            fileServices.DeleteFile([wallpaper, smallImage]);
+
+            return new ObjectResult("error while adding store")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         storeData = await unitOfWork.StoreRepository.GetStore(id)!;
         storeData!.Addresses = new List<Address> { address };
 
 
-        return new Result<StoreDto?>
-        (
-            data: storeData?.ToDto(config.GetKey("url_file")),
-            message: "",
-            isSuccessful: true,
-            statusCode: 201
-        );
+        var storeToDto = storeData?.ToDto(config.GetKey("url_file"));
+
+        return new ObjectResult(storeToDto)
+            { StatusCode = StatusCodes.Status201Created };
     }
 
-    public async Task<StoreDto?>> UpdateStore(
+    public async Task<IActionResult> UpdateStore(
         UpdateStoreDto storeDto,
         Guid userId
     )
     {
         if (storeDto.IsEmpty())
         {
-            return new Result<StoreDto?>
-            (
-                data: null,
-                message: "user not found",
-                isSuccessful: true,
-                statusCode: 200
-            );
+            return new ObjectResult("no found update at data request")
+                { StatusCode = StatusCodes.Status400BadRequest };
         }
 
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(userId);
 
-        var isValide = user.IsValidateFunc(isStore: true);
+        var validationResult = user.IsValidateFunc(isStore: true);
 
-        if (isValide is not null)
+        if (validationResult is not null)
         {
-            return new Result<StoreDto?>(
-                isSuccessful: false,
-                data: null,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
         if (storeDto.Name is not null)
         {
-            bool isExist = await unitOfWork.StoreRepository.IsExist(storeDto.Name, user!.Store!.Id);
+            var isExist = await unitOfWork.StoreRepository.IsExist(storeDto.Name, user!.Store!.Id);
 
             if (isExist)
             {
-                return new Result<StoreDto?>
-                (
-                    data: null,
-                    message: "store already exist",
-                    isSuccessful: false,
-                    statusCode: 400
-                );
+                return new ObjectResult("store name have been already exist")
+                    { StatusCode = StatusCodes.Status409Conflict };
             }
         }
 
 
-        string? wallperper = null, smallImage = null;
+        string? wallpaper = null, smallImage = null;
 
         if (storeDto.WallpaperImage is not null)
         {
-            wallperper = await fileServices.SaveFile(
+            wallpaper = await fileServices.SaveFile(
                 storeDto.WallpaperImage,
                 EnImageType.Store);
 
@@ -245,7 +190,7 @@ public class StoreServices(
         }
 
         user!.Store!.SmallImage = smallImage ?? user!.Store!.SmallImage;
-        user!.Store!.WallpaperImage = wallperper ?? user!.Store!.WallpaperImage;
+        user!.Store!.WallpaperImage = wallpaper ?? user!.Store!.WallpaperImage;
         user!.Store!.Name = storeDto.Name ?? user!.Store!.Name;
         user!.Store!.UpdatedAt = DateTime.Now;
 
@@ -256,238 +201,146 @@ public class StoreServices(
             (storeDto.Longitude is not null && storeDto.Latitude is null)
         )
         {
-            return new Result<StoreDto?>(
-                isSuccessful: false,
-                data: null,
-                message: "when update address you must change both longitude and latitude not one of them only ",
-                statusCode: 400
-            );
+            fileServices.DeleteFile([wallpaper ?? "", smallImage ?? ""]);
+
+
+            return new ObjectResult(
+                    "when update address you must change both longitude and latitude not one of them only")
+                { StatusCode = StatusCodes.Status400BadRequest };
         }
 
-        if (storeDto?.Longitude is not null && storeDto?.Latitude is not null)
-        {
-            Address? address = await unitOfWork.AddressRepository
-                .GetAddressByOwnerId(user!.Store!.Id);
 
-            if (address is null)
-                return new Result<StoreDto?>
-                (
-                    data: null,
-                    message: "store not has any address",
-                    isSuccessful: false,
-                    statusCode: 404
-                );
-            address.Title = storeDto?.Name ?? address.Title;
-            address.UpdatedAt = DateTime.Now;
-            address.Longitude = (decimal)storeDto?.Longitude!;
-            address.Latitude = (decimal)storeDto!.Latitude;
-            unitOfWork.AddressRepository.Update(address);
-        }
-
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result < 1)
         {
-            return new Result<StoreDto?>
-            (
-                data: null,
-                message: "could not update store",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("could not update store") { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        Store? store = await unitOfWork.StoreRepository.GetStore(user.Store.Id);
-        store.Addresses = await unitOfWork.AddressRepository.GetAllAddressByOwnerId(store!.Id);
+        var store = await unitOfWork.StoreRepository.GetStore(user.Store.Id);
+        store?.Addresses = await unitOfWork.AddressRepository.GetAllAddressByOwnerId(store!.Id);
 
-        return new Result<StoreDto?>
-        (
-            data: store?.ToDto(config.GetKey("url_file")),
-            message: "error while update store Data",
-            isSuccessful: true,
-            statusCode: 200
-        );
+        //   var storeToDto=  store?.ToDto(config.GetKey("url_file"));
+
+        return new ObjectResult(null) { StatusCode = StatusCodes.Status204NoContent };
     }
 
-    public async Task<int?>> GetStorePage(Guid adminId, int storePerPage)
+    public async Task<IActionResult> GetStorePage(Guid adminId, int storePerPage)
 
     {
-        User? store = await unitOfWork.UserRepository.GetUser(adminId);
+        var store = await unitOfWork.UserRepository.GetUser(adminId);
 
-        var isValide = store.IsValidateFunc();
+        var validationResult = store.IsValidateFunc();
 
-        if (isValide is not null)
-            return new Result<int?>
-            (
-                data: null,
-                message: "store not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+        if (validationResult is not null)
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
+
         var count = await unitOfWork.StoreRepository.GetStoresCount(storePerPage);
 
-        return new Result<int?>
-        (
-            data: count,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+        return new ObjectResult(count)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
     }
 
 
-    public async Task<StoreDto?>> GetStoreByUserId(Guid userId)
+    public async Task<IActionResult> GetStoreByUserId(Guid userId)
     {
-        Store? store = await unitOfWork.StoreRepository.GetStoreByUserId(userId);
+        var store = await unitOfWork.StoreRepository.GetStoreByUserId(userId);
 
         if (store is null)
-            return new Result<StoreDto?>
-            (
-                data: null,
-                message: "store not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("store not found")
+                { StatusCode = StatusCodes.Status404NotFound };
 
-        return new Result<StoreDto?>
-        (
-            data: store.ToDto(config.GetKey("url_file")),
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+
+        var storeToDto = store.ToDto(config.GetKey("url_file"));
+        return new ObjectResult(storeToDto)
+            { StatusCode = StatusCodes.Status200OK };
     }
 
 
-    public async Task<StoreDto?>> GetStoreByStoreId(Guid id)
+    public async Task<IActionResult> GetStoreByStoreId(Guid id)
     {
-        Store? store = await unitOfWork.StoreRepository.GetStore(id);
+        var store = await unitOfWork.StoreRepository.GetStore(id);
 
         if (store is null)
-            return new Result<StoreDto?>
-            (
-                data: null,
-                message: "store not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("store not found")
+                { StatusCode = StatusCodes.Status404NotFound };
 
-        return new Result<StoreDto?>
-        (
-            data: store.ToDto(config.GetKey("url_file")),
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+
+        var storeToDto = store.ToDto(config.GetKey("url_file"));
+        return new ObjectResult(storeToDto)
+            { StatusCode = StatusCodes.Status200OK };
     }
 
 
-    public async Task<List<StoreDto>?>> GetStores(Guid adminId, int pageNumber, int pageSize)
+    public async Task<IActionResult> GetStores(Guid adminId, int pageNumber, int pageSize)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(adminId);
 
-        var isValide = user.IsValidateFunc(true);
+        var validationResult = user.IsValidateFunc(true);
 
-        if (isValide is not null)
+        if (validationResult is not null)
         {
-            return new Result<List<StoreDto>?>(
-                isSuccessful: false,
-                data: null,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        List<StoreDto> stores = (await unitOfWork.StoreRepository
+        var storesToDto = (await unitOfWork.StoreRepository
                 .GetStores(pageNumber, pageSize)
             ).Select(st => st.ToDto(config.GetKey("url_file")))
             .ToList();
 
-        return new Result<List<StoreDto>?>
-        (
-            data: stores,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+        return new ObjectResult(storesToDto)
+            { StatusCode = StatusCodes.Status200OK };
     }
 
-    public async Task<bool?>> UpdateStoreStatus(Guid adminId, Guid storeId)
+    public async Task<IActionResult> UpdateStoreStatus(Guid adminId, Guid storeId)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(adminId);
 
-        var isValide = user.IsValidateFunc(true);
+        var validationResult = user.IsValidateFunc(false, isStore: true);
 
-        if (isValide is not null)
+        if (validationResult is not null)
         {
-            return new Result<bool?>(
-                isSuccessful: false,
-                data: null,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        Store? store = await unitOfWork.StoreRepository.GetStore(storeId);
+        var store = await unitOfWork.StoreRepository.GetStore(storeId);
 
-        if (store is null)
-            return new Result<bool?>
-            (
-                data: null,
-                message: "store not found",
-                isSuccessful: false,
-                statusCode: 400
-            );
 
-        isValide = store.user.IsValidateFunc(true);
+        validationResult = store!.user.IsValidateFunc(true);
 
-        if (isValide is null && store.UserId != user!.Id)
+        if (validationResult is null && store.UserId != user!.Id)
         {
-            return new Result<bool?>(
-                isSuccessful: false,
-                data: null,
-                message: "only Admin can update his store Status",
-                statusCode: 400
-            );
+            return new ObjectResult("only Admin can update his store Status")
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
 
 
         store.IsBlock = !store.IsBlock;
 
-        if (store.IsBlock == true && user?.IsUser == false)
+        if (store.IsBlock && user?.IsUser == false)
         {
-            return new Result<bool?>(
-                isSuccessful: false,
-                data: null,
-                message: "this store is belong to admin you could not block it ",
-                statusCode: 400
-            );
+            return new ObjectResult("this store is belong to admin you could not block it ")
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         unitOfWork.StoreRepository.Update(store);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
+
         if (result == 0)
-            return new Result<bool?>
-            (
-                data: null,
-                message: "error while update store status",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while update store status")
+                { StatusCode = StatusCodes.Status500InternalServerError };
 
         await hubContext.Clients.All.SendAsync("storeStatus", new StoreStatusDto
         {
             StoreId = storeId,
             Status = true
         });
-        return new Result<bool?>
-        (
-            data: true,
-            message: "",
-            isSuccessful: true,
-            statusCode: 204
-        );
+
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 }

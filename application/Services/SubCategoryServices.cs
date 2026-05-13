@@ -1,12 +1,11 @@
 using api.application.Interface;
-using api.application.Result;
 using api.domain.entity;
 using api.Infrastructure;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.util;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.application.Services;
 
@@ -14,7 +13,7 @@ public class SubCategoryServices(
     IUnitOfWork unitOfWork)
     : ISubCategoryServices
 {
-    public async Task<SubCategoryDto?>> CreateSubCategory(
+    public async Task<IActionResult> CreateSubCategory(
         Guid storeId,
         CreateSubCategoryDto subCategoryDto
     )
@@ -25,31 +24,22 @@ public class SubCategoryServices(
 
         if (store is not null)
         {
-            return new Result<SubCategoryDto?>(
-                isSuccessful: false,
-                data: null,
-                message: "Store Not Found",
-                statusCode: (int)StatusCodes.Status404NotFound
-            );
+            return new ObjectResult("Store Not Found")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
 
-        int count = await unitOfWork.SubCategoryRepository.GetSubCategoriesCount(storeId);
+        var count = await unitOfWork.SubCategoryRepository.GetSubCategoriesCount(storeId);
 
         if (count == 20)
         {
-            return new Result<SubCategoryDto?>
-            (
-                data: null,
-                message: "store can maximum 20 subcategories",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("store can maximum 20 subcategories")
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
 
-        Guid id = ClsUtil.GenerateGuid();
+        var id = ClsUtil.GenerateGuid();
 
-        SubCategory subCategory = new SubCategory
+        var subCategory = new SubCategory
         {
             Id = id,
             CategoryId = subCategoryDto.CategoryId,
@@ -61,82 +51,56 @@ public class SubCategoryServices(
 
         unitOfWork.SubCategoryRepository.Add(subCategory);
 
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<SubCategoryDto?>
-            (
-                data: null,
-                message: "error while adding new subcategory",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while adding new subcategory")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        return new Result<SubCategoryDto?>
-        (
-            data: subCategory.ToDto(),
-            message: "",
-            isSuccessful: true,
-            statusCode: 201
-        );
+        var subCategoryToDto = subCategory.ToDto();
+
+        return new ObjectResult(subCategoryToDto)
+            { StatusCode = StatusCodes.Status201Created };
     }
 
-    public async Task<SubCategoryDto?>> UpdateSubCategory(
+    public async Task<IActionResult> UpdateSubCategory(
         Guid storeId,
         UpdateSubCategoryDto subCategoryDto
     )
     {
         if (subCategoryDto.IsEmpty())
-            return new Result<SubCategoryDto?>
-            (
-                data: null,
-                message: "",
-                isSuccessful: true,
-                statusCode: 200
-            );
+            return new ObjectResult("No Change Found At Data")
+                { StatusCode = StatusCodes.Status400BadRequest };
 
-        Store? store = await unitOfWork.StoreRepository
+
+        var store = await unitOfWork.StoreRepository
             .GetStore(storeId);
 
 
         if (store is not null)
         {
-            return new Result<SubCategoryDto?>(
-                isSuccessful: false,
-                data: null,
-                message: "Store Not Found",
-                statusCode: (int)StatusCodes.Status404NotFound
-            );
+            return new ObjectResult("Store Not Found")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
 
-        SubCategory? subCategory = await unitOfWork.SubCategoryRepository
+        var subCategory = await unitOfWork.SubCategoryRepository
             .GetSubCategory(subCategoryDto.Id);
 
         if (subCategory is null || subCategory.StoreId != storeId)
         {
-            return new Result<SubCategoryDto?>
-            (
-                data: null,
-                message: "subcategory not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("subcategory not found")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         if (subCategoryDto.CategoryId is not null &&
-            !(await unitOfWork.CategoryRepository.IsExist((Guid)subCategoryDto!.CategoryId))
+            !(await unitOfWork.CategoryRepository.IsExist((Guid)subCategoryDto.CategoryId))
            )
         {
-            return new Result<SubCategoryDto?>
-            (
-                data: null,
-                message: "invalide category",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("invalid category")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         subCategory.Name = subCategoryDto.Name ?? subCategory.Name;
@@ -144,136 +108,96 @@ public class SubCategoryServices(
         subCategory.UpdatedAt = DateTime.Now;
 
         unitOfWork.SubCategoryRepository.Update(subCategory);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<SubCategoryDto?>
-            (
-                data: null,
-                message: "error while update subcategory",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while update subcategory")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
-        return new Result<SubCategoryDto?>
-        (
-            data: subCategory.ToDto(),
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 
-    public async Task<bool>> DeleteSubCategory(Guid id, Guid storeId)
+    public async Task<IActionResult> DeleteSubCategory(Guid id, Guid storeId)
     {
-        Store? store = await unitOfWork.StoreRepository
+        var store = await unitOfWork.StoreRepository
             .GetStore(storeId);
 
 
         if (store is not null)
         {
-            return new Result<bool>(
-                isSuccessful: false,
-                data: false,
-                message: "Store Not Found",
-                statusCode: (int)StatusCodes.Status404NotFound
-            );
+            return new ObjectResult("Store Not Found")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
-        SubCategory? subCategory = await unitOfWork.SubCategoryRepository
+        var subCategory = await unitOfWork.SubCategoryRepository
             .GetSubCategory(id);
 
-        if (subCategory is null || subCategory.StoreId != storeId)
+        if (subCategory is null)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "subcategory not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("SubCategory Not Found")
+                { StatusCode = StatusCodes.Status404NotFound };
+        }
+
+        if (subCategory.StoreId != storeId)
+        {
+            return new ObjectResult("the SubCategory does not belong to this store")
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         unitOfWork.SubCategoryRepository.Delete(id);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
-            return new Result<bool>
-            (
-                data: false,
-                message: "error while deleting subcategory",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("error while deleting subcategory")
+                { StatusCode = StatusCodes.Status403Forbidden };
 
-        return new Result<bool>
-        (
-            data: true,
-            message: "",
-            isSuccessful: true,
-            statusCode: 204
-        );
+
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 
-    public async Task<List<SubCategoryDto>>> GetSubCategories(Guid id, int page, int length)
+    public async Task<IActionResult> GetSubCategories(Guid id, int page, int length)
     {
-        List<SubCategoryDto> subCategories = (await unitOfWork.SubCategoryRepository
+        var subCategories = (await unitOfWork.SubCategoryRepository
                 .GetSubCategories(id, page, length))
             .Select(su => su.ToDto())
             .ToList();
         return (subCategories.Count > 0) switch
         {
-            true =>
-                new Result<List<SubCategoryDto>>
-                (
-                    data: subCategories,
-                    message: "",
-                    isSuccessful: true,
-                    statusCode: 200
-                ),
-            _ => new Result<List<SubCategoryDto>>
-            (
-                data: new List<SubCategoryDto>(),
-                message: "",
-                isSuccessful: true,
-                statusCode: 204
-            )
+            true => new ObjectResult(subCategories)
+                { StatusCode = StatusCodes.Status200OK },
+            _ =>
+                new ObjectResult(new List<SubCategoryDto>())
+                    { StatusCode = StatusCodes.Status200OK },
         };
     }
 
-    public async Task<List<SubCategoryDto>>> GetSubCategoryAll(
+    public async Task<IActionResult> GetSubCategoryAll(
         Guid adminId,
         int page,
         int length)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(adminId);
-        var isValide = user.IsValidateFunc(isAdmin: true);
+        var validationResult = user.IsValidateFunc(isAdmin: true);
 
-        if (isValide is not null)
+        if (validationResult is not null)
         {
-            return new Result<List<SubCategoryDto>>(
-                isSuccessful: false,
-                data: new List<SubCategoryDto>(),
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
 
-        List<SubCategoryDto> subcategories = (await unitOfWork.SubCategoryRepository
+        var subcategories = (await unitOfWork.SubCategoryRepository
                 .GetSubCategories(page, length))
             .Select(ba => ba.ToDto())
             .ToList();
 
-        return new Result<List<SubCategoryDto>>
-        (
-            data: subcategories,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+
+        return new ObjectResult(subcategories)
+            { StatusCode = StatusCodes.Status200OK };
     }
 }

@@ -2,11 +2,11 @@ using api.application.Interface;
 using api.application.Result;
 using api.domain.entity;
 using api.Infrastructure;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.util;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.application.Services;
 
@@ -19,9 +19,9 @@ public class UserService(
 )
     : IUserServices
 {
-    public async Task<AuthDto?>> Signup(SignupDto signupDto)
+    public async Task<IActionResult> Signup(SignupDto signupDto)
     {
-        string? validationResult = ClsValidation
+        var validationResult = ClsValidation
             .ValidateInput(
                 signupDto.Email,
                 signupDto.Password,
@@ -30,52 +30,34 @@ public class UserService(
 
         if (validationResult != null)
         {
-            return new Result<AuthDto?>
-            (
-                data: null,
-                message: validationResult,
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult(validationResult)
+                { StatusCode = StatusCodes.Status400BadRequest };
         }
 
-        bool isExistByEmail = await unitOfWork.UserRepository.IsExistByEmail(signupDto.Email);
+        var isExistByEmail = await unitOfWork.UserRepository.IsExistByEmail(signupDto.Email);
+
         if (isExistByEmail)
         {
-            return new Result<AuthDto?>
-            (
-                data: null,
-                message: "email already exist",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("email already exist")
+                { StatusCode = StatusCodes.Status409Conflict };
         }
 
-        bool isExistByPhone = (await unitOfWork.UserRepository.IsExistByPhone(signupDto.Phone));
+        var isExistByPhone = (await unitOfWork.UserRepository.IsExistByPhone(signupDto.Phone));
+
         if (isExistByPhone)
         {
-            return new Result<AuthDto?>
-            (
-                data: null,
-                message: "phone already exist",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("phone already exist")
+                { StatusCode = StatusCodes.Status409Conflict };
         }
 
         if (signupDto.Role == 0 && await unitOfWork.UserRepository.IsExist(false))
         {
-            return new Result<AuthDto?>
-            (
-                data: null,
-                message: "you cannot create a user with exist role",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("you cannot create a user with exist role")
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
 
-        Guid userId = ClsUtil.GenerateGuid();
-        User user = new User
+        var userId = ClsUtil.GenerateGuid();
+        var user = new User
         {
             Id = userId,
             Name = signupDto.Name,
@@ -90,17 +72,12 @@ public class UserService(
         };
 
         unitOfWork.UserRepository.Add(user);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<AuthDto?>
-            (
-                data: null,
-                message: "there are error in create new user",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("there are error in create new user")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         string token = "", refreshToken = "";
@@ -114,43 +91,32 @@ public class UserService(
             email: signupDto.Email,
             EnTokenMode.RefreshToken);
 
-        return new Result<AuthDto?>(
-            isSuccessful: true,
-            data: new AuthDto { RefreshToken = refreshToken, Token = token },
-            message: "",
-            statusCode: 201
-        );
+
+        return new ObjectResult(new AuthDto { RefreshToken = refreshToken, Token = token })
+            { StatusCode = StatusCodes.Status200OK };
     }
 
-    public async Task<AuthDto?>> Login(LoginDto loginDto)
+    public async Task<IActionResult> Login(LoginDto loginDto)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(loginDto.Username,
                 ClsUtil.HashingText(loginDto.Password)
             );
 
-        var isValide = user.IsValidateFunc(false);
-        if (isValide is not null)
+        var validationResult = user.IsValidateFunc(false);
+        if (validationResult is not null)
         {
-            return new Result<AuthDto?>(
-                isSuccessful: false,
-                data: null,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        user.DeviceToken = loginDto.DeviceToken;
+        user!.DeviceToken = loginDto.DeviceToken;
         unitOfWork.UserRepository.Update(user);
 
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
+
         if (result == 0)
-            new Result<AuthDto?>(
-                isSuccessful: true,
-                data: null,
-                message: "",
-                statusCode: 200
-            );
+            return new ObjectResult("Error While Login User")
+                { StatusCode = StatusCodes.Status500InternalServerError };
 
 
         string token = "", refreshToken = "";
@@ -164,228 +130,160 @@ public class UserService(
             email: user.Email,
             EnTokenMode.RefreshToken);
 
-        return new Result<AuthDto?>(
-            isSuccessful: true,
-            data: new AuthDto { RefreshToken = refreshToken, Token = token },
-            message: "",
-            statusCode: 200
-        );
+        return new ObjectResult(new AuthDto { RefreshToken = refreshToken, Token = token })
+            { StatusCode = StatusCodes.Status200OK };
     }
 
 
-    public async Task<UserInfoDto?>> GetMe(Guid id)
+    public async Task<IActionResult> GetMe(Guid id)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(id);
 
-        var validate = user.IsValidateFunc(false);
-        if (validate is not null)
+        var validationResult = user.IsValidateFunc(false);
+        if (validationResult is not null)
         {
-            return new Result<UserInfoDto?>(
-                isSuccessful: false,
-                data: null,
-                message: validate.Message,
-                statusCode: validate.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        return new Result<UserInfoDto?>(
-            isSuccessful: true,
-            data: user!.ToUserInfoDto(config.GetKey("url_file")),
-            message: "",
-            statusCode: 200
-        );
+        var userToDto = user!.ToUserInfoDto(config.GetKey("url_file"));
+        return new ObjectResult(userToDto) { StatusCode = StatusCodes.Status200OK };
     }
 
 
-    public async Task<List<UserInfoDto>?>> GetUsers(
+    public async Task<IActionResult> GetUsers(
         int page,
         Guid id)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(id);
 
-        var isValide = user.IsValidateFunc();
-        if (isValide is not null)
+        var validationResult = user.IsValidateFunc();
+        if (validationResult is not null)
         {
-            return new Result<List<UserInfoDto>?>(
-                isSuccessful: false,
-                data: null,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        List<UserInfoDto> users = (await unitOfWork.UserRepository
+        var usersToDto = (await unitOfWork.UserRepository
                 .GetUsers(page, 25))
             .Select(u => u.ToUserInfoDto(config.GetKey("url_file")))
             .ToList();
 
-        return new Result<List<UserInfoDto>?>
-        (
-            data: users,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+
+        return new ObjectResult(usersToDto)
+            { StatusCode = StatusCodes.Status200OK };
     }
 
-    public async Task<int?>> GetUsersPages(Guid id, int pageLenght)
+    public async Task<IActionResult> GetUsersPages(Guid id, int pageLenght)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(id);
 
-        var isValide = user.IsValidateFunc();
-        if (isValide is not null)
+        var validationResult = user.IsValidateFunc();
+        if (validationResult is not null)
         {
-            return new Result<int?>(
-                isSuccessful: false,
-                data: null,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
         var userPages = await unitOfWork.UserRepository.GetUserCount();
         var pageUserCount = userPages > 0 ? (int)Math.Ceiling((double)userPages / pageLenght) : 0;
-        return new Result<int?>(
-            isSuccessful: true,
-            data: pageUserCount,
-            message: "",
-            statusCode: 200
-        );
+
+        return new ObjectResult(pageUserCount)
+            { StatusCode = StatusCodes.Status200OK };
     }
 
-    public async Task<bool>> BlockOrUnBlockUser(Guid id, Guid userId)
+    public async Task<IActionResult> BlockOrUnBlockUser(Guid id, Guid userId)
     {
-        User? admin = await unitOfWork.UserRepository
+        var admin = await unitOfWork.UserRepository
             .GetUser(id);
 
-        var validateFunc = admin.IsValidateFunc();
-        if (validateFunc is not null)
+        var validationResult = admin.IsValidateFunc();
+        if (validationResult is not null)
         {
-            return new Result<bool>(
-                isSuccessful: false,
-                data: false,
-                message: validateFunc.Message,
-                statusCode: validateFunc.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        User? user = await unitOfWork.UserRepository.GetUser(userId);
+        var user = await unitOfWork.UserRepository.GetUser(userId);
 
-        validateFunc = user.IsValidateFunc();
+        validationResult = user.IsValidateFunc();
 
         //this to handle if user that admin want to block is not admin
-        if (validateFunc is not null)
+        if (validationResult is not null)
         {
-            return new Result<bool>(
-                isSuccessful: false,
-                data: false,
-                message: $"unable to {(user?.IsBlocked == true ? "block" : "unblock")}  user",
-                statusCode: validateFunc?.StatusCode ?? 400
-            );
+            return new ObjectResult($"unable to {(user?.IsBlocked == true ? "block" : "unblock")}  user")
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         user!.IsBlocked = !user.IsBlocked;
 
         if (user is { IsBlocked: true, IsUser: false })
         {
-            return new Result<bool>(
-                isSuccessful: false,
-                data: false,
-                message: "you could not block admin user ",
-                statusCode: 400
-            );
+            return new ObjectResult("you could not block admin user ")
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         unitOfWork.UserRepository.Update(user);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "error while change user Blocking status",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while change user Blocking status")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        return new Result<bool>
-        (
-            data: true,
-            message: "",
-            isSuccessful: false,
-            statusCode: 204
-        );
+
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 
 
-    public async Task<UserInfoDto?>> UpdateUser(
+    public async Task<IActionResult> UpdateUser(
         UpdateUserInfoDto userDto,
         Guid id,
         bool isUpdateWillBeTop = false)
     {
         if (userDto.IsEmpty())
-            return new Result<UserInfoDto?>
-            (
-                data: null,
-                message: "no data changes",
-                isSuccessful: false,
-                statusCode: 200
-            );
+            return new ObjectResult("no data changes")
+                { StatusCode = StatusCodes.Status400BadRequest };
 
 
-        User? user = await unitOfWork.UserRepository.GetUser(id);
+        var user = await unitOfWork.UserRepository.GetUser(id);
 
-        var isValide = user.IsValidateFunc(false);
+        var validationResult = user.IsValidateFunc(false);
 
-        if (isValide is not null)
+        if (validationResult is not null)
         {
-            return new Result<UserInfoDto?>(
-                isSuccessful: false,
-                data: null,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
 
         if (userDto.Phone is not null && user?.Phone != userDto.Phone)
         {
-            bool isExistPhone = await unitOfWork.UserRepository.IsExistByPhone(userDto.Phone ?? "");
+            var isExistPhone = await unitOfWork.UserRepository.IsExistByPhone(userDto.Phone ?? "");
 
             if (isExistPhone)
             {
-                return new Result<UserInfoDto?>
-                (
-                    data: null,
-                    message: "phone already exist",
-                    isSuccessful: false,
-                    statusCode: 400
-                );
+                return new ObjectResult("phone already exist")
+                {
+                    StatusCode = StatusCodes.Status409Conflict
+                };
             }
         }
 
-        string? hashedPassword =
+        var hashedPassword =
             string.IsNullOrEmpty(userDto.Password)
             || string.IsNullOrEmpty(userDto.NewPassword)
                 ? null
                 : ClsUtil.HashingText(userDto.NewPassword);
 
-        if (userDto.Password != null && userDto.NewPassword != null)
+        if (userDto is { Password: not null, NewPassword: not null })
         {
             if (user?.Password != ClsUtil.HashingText(userDto.Password))
             {
-                return new Result<UserInfoDto?>
-                (
-                    data: null,
-                    message: "password not corrected",
-                    isSuccessful: false,
-                    statusCode: 400
-                );
+                return new ObjectResult("Enter Valid Previous Password")
+                {
+                    StatusCode = StatusCodes.Status409Conflict
+                };
             }
         }
 
@@ -395,64 +293,47 @@ public class UserService(
             profile = await fileServices.SaveFile(userDto.Thumbnail, EnImageType.Profile);
         }
 
-        user.Thumbnail = profile ?? user.Thumbnail;
-        user.Name = userDto.Name ?? user.Name;
-        user.Phone = userDto.Phone ?? user.Phone;
-        user.UpdatedAt = DateTime.Now;
-        user.Password = hashedPassword ?? user.Password;
+        user?.Thumbnail = profile ?? user.Thumbnail;
+        user?.Name = userDto.Name ?? user.Name;
+        user?.Phone = userDto.Phone ?? user.Phone;
+        user?.UpdatedAt = DateTime.Now;
+        user?.Password = hashedPassword ?? user.Password;
 
-        unitOfWork.UserRepository.Update(user);
+        unitOfWork.UserRepository.Update(user!);
 
         if (isUpdateWillBeTop)
         {
-            return new Result<UserInfoDto?>
-            (
-                data: null,
-                message: "",
-                isSuccessful: true,
-                statusCode: 200
-            );
+            return new ObjectResult(null)
+                { StatusCode = StatusCodes.Status204NoContent };
         }
 
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<UserInfoDto?>
-            (
-                data: null,
-                message: "error while updating user",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while updating user")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        return new Result<UserInfoDto?>
-        (
-            data: user.ToUserInfoDto(config.GetKey("url_file")),
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+        //var userToDto = user?.ToUserInfoDto(config.GetKey("url_file"));
+
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 
-    public async Task<AddressDto?>> AddAddressToUser(
+    public async Task<IActionResult> AddAddressToUser(
         CreateAddressDto addressDto,
         Guid id
     )
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(id);
-        var isValide = user.IsValidateFunc(false);
 
-        if (isValide is not null)
+        var validationResult = user.IsValidateFunc(false);
+
+        if (validationResult is not null)
         {
-            return new Result<AddressDto?>(
-                isSuccessful: false,
-                data: null,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
         int addressCount = await unitOfWork.AddressRepository.GetAddressCount(id);
