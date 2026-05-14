@@ -1,20 +1,15 @@
-using System.Security.Claims;
 using api.application.Interface;
 using api.Filter;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 
 namespace api.Presentation.controller;
 
 [Authorize]
 [ApiController]
 [Route("api/Order")]
-public class OrderController(
-    IOrderServices orderServices,
-    IAuthenticationService authenticationService) : ControllerBase
+public class OrderController(IOrderServices orderServices) : ControllerBase
 {
     [HttpPost()]
     [GetUserIdFromUserClaims]
@@ -25,15 +20,11 @@ public class OrderController(
     public async Task<IActionResult> CreateOrder
         ([FromBody] CreateOrderDto orderDto)
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await orderServices.CreateOrder(id, orderDto);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     [HttpGet("status")]
@@ -44,18 +35,14 @@ public class OrderController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> GetOrderStatus()
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await orderServices.GetOrdersStatus(id);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
-    [HttpGet("{pageNumber}")]
+    [HttpGet()]
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -69,19 +56,15 @@ public class OrderController(
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
 
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await orderServices.GetOrders(id, pageNumber, 25);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
-    [HttpGet("me/{pageNumber}")]
+    [HttpGet("me")]
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -95,7 +78,7 @@ public class OrderController(
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
 
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await orderServices
             .GetMyOrders(
@@ -103,14 +86,10 @@ public class OrderController(
                 pageNumber,
                 25);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
-    [HttpGet("deliveries/{pageNumber}")]
+    [HttpGet("deliveries")]
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -122,7 +101,7 @@ public class OrderController(
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
 
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await orderServices
             .GetOrdersNotBelongToDeliveries(
@@ -130,15 +109,11 @@ public class OrderController(
                 pageNumber,
                 25);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
-    [HttpDelete("{orderId}")]
+    [HttpDelete("{orderId:guid}")]
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -147,18 +122,14 @@ public class OrderController(
     public async Task<IActionResult> DeleteOrders
         (Guid orderId)
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
 
         var result = await orderServices
             .DeleteOrder(
                 orderId, id);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -173,7 +144,7 @@ public class OrderController(
         [FromBody] UpdateOrderStatusDto orderStatus
     )
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await orderServices
             .UpdateOrderStatus(
@@ -181,10 +152,6 @@ public class OrderController(
                 orderStatus.Status
             );
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 }

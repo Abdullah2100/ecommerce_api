@@ -1,19 +1,14 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using api.application.Interface;
 using api.Filter;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 
 namespace api.Presentation.controller;
 
 [Authorize]
 [ApiController]
 [Route("api/analyse")]
-public class AnalyseController(
-    IAnalyseServices analyseServices,
-    IAuthenticationService authenticationService) : ControllerBase
+public class AnalyseController(IAnalyseServices analyseServices) : ControllerBase
 {
     [HttpGet("system")]
     [GetUserIdFromUserClaims]
@@ -23,14 +18,10 @@ public class AnalyseController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> GetOrderStatus()
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await analyseServices.GetMonthAnalysis(id);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 }

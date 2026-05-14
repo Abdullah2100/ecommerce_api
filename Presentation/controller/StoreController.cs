@@ -1,11 +1,8 @@
-using System.Security.Claims;
 using api.application.Interface;
 using api.Filter;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 
 namespace api.Presentation.controller;
 
@@ -15,9 +12,7 @@ namespace api.Presentation.controller;
 public class StoreController(
     IStoreServices storeServices,
     IBannerServices bannerServices,
-    ISubCategoryServices subCategoryServices,
-    IAuthenticationService authenticationService
-)
+    ISubCategoryServices subCategoryServices)
     : ControllerBase
 {
     [HttpPost("")]
@@ -29,15 +24,11 @@ public class StoreController(
     public async Task<IActionResult> CreateNewStore(
         [FromForm] CreateStoreDto store)
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await storeServices.CreateStore(store, id);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -51,16 +42,12 @@ public class StoreController(
     public async Task<IActionResult> UpdateStore(
         [FromForm] UpdateStoreDto store)
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
 
         var result = await storeServices.UpdateStore(store, id);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -74,17 +61,13 @@ public class StoreController(
         Guid storeId
     )
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
 
         var result = await storeServices.UpdateStoreStatus(id, storeId);
 
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -95,15 +78,11 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetMyStore()
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await storeServices.GetStoreByUserId(id);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     [HttpGet("{storeId:guid}/pages")]
@@ -111,17 +90,13 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetStoresPages()
+    public async Task<IActionResult> GetStoresPages(Guid storeId)
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await storeServices.GetStorePage(id, 20);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -132,11 +107,7 @@ public class StoreController(
     {
         var result = await storeServices.GetStoreByStoreId(storeId);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -147,15 +118,11 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetStores(int page = 1)
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await storeServices.GetStores(id, page, 25);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     //this or admin page to get name of store while typing 
@@ -166,15 +133,11 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetStores(string prefix)
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await storeServices.GetStores(id, prefix, 25);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     [HttpPost("{storeId:guid}/banners")]
@@ -187,15 +150,11 @@ public class StoreController(
         Guid storeId, [FromForm] CreateBannerDto banner
     )
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await bannerServices.CreateBanner(id, banner);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     [HttpDelete("{storeId:guid}/banners/{bannerId:guid}")]
@@ -208,16 +167,12 @@ public class StoreController(
         Guid storeId, Guid bannerId
     )
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await bannerServices
             .DeleteBanner(bannerId, id);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     [HttpGet("{storeId:guid}/banners")]
@@ -233,11 +188,7 @@ public class StoreController(
         var result = await bannerServices
             .GetBanners(storeId, pageNumber, 25);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     [HttpPost("{storeId:guid}/subCategories")]
@@ -251,11 +202,7 @@ public class StoreController(
     {
         var result = await subCategoryServices.CreateSubCategory(storeId, subCategory);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     [HttpPut("{storeId:guid}/subCategories")]
@@ -269,11 +216,7 @@ public class StoreController(
     {
         var result = await subCategoryServices.UpdateSubCategory(storeId, subCategory);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     [HttpDelete("{storeId:guid}/subCategories/{subCategoryId:guid}")]
@@ -289,11 +232,7 @@ public class StoreController(
             storeId: storeId,
             id: subCategoryId);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     [HttpGet("{storeId:guid}/subCategories")]
@@ -304,10 +243,6 @@ public class StoreController(
         var result = await subCategoryServices.GetSubCategories(
             storeId, page, 25);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 }

@@ -1,21 +1,16 @@
-using System.Security.Claims;
 using api.application.Interface;
 using api.Filter;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using api.Presentation.dto.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 
 namespace api.Presentation.controller;
 
 [Authorize]
 [ApiController]
 [Route("api/General")]
-public class GeneralController(
-    IGeneralSettingServices generalSettingServices,
-    IAuthenticationService authenticationService) : ControllerBase
+public class GeneralController(IGeneralSettingServices generalSettingServices) : ControllerBase
 {
     [HttpPost("")]
     [GetUserIdFromUserClaims]
@@ -27,17 +22,13 @@ public class GeneralController(
         [FromBody] GeneralSettingDto generalSetting
     )
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await generalSettingServices.CreateGeneralSetting(
             adminId: id,
             generalSetting
         );
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -48,21 +39,17 @@ public class GeneralController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteGeneralSetting(
-        Guid genralSettingId
+        Guid generalSettingId
     )
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
 
         var result = await generalSettingServices.DeleteGeneralSetting(
             adminId: id,
-            id: genralSettingId
+            id: generalSettingId
         );
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     [HttpPut("{generalSettingId:guid}")]
@@ -72,27 +59,23 @@ public class GeneralController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateGeneralSetting(
-        Guid genralSettingId,
+        Guid generalSettingId,
         [FromBody] UpdateGeneralSettingDto generalSetting
     )
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
 
         var result = await generalSettingServices.UpdateGeneralSetting(
             adminId: id,
-            id: genralSettingId,
+            id: generalSettingId,
             settingDto: generalSetting
         );
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     [AllowAnonymous]
-    [HttpGet("{pageNumber:int}")]
+    [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -107,10 +90,6 @@ public class GeneralController(
             pageNum: pageNumber,
             pageSize: 25
         );
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 }

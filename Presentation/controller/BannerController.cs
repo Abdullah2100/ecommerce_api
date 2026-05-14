@@ -1,40 +1,30 @@
-using System.Security.Claims;
 using api.application.Interface;
 using api.Filter;
-using api.Presentation.dto;
-using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 
 namespace api.Presentation.controller;
 
 [Authorize]
 [ApiController]
 [Route("api/Banner")]
-public class BannerController(
-    IBannerServices bannerServices,
-    IAuthenticationService authenticationService) : ControllerBase
+public class BannerController(IBannerServices bannerServices) : ControllerBase
 {
     //this method for dashboard only
-    [HttpGet("{pageNumber:int}")]
+    [HttpGet()]
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetBannerRandom(int pageNumber)
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
 
         var result = await bannerServices
             .GetBanners(id, pageNumber, 25);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     [HttpGet("")]
@@ -45,10 +35,6 @@ public class BannerController(
         var result = await bannerServices
             .GetBanners(15);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 }

@@ -1,21 +1,15 @@
-using System.Security.Claims;
 using api.application.Interface;
 using api.Filter;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 
 namespace api.Presentation.controller;
 
 [Authorize]
 [ApiController]
 [Route("api/Product")]
-public class ProductController(
-    IProductServices productServices,
-    IAuthenticationService authenticationService
-) : ControllerBase
+public class ProductController(IProductServices productServices) : ControllerBase
 {
     [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -27,11 +21,7 @@ public class ProductController(
 
         var result = await productServices.GetProductsByStoreId(storeId, pageNumber, 25);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -46,11 +36,7 @@ public class ProductController(
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
         var result = await productServices.GetProductsByCategoryId(categoryId, pageNumber, 25);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -72,11 +58,7 @@ public class ProductController(
             pageNumber,
             25);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -90,11 +72,7 @@ public class ProductController(
 
         var result = await productServices.GetProducts(pageNumber, 25);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -109,7 +87,7 @@ public class ProductController(
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
 
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await productServices.GetProductsForAdmin(
             id,
@@ -117,11 +95,7 @@ public class ProductController(
             25
         );
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -132,15 +106,11 @@ public class ProductController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProductsPagesNum()
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await productServices.GetProductsPagesForAdmin(id, 25);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -155,16 +125,12 @@ public class ProductController(
         [FromForm] CreateProductDto product
     )
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await productServices.CreateProducts(
             id, product);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -179,20 +145,16 @@ public class ProductController(
         [FromForm] UpdateProductDto product
     )
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await productServices.UpdateProducts(
             id, product);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
-    [HttpDelete("{storeId:guid}/{productId:guid}")]
+    [HttpDelete("{productId:guid}")]
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -200,18 +162,14 @@ public class ProductController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteProduct
     (
-        Guid storeId,
-        Guid productId
+        Guid productId,
+        Guid storeId
     )
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await productServices.DeleteProducts(id, storeId, productId);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 }

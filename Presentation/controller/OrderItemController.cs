@@ -1,22 +1,18 @@
 using System.Security.Claims;
 using api.application.Interface;
 using api.Filter;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 
 namespace api.Presentation.controller;
 
 [Authorize]
 [ApiController]
 [Route("api/OrderItems")]
-public class OrderItemController(
-    IOrderItemServices orderItemServices,
-    IAuthenticationService authenticationService) : ControllerBase
+public class OrderItemController(IOrderItemServices orderItemServices) : ControllerBase
 {
-    [HttpGet("{pageNumber}")]
+    [HttpGet()]
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -30,7 +26,7 @@ public class OrderItemController(
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
 
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await orderItemServices
             .GetOrderItems(
@@ -39,11 +35,7 @@ public class OrderItemController(
                 25
             );
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     [HttpPut("status")]
@@ -54,17 +46,13 @@ public class OrderItemController(
     public async Task<IActionResult> UpdateOrderItemStatus
         ([FromBody] UpdateOrderItemStatusDto orderItemStatusDto)
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await orderItemServices
             .UpdateOrderItemsStatus(
                 id,
                 orderItemStatusDto);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 }

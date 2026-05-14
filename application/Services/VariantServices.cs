@@ -6,249 +6,179 @@ using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using api.shared.mapper;
 using api.util;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.application.Services;
 
 public class VariantServices(IUnitOfWork unitOfWork)
     : IVariantServices
 {
-    public async Task<VariantDto?>> CreateVariant(
+    public async Task<IActionResult> CreateVariant(
         CreateVariantDto variantDto,
         Guid adminId
     )
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(adminId);
 
-        var isValid = user.IsValidateFunc(true);
-        if (isValid is not null)
+        var validationResult = user.IsValidateFunc(true);
+        if (validationResult is not null)
         {
-            return new Result<VariantDto?>
-            (
-                data: null,
-                message: isValid.Message,
-                isSuccessful: false,
-                statusCode: isValid.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
         if (await unitOfWork.VarientRepository.IsExist(variantDto.Name))
         {
-            return new Result<VariantDto?>
-            (
-                data: null,
-                message: "there are varient with the same name",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("there are variant with the same name")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
-        Guid id = ClsUtil.GenerateGuid();
+        var id = ClsUtil.GenerateGuid();
 
-        Variant? varient = new Variant
+        var variant = new Variant
         {
             Id = id,
             Name = variantDto.Name
         };
 
-        unitOfWork.VarientRepository.Add(varient);
-        int result = await unitOfWork.SaveChanges();
+        unitOfWork.VarientRepository.Add(variant);
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<VariantDto?>
-            (
-                data: null,
-                message: "error while adding new varient",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while adding new variant")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
-        return new Result<VariantDto?>
-        (
-            data: varient?.ToDto(),
-            message: "",
-            isSuccessful: true,
-            statusCode: 201
-        );
+        var variantToDto = variant?.ToDto();
+
+        return new ObjectResult(variantToDto)
+            { StatusCode = StatusCodes.Status201Created };
     }
 
-    public async Task<VariantDto?>> UpdateVariant(
+    public async Task<IActionResult> UpdateVariant(
         UpdateVariantDto variantDto,
         Guid adminId
     )
     {
         if (variantDto.IsEmpty())
-            return new Result<VariantDto?>
-            (
-                data: null,
-                message: "",
-                isSuccessful: true,
-                statusCode: 200
-            );
+            return new ObjectResult("No Found Update Chanage")
+                { StatusCode = StatusCodes.Status400BadRequest };
 
-        User? user = await unitOfWork.UserRepository
+
+        var user = await unitOfWork.UserRepository
             .GetUser(adminId);
 
-        var isValid = user.IsValidateFunc(true);
-        if (isValid is not null)
+        var validationResult = user.IsValidateFunc(false, isStore: true);
+
+        if (validationResult is not null)
         {
-            return new Result<VariantDto?>
-            (
-                data: null,
-                message: isValid.Message,
-                isSuccessful: false,
-                statusCode: isValid.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
+        }
+
+        var variant = await unitOfWork.VarientRepository.GetVarient(variantDto.Id);
+
+        if (variant is null)
+        {
+            return new ObjectResult("variant not found")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         if (variantDto.Name is not null)
             if (await unitOfWork.VarientRepository.IsExist(variantDto.Name, variantDto.Id))
             {
-                return new Result<VariantDto?>
-                (
-                    data: null,
-                    message: "there are varient with the same name",
-                    isSuccessful: false,
-                    statusCode: 400
-                );
+                return new ObjectResult("name of variant already exist")
+                    { StatusCode = StatusCodes.Status409Conflict };
             }
 
-        Variant? varient = await unitOfWork.VarientRepository.GetVarient(variantDto.Id);
 
-        if (varient is null)
-        {
-            return new Result<VariantDto?>
-            (
-                data: null,
-                message: "varient not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
-        }
+        variant.Name = variantDto.Name ?? variant.Name;
 
-        varient.Name = variantDto.Name ?? varient.Name;
-
-        unitOfWork.VarientRepository.Update(varient);
-        int result = await unitOfWork.SaveChanges();
+        unitOfWork.VarientRepository.Update(variant);
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<VariantDto?>
-            (
-                data: null,
-                message: "error while update varient",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while update variant")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        return new Result<VariantDto?>
-        (
-            data: varient?.ToDto(),
-            message: "",
-            isSuccessful: true,
-            statusCode: 201
-        );
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
+
     }
 
-    public async Task<bool>> DeleteVariant(Guid vairantId, Guid adminId)
+    public async Task<IActionResult> DeleteVariant(Guid vairantId, Guid adminId)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(adminId);
-        var isValid = user.IsValidateFunc(true);
-        if (isValid is not null)
+        
+        var validationResult = user.IsValidateFunc(false, isStore: true);
+
+        if (validationResult is not null)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: isValid.Message,
-                isSuccessful: false,
-                statusCode: isValid.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
 
-        Variant? varient = await unitOfWork.VarientRepository.GetVarient(vairantId);
+        var variant = await unitOfWork.VarientRepository.GetVarient(vairantId);
 
-        if (varient is null)
+        if (variant is null)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "varient not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("variant not found")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
 
         unitOfWork.VarientRepository
             .Delete(vairantId);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "error while delete varient",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while delete variant")
+                { StatusCode = StatusCodes.Status500InternalServerError };
+
         }
 
-        return new Result<bool>
-        (
-            data: true,
-            message: "",
-            isSuccessful: true,
-            statusCode: 204
-        );
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
+
     }
 
-    public async Task<int?>> GetVariantPage(Guid adminId, int variantPerPage)
+    public async Task<IActionResult> GetVariantPage(Guid adminId, int variantPerPage)
 
     {
-        User? store = await unitOfWork.UserRepository.GetUser(adminId);
+        var user = await unitOfWork.UserRepository.GetUser(adminId);
 
-        var isValide = store.IsValidateFunc();
+        var validationResult = user.IsValidateFunc(false, isStore: true);
 
-        if (isValide is not null)
-            return new Result<int?>
-            (
-                data: null,
-                message: "store not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+        if (validationResult is not null)
+        {
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
+        }
+        
         var count = await unitOfWork.VarientRepository.GetVarientCount(variantPerPage);
 
-        return new Result<int?>
-        (
-            data: count,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+       
+        return new ObjectResult(count)
+            { StatusCode = StatusCodes.Status200OK };
+
     }
 
 
-    public async Task<List<VariantDto>>> GetVariants(int page, int pageSize)
+    public async Task<IActionResult> GetVariants(int page, int pageSize)
     {
-        var varients = (await unitOfWork.VarientRepository
+        var variants = (await unitOfWork.VarientRepository
             .GetVarients(page, pageSize));
 
-        List<VariantDto> variantDtos = varients
+        var variantDto = variants
             .Select(va => va.ToDto())
             .ToList();
-        return new Result<List<VariantDto>>
-        (
-            data: variantDtos,
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+       
+        
+        return new ObjectResult(variantDto)
+            { StatusCode = StatusCodes.Status200OK };
+
     }
 }

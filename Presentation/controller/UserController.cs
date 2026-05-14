@@ -1,22 +1,16 @@
-using System.Security.Claims;
 using api.application.Interface;
 using api.Filter;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using api.Presentation.dto.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 
 namespace api.Presentation.controller;
 
 [Authorize]
 [ApiController]
 [Route("api/User")]
-public class UserController(
-    IUserServices userServices,
-    IAuthenticationService authenticationService
-) : ControllerBase
+public class UserController(IUserServices userServices ) : ControllerBase
 {
     [AllowAnonymous]
     [HttpPost("auth/signup")]
@@ -26,11 +20,7 @@ public class UserController(
     {
         var result = await userServices.Signup(data);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -42,11 +32,7 @@ public class UserController(
     {
         var result = await userServices.Login(data);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -57,15 +43,11 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUser()
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await userServices.GetMe(id);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -76,15 +58,11 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUsers([FromQuery()] int page)
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await userServices.GetUsers(page, id);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
     //this to get user per pages like we hav 20 pages of user 25 user at one per page 
 
@@ -95,15 +73,11 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUserPages()
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await userServices.GetUsersPages(id);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -115,15 +89,11 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> BlockOrUnBlockUser(Guid userId)
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await userServices.BlockOrUnBlockUser(id, userId);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -137,16 +107,11 @@ public class UserController(
         [FromForm] UpdateUserInfoDto userData
     )
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await userServices.UpdateUser(userData, id);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result
-                .StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -160,17 +125,11 @@ public class UserController(
         [FromBody] CreateAddressDto address
     )
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await userServices.AddAddressToUser(address, id);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result
-                .StatusCode, result.Data),
-
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     [HttpPut("address")]
@@ -183,18 +142,12 @@ public class UserController(
         [FromBody] UpdateAddressDto address
     )
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await userServices.UpdateUserAddress(address, id);
 
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result
-                .StatusCode, result.Data),
-
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     [HttpDelete("address/{addressId}")]
@@ -207,18 +160,12 @@ public class UserController(
         Guid addressId
     )
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await userServices.DeleteUserAddress(addressId, id);
 
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result
-                .StatusCode, result.Data),
-
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -230,18 +177,12 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> UpdateUserCurrentLocation(Guid addressId)
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await userServices.UpdateUserCurrentAddress(addressId, id);
 
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result
-                .StatusCode, result.Data),
-
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -257,12 +198,7 @@ public class UserController(
         var result = await userServices.GenerateOtp(otp);
 
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -271,19 +207,14 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> VerifingOtp(
+    public async Task<IActionResult> VerifyingOtp(
         [FromBody] CreateVerificationDto verification
     )
     {
         var result = await userServices.OtpVerification(verification);
 
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -297,11 +228,6 @@ public class UserController(
         var result = await userServices.RecreatePassword(data);
 
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 }

@@ -1,20 +1,15 @@
-using System.Security.Claims;
 using api.application.Interface;
 using api.Filter;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 
 namespace api.Presentation.controller;
 
 [Authorize]
 [ApiController]
 [Route("api/paymentType")]
-public class PaymentTypeController(
-    IPaymentTypeServices paymentTypeServices,
-    IAuthenticationService authenticationService) : ControllerBase
+public class PaymentTypeController(IPaymentTypeServices paymentTypeServices) : ControllerBase
 {
     [HttpPost("")]
     [GetUserIdFromUserClaims]
@@ -27,15 +22,11 @@ public class PaymentTypeController(
         [FromForm] CreatePaymentTypeDto paymentTypeDto
     )
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await paymentTypeServices.Create(paymentTypeDto, id);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -50,15 +41,11 @@ public class PaymentTypeController(
         [FromForm] UpdatePaymentTypeDto paymentTypeDto
     )
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await paymentTypeServices.Update(paymentTypeDto, id);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     [HttpGet()]
@@ -70,10 +57,6 @@ public class PaymentTypeController(
 
         var result = await paymentTypeServices.GetPaymentTypes(pageNumber);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 }

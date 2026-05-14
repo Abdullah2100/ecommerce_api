@@ -1,20 +1,15 @@
-using System.Security.Claims;
 using api.application.Interface;
 using api.Filter;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 
 namespace api.Presentation.controller;
 
 [Authorize]
 [ApiController]
 [Route("api/Category")]
-public class CategoryController(
-    ICategoryServices categoryServices,
-    IAuthenticationService authenticationService) : ControllerBase
+public class CategoryController(ICategoryServices categoryServices) : ControllerBase
 {
     [HttpPost("")]
     [GetUserIdFromUserClaims]
@@ -24,16 +19,12 @@ public class CategoryController(
     [ProducesResponseType(StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateCategory([FromForm] CreateCategoryDto category)
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
 
         var result = await categoryServices.CreateCategory(category, id);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
@@ -43,18 +34,14 @@ public class CategoryController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateCateogry(
+    public async Task<IActionResult> UpdateCategory(
         [FromForm] UpdateCategoryDto category)
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
         var result = await categoryServices.UpdateCategory(category, id);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
     [HttpDelete("{categoryId:guid}")]
@@ -70,15 +57,11 @@ public class CategoryController(
 
         var result = await categoryServices.DeleteCategory(categoryId, id);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 
 
-    [HttpGet("{pageNumber:int}")]
+    [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -89,10 +72,6 @@ public class CategoryController(
 
         var result = await categoryServices.GetCategories(pageNumber, 25);
 
-        return result.IsSuccessful switch
-        {
-            true => StatusCode(result.StatusCode, result.Data),
-            _ => StatusCode(result.StatusCode, result.Message)
-        };
+        return result;
     }
 }
