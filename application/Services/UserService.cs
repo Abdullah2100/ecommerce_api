@@ -336,20 +336,14 @@ public class UserService(
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        int addressCount = await unitOfWork.AddressRepository.GetAddressCount(id);
+        var addressCount = await unitOfWork.AddressRepository.GetAddressCount(id);
 
         if (addressCount == 20)
         {
-            return new Result<AddressDto?>
-            (
-                data: null,
-                message: "maximum 20 addresses reached",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("maximum 20 addresses reached") { StatusCode = StatusCodes.Status403Forbidden };
         }
 
-        Address address = new Address
+        var address = new Address
         {
             Id = ClsUtil.GenerateGuid(),
             Longitude = addressDto.Longitude,
@@ -366,88 +360,58 @@ public class UserService(
 
         if (result == 0)
         {
-            return new Result<AddressDto?>
-            (
-                data: null,
-                message: "error while adding address",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while adding address")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        return new Result<AddressDto?>
-        (
-            data: address.ToDto(),
-            message: "",
-            isSuccessful: true,
-            statusCode: 201
-        );
+
+        return new ObjectResult(address.ToDto()) { StatusCode = StatusCodes.Status201Created };
     }
 
 
-    public async Task<AddressDto?>> UpdateUserAddress(
+    public async Task<IActionResult> UpdateUserAddress(
         UpdateAddressDto addressDto,
         Guid id)
     {
         if (addressDto.IsEmpty())
-            return new Result<AddressDto?>
-            (
-                data: null,
-                message: "nothing to be updated",
-                isSuccessful: true,
-                statusCode: 200
-            );
+            return new ObjectResult("nothing to be updated")
+                { StatusCode = StatusCodes.Status400BadRequest };
 
-        User? user = await unitOfWork.UserRepository
+
+        var user = await unitOfWork.UserRepository
             .GetUser(id);
-        var isValide = user.IsValidateFunc(false);
 
-        if (isValide is not null)
+        var validationResult = user.IsValidateFunc(false);
+
+        if (validationResult is not null)
         {
-            return new Result<AddressDto?>(
-                isSuccessful: false,
-                data: null,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
+
 
         if (
             (addressDto.Longitude is null && addressDto.Latitude is not null) ||
             (addressDto.Longitude is not null && addressDto.Latitude is null)
         )
         {
-            return new Result<AddressDto?>(
-                isSuccessful: false,
-                data: null,
-                message: "when update address you must change both longitude and latitude not one of them only ",
-                statusCode: 400
-            );
+            return new ObjectResult(
+                    "when update address you must change both longitude and latitude not one of them only ")
+                { StatusCode = StatusCodes.Status400BadRequest };
         }
 
 
-        Address? address = await unitOfWork.AddressRepository.GetAddress(addressDto.Id);
+        var address = await unitOfWork.AddressRepository.GetAddress(addressDto.Id);
 
         if (address is null)
         {
-            return new Result<AddressDto?>
-            (
-                data: null,
-                message: "address not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("address not found")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         if (address.OwnerId != id)
         {
-            return new Result<AddressDto?>
-            (
-                data: null,
-                message: "address not owned",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("address not belong to you")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
 
@@ -456,153 +420,96 @@ public class UserService(
         address.Latitude = addressDto.Latitude ?? address.Latitude;
 
         unitOfWork.AddressRepository.Update(address);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<AddressDto?>
-            (
-                data: null,
-                message: "error while updating address",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while updating address")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        return new Result<AddressDto?>
-        (
-            data: address.ToDto(),
-            message: "",
-            isSuccessful: true,
-            statusCode: 200
-        );
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 
 
-    public async Task<bool>> DeleteUserAddress(Guid addressId, Guid id)
+    public async Task<IActionResult> DeleteUserAddress(Guid addressId, Guid id)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(id);
-        var isValide = user.IsValidateFunc(false);
 
-        if (isValide is not null)
+        var validationResult = user.IsValidateFunc(false, isStore: true);
+
+        if (validationResult is not null)
         {
-            return new Result<bool>(
-                isSuccessful: false,
-                data: false,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        Address? address = await unitOfWork.AddressRepository.GetAddress(addressId);
+
+        var address = await unitOfWork.AddressRepository.GetAddress(addressId);
 
         if (address is null)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "address not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("address not found")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         if (address.OwnerId != id)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "address not owned",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("address not belong to you")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         if (address.IsCurrent)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "could not delete current address",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("could not delete current address")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         unitOfWork.AddressRepository.Delete(addressId);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "error while delete address",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while delete address")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        return new Result<bool>
-        (
-            data: true,
-            message: "",
-            isSuccessful: true,
-            statusCode: 204
-        );
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 
 
-    public async Task<bool>> UpdateUserCurrentAddress(Guid addressId, Guid id)
+    public async Task<IActionResult> UpdateUserCurrentAddress(Guid addressId, Guid id)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(id);
-        var isValide = user.IsValidateFunc(false);
 
-        if (isValide is not null)
+        var validationResult = user.IsValidateFunc(false);
+
+        if (validationResult is not null)
         {
-            return new Result<bool>(
-                isSuccessful: false,
-                data: false,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        Address? address = await unitOfWork.AddressRepository.GetAddress(addressId);
+        var address = await unitOfWork.AddressRepository.GetAddress(addressId);
 
         if (address is null)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "address not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("address not found")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         if (address.OwnerId != id)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "address not owned",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("address not belong to you")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         if (address.IsCurrent)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "address is already current address",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("address is already current address")
+                { StatusCode = StatusCodes.Status409Conflict };
         }
 
         unitOfWork.AddressRepository.MakeAddressNotCurrentToId(user!.Id);
@@ -613,45 +520,31 @@ public class UserService(
 
         if (result == 0)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "error while update current address",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while update current address")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        return new Result<bool>
-        (
-            data: true,
-            message: "",
-            isSuccessful: true,
-            statusCode: 204
-        );
+
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 
 
-    public async Task<bool>> GenerateOtp(ForgetPasswordDto forgetPasswordDto)
+    public async Task<IActionResult> GenerateOtp(ForgetPasswordDto forgetPasswordDto)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(forgetPasswordDto.Email);
 
-        var isValide = user.IsValidateFunc(false);
+        var validationResult = user.IsValidateFunc(false);
 
-        if (isValide is not null)
+        if (validationResult is not null)
         {
-            return new Result<bool>(
-                isSuccessful: false,
-                data: false,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        string otp = ClsUtil.GenerateGuid().ToString().Substring(0, 6).Replace("-", "");
-        bool isOtpExist = await unitOfWork.PasswordRepository.IsExist(otp, user!.Email);
-        bool isExist = isOtpExist;
+        var otp = ClsUtil.GenerateGuid().ToString().Substring(0, 6).Replace("-", "");
+        var isOtpExist = await unitOfWork.PasswordRepository.IsExist(otp, user!.Email);
+        var isExist = isOtpExist;
 
         if (isExist)
         {
@@ -671,161 +564,109 @@ public class UserService(
                 Otp = otp
             }
         );
-        int result = await unitOfWork.SaveChanges();
+
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "error while generate otp",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while generate otp")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
 
         var sendMessageService = sp.GetRequiredKeyedService<IMessageService>(EnMessageService.Email);
-        bool emailSendResult = await sendMessageService.SendingMessage(message: otp, otp);
+        var emailSendResult = await sendMessageService.SendingMessage(message: otp, otp);
 
         if (!emailSendResult)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "error while send  otp email",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while send  otp email")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        return new Result<bool>
-        (
-            data: true,
-            message: "",
-            isSuccessful: false,
-            statusCode: 204
-        );
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 
-    public async Task<bool>> OtpVerification(CreateVerificationDto otp)
+    public async Task<IActionResult> OtpVerification(CreateVerificationDto otp)
     {
-        bool isExistUser = await unitOfWork.UserRepository
+        var isExistUser = await unitOfWork.UserRepository
             .IsExistByEmail(otp.Email);
         if (!isExistUser)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "user not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("user not found")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
-        ReseatPasswordOtp? otpResult = await unitOfWork.PasswordRepository.GetOtp(otp.Otp, otp.Email);
+        var otpResult = await unitOfWork.PasswordRepository.GetOtp(otp.Otp, otp.Email);
 
 
         if (otpResult is null)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "otp not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("otp not found")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         otpResult.IsValidated = true;
 
         unitOfWork.PasswordRepository.Update(otpResult);
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<bool>
-            (
-                data: false,
-                message: "error while update otp",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while update otp")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
 
-        return new Result<bool>
-        (
-            data: true,
-            message: "",
-            isSuccessful: true,
-            statusCode: 204
-        );
+        return new ObjectResult(null)
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 
-    public async Task<AuthDto?>> RecreatePassword(CreateRecreatePasswordDto otp)
+    public async Task<IActionResult> RecreatePassword(CreateRecreatePasswordDto otp)
     {
-        bool isExistUser = await unitOfWork.UserRepository
+        var isExistUser = await unitOfWork.UserRepository
             .IsExistByEmail(otp.Email);
+
         if (!isExistUser)
         {
-            return new Result<AuthDto?>
-            (
-                data: null,
-                message: "user not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("user not found")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
-        ReseatPasswordOtp? otpResult = await unitOfWork.PasswordRepository.GetOtp(otp.Otp, otp.Email, true);
+        var otpResult = await unitOfWork.PasswordRepository.GetOtp(otp.Otp, otp.Email, true);
 
 
         if (otpResult is null)
         {
-            return new Result<AuthDto?>
-            (
-                data: null,
-                message: "otp not found",
-                isSuccessful: false,
-                statusCode: 404
-            );
+            return new ObjectResult("otp not found")
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
-        User? user = await unitOfWork.UserRepository.GetUser(otp.Email);
+        var user = await unitOfWork.UserRepository.GetUser(otp.Email);
 
-        var isValide = user.IsValidateFunc();
-        if (isValide is not null)
+        var validationResult = user.IsValidateFunc(false);
+
+        if (validationResult is not null)
         {
-            return new Result<AuthDto?>(
-                isSuccessful: false,
-                data: null,
-                message: isValide.Message,
-                statusCode: isValide.StatusCode
-            );
+            return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        user.Password = ClsUtil.HashingText(otp.Password);
+        user?.Password = ClsUtil.HashingText(otp.Password);
 
-        unitOfWork.UserRepository.Update(user);
-        int result = await unitOfWork.SaveChanges();
+        unitOfWork.UserRepository.Update(user!);
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            return new Result<AuthDto?>
-            (
-                data: null,
-                message: "error while update user password",
-                isSuccessful: false,
-                statusCode: 400
-            );
+            return new ObjectResult("error while update user password")
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
 
         string token = "", refreshToken = "";
 
         token = authenticationService.GenerateToken(
-            id: user.Id,
+            id: user!.Id,
             email: user.Email
         );
 
@@ -834,11 +675,8 @@ public class UserService(
             email: user.Email,
             EnTokenMode.RefreshToken);
 
-        return new Result<AuthDto?>(
-            isSuccessful: true,
-            data: new AuthDto { RefreshToken = refreshToken, Token = token },
-            message: "",
-            statusCode: 200
-        );
+
+        return new ObjectResult(new AuthDto { RefreshToken = refreshToken, Token = token })
+            { StatusCode = StatusCodes.Status200OK };
     }
 }

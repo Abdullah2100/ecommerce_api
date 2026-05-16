@@ -17,7 +17,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     public DbSet<Banner> Banner { get; set; }
 
-    public DbSet<Variant> Varients { get; set; }
+    public DbSet<Variant> Variants { get; set; }
+    public DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
 
     public DbSet<Product> Products { get; set; }
     public DbSet<ProductVariant> ProductVariants { get; set; }

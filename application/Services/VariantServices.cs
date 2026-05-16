@@ -105,14 +105,13 @@ public class VariantServices(IUnitOfWork unitOfWork)
 
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
-
     }
 
     public async Task<IActionResult> DeleteVariant(Guid vairantId, Guid adminId)
     {
         var user = await unitOfWork.UserRepository
             .GetUser(adminId);
-        
+
         var validationResult = user.IsValidateFunc(false, isStore: true);
 
         if (validationResult is not null)
@@ -138,12 +137,10 @@ public class VariantServices(IUnitOfWork unitOfWork)
         {
             return new ObjectResult("error while delete variant")
                 { StatusCode = StatusCodes.Status500InternalServerError };
-
         }
 
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
-
     }
 
     public async Task<IActionResult> GetVariantPage(Guid adminId, int variantPerPage)
@@ -157,13 +154,12 @@ public class VariantServices(IUnitOfWork unitOfWork)
         {
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
-        
+
         var count = await unitOfWork.VarientRepository.GetVarientCount(variantPerPage);
 
-       
+
         return new ObjectResult(count)
             { StatusCode = StatusCodes.Status200OK };
-
     }
 
 
@@ -175,10 +171,9 @@ public class VariantServices(IUnitOfWork unitOfWork)
         var variantDto = variants
             .Select(va => va.ToDto())
             .ToList();
-       
-        
+
+
         return new ObjectResult(variantDto)
             { StatusCode = StatusCodes.Status200OK };
-
     }
 }

@@ -74,6 +74,7 @@ FirebaseApp.Create(new AppOptions()
 });
 
 
+
 var corsName = "AllowAllOrigins";
 builder.Services.AddCors(options =>
 {

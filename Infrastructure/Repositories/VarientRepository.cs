@@ -10,7 +10,7 @@ public class VarientRepository(AppDbContext context) : IVarientRepository
     public async Task<IEnumerable<Variant>> GetAllAsync(int page, int length)
     {
         return await context
-            .Varients
+            .Variants
             .AsNoTracking()
             .Skip((page - 1) * length)
             .Take(length)
@@ -19,34 +19,34 @@ public class VarientRepository(AppDbContext context) : IVarientRepository
 
     public void Add(Variant entity)
     {
-        context.Varients.AddAsync(entity);
+        context.Variants.AddAsync(entity);
     }
 
     public void Update(Variant entity)
     {
-        context.Varients.Update(entity);
+        context.Variants.Update(entity);
     }
 
     public void Delete(Guid id)
     {
         var variants = context
-            .Varients
+            .Variants
             .Where(i => i.Id == id)
             .ToList();
-        context.Varients.RemoveRange(variants);
+        context.Variants.RemoveRange(variants);
     }
 
     public async Task<Variant?> GetVarient(Guid id)
     {
         return await context
-            .Varients
+            .Variants
             .FindAsync(id);
     }
 
     public async Task<List<Variant>> GetVarients(int page, int length)
     {
         var variants = await context
-            .Varients
+            .Variants
             .AsNoTracking()
             .Skip((page - 1) * length)
             .Take(length)
@@ -68,7 +68,7 @@ public class VarientRepository(AppDbContext context) : IVarientRepository
     public async Task<bool> IsExist(Guid id)
     {
         return await context
-            .Varients
+            .Variants
             .AsNoTracking()
             .AnyAsync(i => i.Id == id);
     }
@@ -76,7 +76,7 @@ public class VarientRepository(AppDbContext context) : IVarientRepository
     public async Task<bool> IsExist(string name)
     {
         return await context
-            .Varients
+            .Variants
             .AsNoTracking()
             .AnyAsync(i => i.Name == name);
     }
@@ -84,7 +84,7 @@ public class VarientRepository(AppDbContext context) : IVarientRepository
     public async Task<bool> IsExist(string name, Guid id)
     {
         return await context
-            .Varients
+            .Variants
             .AsNoTracking()
             .AnyAsync(i => i.Name == name && i.Id != id);
     }

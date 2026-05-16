@@ -5,7 +5,7 @@ using api.Infrastructure;
 using api.util;
 using Microsoft.IdentityModel.Tokens;
 
-namespace api.application
+namespace api.application.Services
 {
     public enum EnTokenMode
     {
