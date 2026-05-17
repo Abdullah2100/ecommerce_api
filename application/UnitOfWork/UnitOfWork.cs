@@ -27,11 +27,12 @@ public class UnitOfWork : IUnitOfWork
         StoreRepository = new StoreRepository(_context);
         SubCategoryRepository = new SubCategoryRepository(_context);
         UserRepository = new UserRepository(_context);
-        VarientRepository = new VarientRepository(_context);
+        VariantRepository = new VarientRepository(_context);
         OrderProductVariantRepository = new OrderProductVariantRepository(context);
         AnalyseRepository = new AnalyseRepository(_context);
         CurrencyRepository = new CurrencyRepository(_context);
         PaymentTypeRepository = new PaymentTypeRepository(_context);
+        UserRefreshTokenRepository = new UserRefreshTokenRepository(_context);
     }
 
     public void Dispose()
@@ -71,6 +72,7 @@ public class UnitOfWork : IUnitOfWork
     public IStoreRepository StoreRepository { get; }
     public ISubCategoryRepository SubCategoryRepository { get; }
     public IUserRepository UserRepository { get; }
-    public IVarientRepository VarientRepository { get; }
+    public IVarientRepository VariantRepository { get; }
     public IAnalyseRepository AnalyseRepository { get; }
+    public IUserRefreshTokenRepository UserRefreshTokenRepository { get; set; }
 }

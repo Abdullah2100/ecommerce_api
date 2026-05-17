@@ -27,7 +27,7 @@ public class VariantServices(IUnitOfWork unitOfWork)
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        if (await unitOfWork.VarientRepository.IsExist(variantDto.Name))
+        if (await unitOfWork.VariantRepository.IsExist(variantDto.Name))
         {
             return new ObjectResult("there are variant with the same name")
                 { StatusCode = StatusCodes.Status404NotFound };
@@ -41,7 +41,7 @@ public class VariantServices(IUnitOfWork unitOfWork)
             Name = variantDto.Name
         };
 
-        unitOfWork.VarientRepository.Add(variant);
+        unitOfWork.VariantRepository.Add(variant);
         var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
@@ -76,7 +76,7 @@ public class VariantServices(IUnitOfWork unitOfWork)
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        var variant = await unitOfWork.VarientRepository.GetVarient(variantDto.Id);
+        var variant = await unitOfWork.VariantRepository.GetVarient(variantDto.Id);
 
         if (variant is null)
         {
@@ -85,7 +85,7 @@ public class VariantServices(IUnitOfWork unitOfWork)
         }
 
         if (variantDto.Name is not null)
-            if (await unitOfWork.VarientRepository.IsExist(variantDto.Name, variantDto.Id))
+            if (await unitOfWork.VariantRepository.IsExist(variantDto.Name, variantDto.Id))
             {
                 return new ObjectResult("name of variant already exist")
                     { StatusCode = StatusCodes.Status409Conflict };
@@ -94,7 +94,7 @@ public class VariantServices(IUnitOfWork unitOfWork)
 
         variant.Name = variantDto.Name ?? variant.Name;
 
-        unitOfWork.VarientRepository.Update(variant);
+        unitOfWork.VariantRepository.Update(variant);
         var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
@@ -120,7 +120,7 @@ public class VariantServices(IUnitOfWork unitOfWork)
         }
 
 
-        var variant = await unitOfWork.VarientRepository.GetVarient(vairantId);
+        var variant = await unitOfWork.VariantRepository.GetVarient(vairantId);
 
         if (variant is null)
         {
@@ -129,7 +129,7 @@ public class VariantServices(IUnitOfWork unitOfWork)
         }
 
 
-        unitOfWork.VarientRepository
+        unitOfWork.VariantRepository
             .Delete(vairantId);
         var result = await unitOfWork.SaveChanges();
 
@@ -155,7 +155,7 @@ public class VariantServices(IUnitOfWork unitOfWork)
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        var count = await unitOfWork.VarientRepository.GetVarientCount(variantPerPage);
+        var count = await unitOfWork.VariantRepository.GetVarientCount(variantPerPage);
 
 
         return new ObjectResult(count)
@@ -165,7 +165,7 @@ public class VariantServices(IUnitOfWork unitOfWork)
 
     public async Task<IActionResult> GetVariants(int page, int pageSize)
     {
-        var variants = (await unitOfWork.VarientRepository
+        var variants = (await unitOfWork.VariantRepository
             .GetVarients(page, pageSize));
 
         var variantDto = variants

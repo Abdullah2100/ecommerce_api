@@ -18,11 +18,13 @@ public interface IUnitOfWork : IDisposable
     public IStoreRepository StoreRepository { get; }
     public ISubCategoryRepository SubCategoryRepository { get; }
     public IUserRepository UserRepository { get; }
-    public IVarientRepository VarientRepository { get; }
+    public IVarientRepository VariantRepository { get; }
     public IOrderProductVariant OrderProductVariantRepository { get; }
     public IAnalyseRepository AnalyseRepository { get; }
     public ICurrencyRepository CurrencyRepository { get; }
     public IPaymentTypeRepository PaymentTypeRepository { get; set; }
+    public IUserRefreshTokenRepository UserRefreshTokenRepository { get; set; }
+    
 
 
     public Task<int> SaveChanges();
