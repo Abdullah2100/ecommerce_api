@@ -47,4 +47,9 @@ public class UserRefreshTokenRepository(AppDbContext context):IUserRefreshTokenR
                 break;
         }
     }
+
+    public async Task<UserRefreshToken?> GetByUserId(Guid id)
+    {
+        return await context.UserRefreshTokens.AsNoTracking().FirstOrDefaultAsync(value => value.UserId == id);
+    }
 }

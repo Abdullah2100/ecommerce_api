@@ -1,5 +1,8 @@
+using System.Diagnostics;
 using api.application.Interface;
 using api.application.Result;
+using api.application.Services.Implement;
+using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
 using api.Presentation.dto.Request;
@@ -80,19 +83,14 @@ public class UserService(
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        string token = "", refreshToken = "";
 
-        token = authenticationService.GenerateToken(
-            id: userId,
-            email: signupDto.Email);
-
-        refreshToken = authenticationService.GenerateToken(
+        var tokenData = await authenticationService.GenerateToken(
             id: userId,
             email: signupDto.Email,
-            EnTokenMode.RefreshToken);
+            EnUserType.User);
 
 
-        return new ObjectResult(new AuthDto { RefreshToken = refreshToken, Token = token })
+        return new ObjectResult(tokenData)
             { StatusCode = StatusCodes.Status200OK };
     }
 
@@ -119,18 +117,25 @@ public class UserService(
                 { StatusCode = StatusCodes.Status500InternalServerError };
 
 
-        string token = "", refreshToken = "";
+      
+        var userRefreshTokenHolder = await unitOfWork.UserRefreshTokenRepository.GetByUserId(user!.Id);
 
-        token = authenticationService.GenerateToken(
-            id: user.Id,
-            email: user.Email);
+        var role = userRefreshTokenHolder!.Role switch
+        {
+            "Admin" => EnUserType.Admin,
+            "Delivery" => EnUserType.Delivery,
+            _ => EnUserType.User
+        };
 
-        refreshToken = authenticationService.GenerateToken(
-            id: user.Id,
+
+        var tokenData = await authenticationService.GenerateToken(
+            id: user!.Id,
             email: user.Email,
-            EnTokenMode.RefreshToken);
+            role
+        );
 
-        return new ObjectResult(new AuthDto { RefreshToken = refreshToken, Token = token })
+
+        return new ObjectResult(tokenData)
             { StatusCode = StatusCodes.Status200OK };
     }
 
@@ -662,21 +667,24 @@ public class UserService(
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
+        var userRefreshTokenHolder = await unitOfWork.UserRefreshTokenRepository.GetByUserId(user!.Id);
 
-        string token = "", refreshToken = "";
+        var role = userRefreshTokenHolder!.Role switch
+        {
+            "Admin" => EnUserType.Admin,
+            "Delivery" => EnUserType.Delivery,
+            _ => EnUserType.User
+        };
 
-        token = authenticationService.GenerateToken(
+
+        var tokenData = await authenticationService.GenerateToken(
             id: user!.Id,
-            email: user.Email
+            email: user.Email,
+            role
         );
 
-        refreshToken = authenticationService.GenerateToken(
-            id: user.Id,
-            email: user.Email,
-            EnTokenMode.RefreshToken);
 
-
-        return new ObjectResult(new AuthDto { RefreshToken = refreshToken, Token = token })
+        return new ObjectResult(tokenData)
             { StatusCode = StatusCodes.Status200OK };
     }
 }

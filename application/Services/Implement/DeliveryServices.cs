@@ -1,4 +1,6 @@
 using api.application.Interface;
+using api.application.Services.Implement;
+using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
 using api.Presentation.dto.Request;
@@ -66,17 +68,15 @@ public class DeliveryServices(
         }
 
 
-        string? token = null, refreshToken = null;
-        token = authenticationService.GenerateToken(
-            id: delivery.Id,
-            email: delivery.User.Email);
+        var tokenData = await authenticationService.GenerateToken(
+            id: user!.Id,
+            email: user.Email,
+            EnUserType.Delivery
+        );
 
-        refreshToken = authenticationService.GenerateToken(
-            id: delivery.Id,
-            email: delivery.User.Email,
-            EnTokenMode.RefreshToken);
 
-        return new ObjectResult(new AuthDto { RefreshToken = refreshToken, Token = token }) { StatusCode = 200 };
+        return new ObjectResult(tokenData)
+            { StatusCode = StatusCodes.Status200OK };
     }
 
 
@@ -232,7 +232,6 @@ public class DeliveryServices(
                 var validationResult = user.IsValidateFunc(isStore: true);
                 if (validationResult is not null)
                 {
-                   
                     return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
                 }
 
@@ -259,7 +258,7 @@ public class DeliveryServices(
             .ToList();
 
         if (deliveryDto is null) return new ObjectResult(deliveryDto) { StatusCode = StatusCodes.Status200OK };
-        
+
         foreach (var delivery in deliveryDto)
         {
             delivery.Analyse = await unitOfWork.DeliveryRepository.GetDeliveryAnalys(delivery.Id);
@@ -334,6 +333,8 @@ public class DeliveryServices(
         var result = await unitOfWork.SaveChanges();
 
 
-        return result < 1 ? new ObjectResult("Something went wrong") { StatusCode = StatusCodes.Status500InternalServerError } : new ObjectResult(null) { StatusCode = StatusCodes.Status204NoContent };
+        return result < 1
+            ? new ObjectResult("Something went wrong") { StatusCode = StatusCodes.Status500InternalServerError }
+            : new ObjectResult(null) { StatusCode = StatusCodes.Status204NoContent };
     }
 }

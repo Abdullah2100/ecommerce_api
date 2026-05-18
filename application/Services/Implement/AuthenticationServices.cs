@@ -1,22 +1,38 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using api.application.Interface;
+using api.application.Services.Interface;
+using api.domain.entity;
 using api.Infrastructure;
+using api.Presentation.dto.Response;
 using api.util;
 using Microsoft.IdentityModel.Tokens;
 
-namespace api.application.Services
+namespace api.application.Services.Implement
 {
-    public enum EnTokenMode
+    public enum  EnUserType
     {
-        AccessToken,
-        RefreshToken
+        User,
+        Admin,
+        Delivery
     }
-
-
-    public class AuthenticationServices(IConfig config) : IAuthenticationService
+    public class AuthenticationServices(IConfig config, IUnitOfWork unitOfWork) : IAuthenticationService
     {
-        public string GenerateToken(Guid id, string email, EnTokenMode tokenType)
+        private async Task<Guid> GenerateRefreshToken(Guid userId,string role)
+        {
+            var userRefreshTokenHolder = new UserRefreshToken()
+            {
+                ExpireAt = DateTime.UtcNow.AddHours(4), 
+                UserId = userId, 
+                Id = Guid.CreateVersion7(),
+                Refresh = Guid.CreateVersion7(),
+                Role = role
+            };
+            await unitOfWork.UserRefreshTokenRepository.Save(userRefreshTokenHolder);
+            await unitOfWork.SaveChanges();
+            return userRefreshTokenHolder.Refresh;
+        }
+
+        public async Task<AuthDto> GenerateToken(Guid id, string email,EnUserType type)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = config.GetKey("credentials:key");
@@ -25,15 +41,16 @@ namespace api.application.Services
 
             List<Claim> claims =
             [
-                new(JwtRegisteredClaimNames.Jti, ClsUtil.GenerateGuid().ToString()),
-                new(JwtRegisteredClaimNames.NameId, id.ToString() ?? ""),
-                new(JwtRegisteredClaimNames.Email, email)
+                new(ClaimTypes.NameIdentifier, id.ToString() ?? ""),
+                new(ClaimTypes.Email, email),
+                new(ClaimTypes.Role,type.ToString())
+                
             ];
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = ClsUtil.GenerateDateTime(tokenType),
+                Expires = DateTime.UtcNow.AddHours(1),
                 Issuer = issuer,
                 Audience = audience,
                 SigningCredentials = new SigningCredentials(
@@ -44,8 +61,9 @@ namespace api.application.Services
 
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            var tokenData = tokenHandler.WriteToken(token);
+            var refreshToken = await GenerateRefreshToken(id,type.ToString());
+            return new AuthDto() { Token = tokenData, RefreshToken = refreshToken };
         }
-
-     }
+    }
 }

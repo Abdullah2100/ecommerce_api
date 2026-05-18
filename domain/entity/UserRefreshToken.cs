@@ -9,4 +9,5 @@ public class UserRefreshToken
     public Guid UserId { get; set; }
     public Guid Refresh { get; set; }
     public DateTime ExpireAt { get; set; }
+    public string? Role { get; set; }
 }

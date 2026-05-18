@@ -1,9 +1,9 @@
-using System.Security.Claims;
-using api.application.Services;
+using api.application.Services.Implement;
+using api.Presentation.dto.Response;
 
-namespace api.application.Interface;
+namespace api.application.Services.Interface;
 
 public interface IAuthenticationService
 {
-    string GenerateToken(Guid id, string email, EnTokenMode tokenType = EnTokenMode.AccessToken);
+    Task<AuthDto> GenerateToken(Guid id, string email,EnUserType type);
 }

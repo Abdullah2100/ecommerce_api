@@ -2,6 +2,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using api.application.Interface;
 using api.application.Result;
+using api.application.Services.Implement;
+using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
 using api.Presentation.dto;
@@ -48,17 +50,25 @@ public class RefreshTokenServices(
                 { StatusCode = StatusCodes.Status400BadRequest };
         }
 
-        var tokenHolder = authenticationService.GenerateToken(
-            id: idHolder,
-            email: (user?.Email ?? delivery?.User?.Email) ?? string.Empty);
+        
+        var userRefreshTokenHolder = await unitOfWork.UserRefreshTokenRepository.GetByUserId(user!.Id);
 
-        var refreshTokenHolder = authenticationService.GenerateToken(
-            id: idHolder,
-            email: user?.Email ?? (delivery?.User?.Email) ?? string.Empty,
-            EnTokenMode.RefreshToken);
+        var role = userRefreshTokenHolder!.Role switch
+        {
+            "Admin" => EnUserType.Admin,
+            "Delivery" => EnUserType.Delivery,
+            _ => EnUserType.User
+        };
 
 
-        return new ObjectResult(new AuthDto { RefreshToken = refreshTokenHolder, Token = tokenHolder })
+        var tokenData = await authenticationService.GenerateToken(
+            id: user!.Id,
+            email: user.Email,
+            role
+        );
+
+
+        return new ObjectResult(tokenData)
             { StatusCode = StatusCodes.Status200OK };
     }
 }

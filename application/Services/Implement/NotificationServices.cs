@@ -1,7 +1,8 @@
 using api.application.Interface;
+using api.application.Services.Interface;
 using FirebaseAdmin.Messaging;
 
-namespace api.application.Services;
+namespace api.application.Services.Implement;
 
 public class NotificationServices : IMessageService
 {

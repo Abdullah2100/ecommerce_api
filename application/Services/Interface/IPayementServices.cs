@@ -1,6 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
-
-using api.application.Result;
+namespace api.application.Services.Interface;
 
 public interface IPaymentServices
 {

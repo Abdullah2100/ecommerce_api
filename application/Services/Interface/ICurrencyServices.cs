@@ -1,10 +1,7 @@
-using api.Presentation.dto;
-using api.application.Result;
 using api.Presentation.dto.Request;
-using api.Presentation.dto.Response;
 using Microsoft.AspNetCore.Mvc;
 
-namespace api.application.Interface;
+namespace api.application.Services.Interface;
 
 public interface ICurrencyServices
 {

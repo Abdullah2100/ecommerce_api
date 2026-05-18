@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Mail;
 using api.application.Interface;
+using api.application.Services.Interface;
 using api.Infrastructure;
 
 namespace api.application;

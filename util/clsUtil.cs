@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using api.application;
 using api.application.Services;
+using api.application.Services.Implement;
 
 namespace api.util
 {
@@ -19,21 +20,6 @@ namespace api.util
     static class ClsUtil
     {
         public static Guid GenerateGuid() => Guid.NewGuid();
-
-        public static DateTime GenerateDateTime(EnTokenMode mode)
-        {
-            switch (mode)
-            {
-                case EnTokenMode.AccessToken:
-                {
-                    return DateTime.Now.AddSeconds(40);
-                }
-                default:
-                {
-                    return DateTime.Now.AddDays(30);
-                }
-            }
-        }
 
         public static string RemoveAdditionalPath(string dir)
         {
