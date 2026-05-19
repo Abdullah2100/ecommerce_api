@@ -1,9 +1,9 @@
-using api.application.Interface;
+using api.application.Services.Interface;
 using api.Infrastructure;
 using api.shared.mapper;
 using Microsoft.AspNetCore.Mvc;
 
-namespace api.application.Services;
+namespace api.application.Services.Implement;
 
 public class AnalyseServices(IUnitOfWork unitOfWork) : IAnalyseServices
 {

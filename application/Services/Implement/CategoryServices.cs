@@ -1,16 +1,12 @@
-using api.application.Interface;
-using api.application.Result;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
-using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.util;
 using Microsoft.AspNetCore.Mvc;
 
-namespace api.application.Services;
+namespace api.application.Services.Implement;
 
 public class CategoryServices(
     IConfig config,
@@ -20,7 +16,7 @@ public class CategoryServices(
 {
     public async Task<IActionResult> CreateCategory(CreateCategoryDto categoryDto, Guid adminId)
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(adminId);
 
         var validationResult = user.IsValidateFunc();
@@ -173,7 +169,7 @@ public class CategoryServices(
         var categories = (await unitOfWork.CategoryRepository.GetCategories(pageNumber, pageSize))
             .Select(ca => ca.ToDto(config.GetKey("url_file")))
             .ToList();
-        return new ObjectResult(null)
-            { StatusCode = StatusCodes.Status204NoContent };
+        return new ObjectResult(categories)
+            { StatusCode = StatusCodes.Status200OK };
     }
 }

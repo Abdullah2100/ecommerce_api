@@ -11,6 +11,9 @@ namespace api.Presentation.controller;
 public class PaymentController : ControllerBase
 {
     [HttpPost("")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateSession([FromBody] PaymentRequirementData paymentRequirementData)
     {
         var options = new PaymentIntentCreateOptions

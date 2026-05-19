@@ -41,28 +41,16 @@ public static class UserMapperExtension
 
         private Tuple<string, int>? IsHasStore()
         {
-            switch (user.Store is not null)
+            return (user.Store is not null) switch
             {
-                case true:
-                {
-                    if (user.Store.IsBlock)
-                    {
-                        return new Tuple<string, int>("store is Blocked", 403);
-                    }
-
-                    return null;
-                }
-
-                default:
-                {
-                    if (user.Store is null)
-                    {
-                        return new("you must has store before done this operation", 409);
-                    }
-
-                    return null;
-                }
-            }
+                true => user.Store.IsBlock
+                    ? new Tuple<string, int>("store is Blocked", StatusCodes.Status403Forbidden)
+                    : null,
+                _ => user.Store is null
+                    ? new Tuple<string, int>("you must has store before done this operation",
+                        StatusCodes.Status409Conflict)
+                    : null
+            };
         }
     }
 
@@ -73,34 +61,34 @@ public static class UserMapperExtension
         {
             if (user is null)
             {
-                return new Tuple<string, int>("user not found", 404);
+                return new Tuple<string, int>("user not found", StatusCodes.Status404NotFound);
             }
 
 
             //validate user if it is admin or user according to isAdmin feild 
             switch (isAdmin)
             {
-                case null: return isStore ? IsHasStore(user) : null;
+                case null: return isStore ? user.IsHasStore() : null;
 
                 case false:
                 {
                     if (user.IsBlocked)
                     {
-                        return new Tuple<string, int>("user is blocked", 403);
+                        return new Tuple<string, int>("user is blocked", StatusCodes.Status403Forbidden);
                     }
 
                     //check if user has store
-                    return isStore ? IsHasStore(user) : null;
+                    return isStore ? user.IsHasStore() : null;
                 }
                 default:
                 {
                     if (user is { IsUser: false, IsBlocked: true })
                     {
-                        return new Tuple<string, int>("user not has the permission", 403);
+                        return new Tuple<string, int>("user not has the permission", StatusCodes.Status403Forbidden);
                     }
 
                     //check if admin has store
-                    return isStore ? IsHasStore(user) : null;
+                    return isStore ? user.IsHasStore() : null;
                 }
             }
         }

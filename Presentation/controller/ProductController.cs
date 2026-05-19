@@ -13,6 +13,7 @@ public class ProductController(IProductServices productServices) : ControllerBas
 {
     [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProducts
         ([FromQuery] Guid storeId, [FromQuery] int pageNumber)
     {
@@ -27,6 +28,7 @@ public class ProductController(IProductServices productServices) : ControllerBas
 
     [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProductsByCategory
     (
         [FromQuery] Guid categoryId, [FromQuery] int pageNumber
@@ -42,6 +44,7 @@ public class ProductController(IProductServices productServices) : ControllerBas
 
     [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProducts
     (
         [FromQuery] Guid storeId,
@@ -64,6 +67,7 @@ public class ProductController(IProductServices productServices) : ControllerBas
 
     [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProducts
         ([FromQuery] int pageNumber)
     {
@@ -79,7 +83,7 @@ public class ProductController(IProductServices productServices) : ControllerBas
     [HttpGet("")]
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProductsAdmin
         ([FromQuery] int pageNumber, [FromHeader] string header)
@@ -102,7 +106,7 @@ public class ProductController(IProductServices productServices) : ControllerBas
     [HttpGet("pages")]
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProductsPagesNum()
     {
@@ -118,8 +122,9 @@ public class ProductController(IProductServices productServices) : ControllerBas
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateProduct
     (
         [FromForm] CreateProductDto product
@@ -138,8 +143,9 @@ public class ProductController(IProductServices productServices) : ControllerBas
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateProduct
     (
         [FromForm] UpdateProductDto product
@@ -158,8 +164,9 @@ public class ProductController(IProductServices productServices) : ControllerBas
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteProduct
     (
         Guid productId,

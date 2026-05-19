@@ -15,10 +15,9 @@ public class OrderItemController(IOrderItemServices orderItemServices) : Control
 {
     [HttpGet()]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> GetOrdersItemForStore
     (
         int pageNumber = 1
@@ -41,9 +40,10 @@ public class OrderItemController(IOrderItemServices orderItemServices) : Control
 
     [HttpPut("status")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateOrderItemStatus
         ([FromBody] UpdateOrderItemStatusDto orderItemStatusDto)
     {

@@ -13,10 +13,11 @@ public class VariantController(IVariantServices variantServices) : ControllerBas
 {
     [HttpPost("")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateVariant([FromBody] CreateVariantDto variant)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -28,10 +29,11 @@ public class VariantController(IVariantServices variantServices) : ControllerBas
 
     [HttpPatch("")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateVariant([FromBody] UpdateVariantDto variant)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -43,10 +45,11 @@ public class VariantController(IVariantServices variantServices) : ControllerBas
 
     [HttpDelete("{variantId:guid}")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteVariant(Guid variantId)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -60,8 +63,7 @@ public class VariantController(IVariantServices variantServices) : ControllerBas
 
     [HttpGet("{pageNumber:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetVariants([FromQuery()] int pageNumber = 1)
     {
         if (pageNumber < 1)
@@ -73,9 +75,9 @@ public class VariantController(IVariantServices variantServices) : ControllerBas
 
     [HttpGet("pages")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetStoresPages()
     {
         Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;

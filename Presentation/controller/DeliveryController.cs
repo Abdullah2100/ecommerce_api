@@ -21,7 +21,8 @@ public class DeliveryController(
     [AllowAnonymous]
     [HttpPost("login")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Login([FromBody] LoginDto data)
     {
@@ -33,10 +34,11 @@ public class DeliveryController(
 
     [HttpPost("")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateDelivery
         ([FromForm] CreateDeliveryDto delivery)
     {
@@ -53,9 +55,9 @@ public class DeliveryController(
 
     [HttpGet("me")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetDelivery()
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -68,9 +70,11 @@ public class DeliveryController(
 
     [HttpPut()]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateDeliveryInfo([FromForm] UpdateDeliveryDto delivery)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -84,9 +88,9 @@ public class DeliveryController(
 
     [HttpGet("all")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetDelivery(int pageNumber)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -100,9 +104,10 @@ public class DeliveryController(
 
     [HttpPut("{status:bool}")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateDeliveryStatus(bool status)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -116,10 +121,9 @@ public class DeliveryController(
 
     [HttpGet()]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetOrderNotTookByDelivery
     (
         int pageNumber = 1
@@ -135,12 +139,11 @@ public class DeliveryController(
     }
 
 
-    [HttpGet("me")]
+    [HttpGet("my/orders")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetOrderBelongToMe(int pageNumber = 1)
     {
         if (pageNumber < 1)
@@ -158,10 +161,11 @@ public class DeliveryController(
 
     [HttpPatch("{orderId:guid}")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateOrderDeliveryId(Guid orderId)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -174,10 +178,10 @@ public class DeliveryController(
 
     [HttpDelete("{orderId:guid}")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> RenameOrderBelongToDelivery(Guid orderId)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;

@@ -14,10 +14,11 @@ public class CategoryController(ICategoryServices categoryServices) : Controller
 {
     [HttpPost("")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateCategory([FromForm] CreateCategoryDto category)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -31,10 +32,12 @@ public class CategoryController(ICategoryServices categoryServices) : Controller
 
     [HttpPut("")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateCategory(
         [FromForm] UpdateCategoryDto category)
     {
@@ -47,13 +50,13 @@ public class CategoryController(ICategoryServices categoryServices) : Controller
 
     [HttpDelete("{categoryId:guid}")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteCategory(Guid categoryId)
     {
-        Guid id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
+        var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
 
 
         var result = await categoryServices.DeleteCategory(categoryId, id);
@@ -65,7 +68,7 @@ public class CategoryController(ICategoryServices categoryServices) : Controller
     [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetCategories(int pageNumber = 1)
     {
         if (pageNumber < 1)

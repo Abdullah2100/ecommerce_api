@@ -14,10 +14,10 @@ public class CurrencyController(ICurrencyServices currencyServices) : Controller
 {
     [HttpPost("")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateCurrency([FromBody] CreateCurrencyDto currencyDto)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -29,10 +29,10 @@ public class CurrencyController(ICurrencyServices currencyServices) : Controller
 
     [HttpPut("")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateCurrency([FromBody] UpdateCurrencyDto currencyDto)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -45,10 +45,10 @@ public class CurrencyController(ICurrencyServices currencyServices) : Controller
 
     [HttpDelete("{currencyId:guid}")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteCurrency(Guid currencyId)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -61,8 +61,7 @@ public class CurrencyController(ICurrencyServices currencyServices) : Controller
 
     [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetCurrencies(int pageNumber = 1)
     {
         if (pageNumber < 1)

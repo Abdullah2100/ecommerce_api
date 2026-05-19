@@ -4,13 +4,11 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace api.Filter;
 
-public class CustomResultFilter() : IAsyncActionFilter
+public class CustomResultFilter() : IAsyncResultFilter
 {
-    public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    public async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
     {
-        var result = context.Result as ObjectResult;
-
-        if (result?.Value is ObjectResult value)
+        if (context.Result is ObjectResult { Value: ObjectResult value } result)
         {
             var resultJson = new Result
             (

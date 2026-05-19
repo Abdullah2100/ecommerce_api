@@ -422,7 +422,7 @@ public class ProductServices(
 
 
         return new ObjectResult(productToDto)
-            { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status200OK };
     }
 
     public async Task<IActionResult> DeleteProducts(
@@ -466,7 +466,7 @@ public class ProductServices(
         if (product?.Thumbnail is not null)
             fileServices.DeleteFile(product.Thumbnail);
 
-        return new ObjectResult("product had link with some order")
+        return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
     }
 }

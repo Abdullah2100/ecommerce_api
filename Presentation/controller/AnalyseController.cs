@@ -1,4 +1,5 @@
 using api.application.Interface;
+using api.application.Services.Interface;
 using api.Filter;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +13,11 @@ public class AnalyseController(IAnalyseServices analyseServices) : ControllerBas
 {
     [HttpGet("system")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetOrderStatus()
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;

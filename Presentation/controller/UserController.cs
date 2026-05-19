@@ -14,8 +14,11 @@ public class UserController(IUserServices userServices ) : ControllerBase
 {
     [AllowAnonymous]
     [HttpPost("auth/signup")]
-    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> SignUp([FromBody] SignupDto data)
     {
         var result = await userServices.Signup(data);
@@ -27,7 +30,9 @@ public class UserController(IUserServices userServices ) : ControllerBase
     [AllowAnonymous]
     [HttpPost("auth/login")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Login([FromBody] LoginDto data)
     {
         var result = await userServices.Login(data);
@@ -38,9 +43,9 @@ public class UserController(IUserServices userServices ) : ControllerBase
 
     [HttpGet("me")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUser()
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -53,9 +58,9 @@ public class UserController(IUserServices userServices ) : ControllerBase
 
     [HttpGet()]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUsers([FromQuery()] int page)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -68,9 +73,9 @@ public class UserController(IUserServices userServices ) : ControllerBase
 
     [HttpGet("pages")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserPages()
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -83,10 +88,10 @@ public class UserController(IUserServices userServices ) : ControllerBase
 
     [HttpPatch("{userId:guid}/status")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> BlockOrUnBlockUser(Guid userId)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -99,10 +104,12 @@ public class UserController(IUserServices userServices ) : ControllerBase
 
     [HttpPut("")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateUser(
         [FromForm] UpdateUserInfoDto userData
     )
@@ -117,10 +124,10 @@ public class UserController(IUserServices userServices ) : ControllerBase
 
     [HttpPost("address")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> AddNewUserAddress(
         [FromBody] CreateAddressDto address
     )
@@ -134,10 +141,11 @@ public class UserController(IUserServices userServices ) : ControllerBase
 
     [HttpPut("address")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateUserLocation(
         [FromBody] UpdateAddressDto address
     )
@@ -152,10 +160,10 @@ public class UserController(IUserServices userServices ) : ControllerBase
 
     [HttpDelete("address/{addressId}")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteUserLocation(
         Guid addressId
     )
@@ -171,10 +179,11 @@ public class UserController(IUserServices userServices ) : ControllerBase
 
     [HttpPatch("address/{addressId:guid}")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateUserCurrentLocation(Guid addressId)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -188,9 +197,10 @@ public class UserController(IUserServices userServices ) : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("auth/otp/generate")]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GenerateOtp(
         [FromBody] ForgetPasswordDto otp
     )
@@ -204,9 +214,9 @@ public class UserController(IUserServices userServices ) : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("auth/otp/verify")]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> VerifyingOtp(
         [FromBody] CreateVerificationDto verification
     )
@@ -220,9 +230,10 @@ public class UserController(IUserServices userServices ) : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("auth/password-reset")]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> ReseatPassword([FromBody] CreateRecreatePasswordDto data)
     {
         var result = await userServices.RecreatePassword(data);

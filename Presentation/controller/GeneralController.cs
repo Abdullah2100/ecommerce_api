@@ -15,10 +15,10 @@ public class GeneralController(IGeneralSettingServices generalSettingServices) :
 {
     [HttpPost("")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateGeneralSetting(
         [FromBody] GeneralSettingDto generalSetting
     )
@@ -35,10 +35,10 @@ public class GeneralController(IGeneralSettingServices generalSettingServices) :
 
     [HttpDelete("{generalSettingId:guid}")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteGeneralSetting(
         Guid generalSettingId
     )
@@ -55,10 +55,10 @@ public class GeneralController(IGeneralSettingServices generalSettingServices) :
 
     [HttpPut("{generalSettingId:guid}")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateGeneralSetting(
         Guid generalSettingId,
         [FromBody] UpdateGeneralSettingDto generalSetting
@@ -78,8 +78,7 @@ public class GeneralController(IGeneralSettingServices generalSettingServices) :
     [AllowAnonymous]
     [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetGeneralSettings(
         int pageNumber
     )

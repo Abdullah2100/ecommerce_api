@@ -114,7 +114,7 @@ public class BannerServices(
 
         fileServices.DeleteFile(banner.Image);
 
-        await hubContext.Clients.All.SendAsync("deletedOrder", id);
+        await hubContext.Clients.All.SendAsync("deletedBanner", id);
 
 
         return new ObjectResult(null) { StatusCode = 204 };

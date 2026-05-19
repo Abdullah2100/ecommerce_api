@@ -18,10 +18,11 @@ public class StoreController(
 {
     [HttpPost("")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateNewStore(
         [FromForm] CreateStoreDto store)
     {
@@ -35,11 +36,12 @@ public class StoreController(
 
     [HttpPut("")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateStore(
         [FromForm] UpdateStoreDto store)
     {
@@ -54,10 +56,11 @@ public class StoreController(
 
     [HttpPut("{storeId:guid}/status")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateStoreStatus(
         Guid storeId
     )
@@ -74,9 +77,9 @@ public class StoreController(
 
     [HttpGet("me")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetMyStore()
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -88,9 +91,9 @@ public class StoreController(
 
     [HttpGet("{storeId:guid}/pages")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetStoresPages(Guid storeId)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -102,8 +105,8 @@ public class StoreController(
 
 
     [HttpGet("{storeId:guid}")]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetStoreById(Guid storeId)
     {
         var result = await storeServices.GetStoreByStoreId(storeId);
@@ -115,7 +118,7 @@ public class StoreController(
     [HttpGet()]
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetStores(int page = 1)
     {
@@ -130,7 +133,7 @@ public class StoreController(
     [HttpGet("search/{prefix:regex(^[[\\p{{L}}]]+$)}")]
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetStores(string prefix)
     {
@@ -143,10 +146,11 @@ public class StoreController(
 
     [HttpPost("{storeId:guid}/banners")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateBanner(
         Guid storeId, [FromForm] CreateBannerDto banner
     )
@@ -160,10 +164,11 @@ public class StoreController(
 
     [HttpDelete("{storeId:guid}/banners/{bannerId:guid}")]
     [GetUserIdFromUserClaims]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteBanner(
         Guid storeId, Guid bannerId
     )
@@ -179,6 +184,7 @@ public class StoreController(
     [HttpGet("{storeId:guid}/banners")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetBanner(
         Guid storeId, int pageNumber
     )
@@ -193,10 +199,10 @@ public class StoreController(
     }
 
     [HttpPost("{storeId:guid}/subCategories")]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreatSubCategory(
         Guid storeId,
         [FromBody] CreateSubCategoryDto subCategory)
@@ -207,10 +213,10 @@ public class StoreController(
     }
 
     [HttpPut("{storeId:guid}/subCategories")]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateSubCategory(
         Guid storeId,
         [FromBody] UpdateSubCategoryDto subCategory)
@@ -221,10 +227,10 @@ public class StoreController(
     }
 
     [HttpDelete("{storeId:guid}/subCategories/{subCategoryId:guid}")]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteSubCategory
         (Guid storeId, Guid subCategoryId)
 
@@ -238,7 +244,7 @@ public class StoreController(
 
     [HttpGet("{storeId:guid}/subCategories")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetSubCategory(Guid storeId, int page)
     {
         var result = await subCategoryServices.GetSubCategories(

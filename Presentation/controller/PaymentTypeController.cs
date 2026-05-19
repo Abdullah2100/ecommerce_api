@@ -15,9 +15,9 @@ public class PaymentTypeController(IPaymentTypeServices paymentTypeServices) : C
     [HttpPost("")]
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreatePaymentType
     (
         [FromForm] CreatePaymentTypeDto paymentTypeDto
@@ -34,9 +34,10 @@ public class PaymentTypeController(IPaymentTypeServices paymentTypeServices) : C
     [HttpPut("")]
     [GetUserIdFromUserClaims]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdatePaymentType
     (
         [FromForm] UpdatePaymentTypeDto paymentTypeDto
@@ -51,6 +52,7 @@ public class PaymentTypeController(IPaymentTypeServices paymentTypeServices) : C
 
     [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProducts([FromQuery] int pageNumber)
     {
         if (pageNumber < 1)
