@@ -3,19 +3,21 @@ using System.Net.Mail;
 using api.application.Interface;
 using api.application.Services.Interface;
 using api.Infrastructure;
+using api.Settings;
+using Microsoft.Extensions.Options;
 
 namespace api.application;
 
-public class EmailServices(IConfig config) : IMessageService
+public class EmailServices(IOptions<SmtpSetting> smtp) : IMessageService
 {
     public async Task<bool> SendingMessage(string message, string to)
     {
         try
         {
-            var serverUrl = config.GetKey("smtp_data:url");
-            var userName = config.GetKey("smtp_data:username");
-            var password = config.GetKey("smtp_data:password");
-            var port = config.GetKey("smtp_data:port");
+            var serverUrl = smtp.Value.Url;
+            var userName = smtp.Value.Username;
+            var password = smtp.Value.Password;
+            var port = smtp.Value.Port;
 
             var client = new SmtpClient(serverUrl, Convert.ToInt32((port)))
             {
@@ -27,7 +29,7 @@ public class EmailServices(IConfig config) : IMessageService
                 new MailMessage(
                     userName
                     , to,
-                    "Otp Valdiation",
+                    "Otp Validation",
                     message)
             );
             return true;

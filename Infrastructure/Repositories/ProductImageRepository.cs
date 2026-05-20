@@ -12,14 +12,14 @@ public class ProductImageRepository(AppDbContext context) : IProductImageReposit
     {
         var result = context.ProductImages.FirstOrDefault(p => p.ProductId == id);
         if (result != null) throw new ArgumentNullException();
-        context.ProductImages.Remove(result);
+        if (result != null) context.ProductImages.Remove(result);
     }
 
     public void DeleteProductImages(List<string> images, Guid id)
     {
-        for (int i = 0; i < images.Count; i++)
+        foreach (var t in images)
         {
-            var imagePath = ClsUtil.RemoveAdditionalPath(images[i]);
+            var imagePath = ClsUtil.RemoveAdditionalPath(t);
             var result = context.ProductImages.FirstOrDefault(pi => pi.Path == imagePath && pi.ProductId == id);
             if (result is not null)
                 context.ProductImages.Remove(result);

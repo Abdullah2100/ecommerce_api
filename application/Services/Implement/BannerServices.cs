@@ -1,19 +1,17 @@
-using api.application.Interface;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
 using api.Presentation.dto.Request;
-using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.shared.signalr;
 using api.util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
-namespace api.application.Services;
+namespace api.application.Services.Implement;
 
 public class BannerServices(
-    IConfig config,
+    IConfiguration config,
     IHubContext<BannerHub> hubContext,
     IUnitOfWork unitOfWork,
     IFileServices fileServices)
@@ -74,7 +72,7 @@ public class BannerServices(
 
         await hubContext.Clients.All.SendAsync("createdBanner", result);
 
-        var bannerToDto = banner.ToDto(config.GetKey("url_file"));
+        var bannerToDto = banner.ToDto(config["url_file"]??"");
         return new ObjectResult(bannerToDto) { StatusCode = 201 };
     }
 
@@ -137,7 +135,7 @@ public class BannerServices(
         var banners = (await unitOfWork.BannerRepository
                 .GetBanners(pageNumber, pageSize)
             )
-            .Select(ba => ba.ToDto(config.GetKey("url_file")))
+            .Select(ba => ba.ToDto(config["url_file"]??""))
             .ToList();
 
         return new ObjectResult(banners) { StatusCode = 200 };
@@ -151,7 +149,7 @@ public class BannerServices(
     {
         var banners = (await unitOfWork.BannerRepository
                 .GetBanners(storeId, pageNumber, pageSize))
-            .Select(ba => ba.ToDto(config.GetKey("url_file")))
+            .Select(ba => ba.ToDto(config["url_file"]??""))
             .ToList();
 
         return new ObjectResult(banners) { StatusCode = 200 };
@@ -163,7 +161,7 @@ public class BannerServices(
     {
         var banners = (await unitOfWork.BannerRepository
                 .GetBanners(randomLenght))
-            .Select(ba => ba.ToDto(config.GetKey("url_file")))
+            .Select(ba => ba.ToDto(config["url_file"]??""))
             .ToList();
 
         return new ObjectResult(banners) { StatusCode = 200 };

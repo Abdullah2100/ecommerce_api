@@ -1,9 +1,7 @@
 using api.application.Interface;
-using api.application.Result;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using api.Presentation.dto.Response;
 using api.shared.mapper;
@@ -12,11 +10,11 @@ using api.util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
-namespace api.application.Services;
+namespace api.application.Services.Implement;
 
 public class StoreServices(
     IWebHostEnvironment host,
-    IConfig config,
+    IConfiguration config,
     IFileServices fileServices,
     IUnitOfWork unitOfWork,
     IHubContext<StoreHub> hubContext
@@ -29,7 +27,7 @@ public class StoreServices(
                 .GetStores(prefix, pageSize)
             );
         var storeToDto = stores?
-            .Select(st => st.ToDto(config.GetKey("url_file")))
+            .Select(st => st.ToDto(config["url_file"]??""))
             .ToList();
 
         return new ObjectResult(storeToDto)
@@ -132,7 +130,7 @@ public class StoreServices(
         storeData!.Addresses = new List<Address> { address };
 
 
-        var storeToDto = storeData?.ToDto(config.GetKey("url_file"));
+        var storeToDto = storeData?.ToDto(config["url_file"]??"");
 
         return new ObjectResult(storeToDto)
             { StatusCode = StatusCodes.Status201Created };
@@ -221,7 +219,7 @@ public class StoreServices(
         var store = await unitOfWork.StoreRepository.GetStore(user.Store.Id);
         store?.Addresses = await unitOfWork.AddressRepository.GetAllAddressByOwnerId(store!.Id);
 
-        //   var storeToDto=  store?.ToDto(config.GetKey("url_file"));
+        //   var storeToDto=  store?.ToDto(config["url_file"]??"");
 
         return new ObjectResult(null) { StatusCode = StatusCodes.Status204NoContent };
     }
@@ -254,7 +252,7 @@ public class StoreServices(
                 { StatusCode = StatusCodes.Status404NotFound };
 
 
-        var storeToDto = store.ToDto(config.GetKey("url_file"));
+        var storeToDto = store.ToDto(config["url_file"]??"");
         return new ObjectResult(storeToDto)
             { StatusCode = StatusCodes.Status200OK };
     }
@@ -269,7 +267,7 @@ public class StoreServices(
                 { StatusCode = StatusCodes.Status404NotFound };
 
 
-        var storeToDto = store.ToDto(config.GetKey("url_file"));
+        var storeToDto = store.ToDto(config["url_file"]??"");
         return new ObjectResult(storeToDto)
             { StatusCode = StatusCodes.Status200OK };
     }
@@ -289,7 +287,7 @@ public class StoreServices(
 
         var storesToDto = (await unitOfWork.StoreRepository
                 .GetStores(pageNumber, pageSize)
-            ).Select(st => st.ToDto(config.GetKey("url_file")))
+            ).Select(st => st.ToDto(config["url_file"]??""))
             .ToList();
 
         return new ObjectResult(storesToDto)

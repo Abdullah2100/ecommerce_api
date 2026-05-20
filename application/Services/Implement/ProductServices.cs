@@ -7,10 +7,10 @@ using api.shared.mapper;
 using api.util;
 using Microsoft.AspNetCore.Mvc;
 
-namespace api.application.Services;
+namespace api.application.Services.Implement;
 
 public class ProductServices(
-    IConfig config,
+    IConfiguration config,
     IUnitOfWork unitOfWork,
     IFileServices fileServices
 )
@@ -32,7 +32,7 @@ public class ProductServices(
     {
         var productsToDto = (await unitOfWork.ProductRepository
                 .GetProducts(storeId, pageNum, pageSize))
-            .Select((de) => de.ToDto(config.GetKey("url_file")))
+            .Select((de) => de.ToDto(config["url_file"]??""))
             .ToList();
 
 
@@ -50,7 +50,7 @@ public class ProductServices(
     {
         var productsToDto = (await unitOfWork.ProductRepository
                 .GetProductsByCategory(categryId, pageNum, pageSize))
-            .Select((de) => de.ToDto(config.GetKey("url_file")))
+            .Select((de) => de.ToDto(config["url_file"]??""))
             .ToList();
 
         return new ObjectResult(productsToDto)
@@ -68,7 +68,7 @@ public class ProductServices(
     {
         var productsToDto = (await unitOfWork.ProductRepository
                 .GetProducts(storeId, subCategoryId, pageNum, pageSize))
-            .Select((de) => de.ToDto(config.GetKey("url_file")))
+            .Select((de) => de.ToDto(config["url_file"]??""))
             .ToList();
 
         return new ObjectResult(productsToDto)
@@ -85,7 +85,7 @@ public class ProductServices(
         var products = (await unitOfWork.ProductRepository
             .GetProducts(pageNum, pageSize));
 
-        var productsToDto = products.Select((de) => de.ToDto(config.GetKey("url_file")))
+        var productsToDto = products.Select((de) => de.ToDto(config["url_file"]??""))
             .ToList();
 
         return new ObjectResult(productsToDto)
@@ -111,7 +111,7 @@ public class ProductServices(
 
         var productsToDto = (await unitOfWork.ProductRepository
                 .GetProducts(pageNum, pageSize))
-            .Select((de) => de.ToAdminDto(config.GetKey("url_file")))
+            .Select((de) => de.ToAdminDto(config["url_file"]??""))
             .ToList();
 
 
@@ -256,7 +256,7 @@ public class ProductServices(
 
         product = await unitOfWork.ProductRepository.GetProduct(product.Id);
 
-        var productToDto = product?.ToDto(config.GetKey("url_file"));
+        var productToDto = product?.ToDto(config["url_file"]??"");
 
         return new ObjectResult(productToDto)
             { StatusCode = StatusCodes.Status201Created };
@@ -418,7 +418,7 @@ public class ProductServices(
 
         product = await unitOfWork.ProductRepository.GetProduct(product.Id);
 
-        var productToDto = product?.ToDto(config.GetKey("url_file"));
+        var productToDto = product?.ToDto(config["url_file"]??"");
 
 
         return new ObjectResult(productToDto)
@@ -440,7 +440,7 @@ public class ProductServices(
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        var product = await unitOfWork.ProductRepository.GetProduct(id, user.Store.Id);
+        var product = await unitOfWork.ProductRepository.GetProduct(id, user?.Store?.Id??Guid.CreateVersion7());
 
         if (product is null || id != product.Id || product.Store.Id != storeId)
         {

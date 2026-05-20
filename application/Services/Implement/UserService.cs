@@ -1,7 +1,4 @@
-using System.Diagnostics;
 using api.application.Interface;
-using api.application.Result;
-using api.application.Services.Implement;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
@@ -11,10 +8,10 @@ using api.shared.mapper;
 using api.util;
 using Microsoft.AspNetCore.Mvc;
 
-namespace api.application.Services;
+namespace api.application.Services.Implement;
 
 public class UserService(
-    IConfig config,
+    IConfiguration config,
     IFileServices fileServices,
     IUnitOfWork unitOfWork,
     IAuthenticationService authenticationService,
@@ -151,7 +148,7 @@ public class UserService(
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        var userToDto = user!.ToUserInfoDto(config.GetKey("url_file"));
+        var userToDto = user!.ToUserInfoDto(config["url_file"]??"");
         return new ObjectResult(userToDto) { StatusCode = StatusCodes.Status200OK };
     }
 
@@ -171,7 +168,7 @@ public class UserService(
 
         var usersToDto = (await unitOfWork.UserRepository
                 .GetUsers(page, 25))
-            .Select(u => u.ToUserInfoDto(config.GetKey("url_file")))
+            .Select(u => u.ToUserInfoDto(config["url_file"]??""))
             .ToList();
 
 
@@ -320,7 +317,7 @@ public class UserService(
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        //var userToDto = user?.ToUserInfoDto(config.GetKey("url_file"));
+        //var userToDto = user?.ToUserInfoDto(config["url_file"]??"");
 
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };

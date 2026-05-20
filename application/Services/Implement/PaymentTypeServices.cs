@@ -15,7 +15,7 @@ namespace api.application.Services;
 public class PaymentTypeServices(
     IUnitOfWork unitOfWork,
     IFileServices fileServices,
-    IConfig config
+    IConfiguration config
 ) : IPaymentTypeServices
 {
     public async Task<IActionResult> Create(CreatePaymentTypeDto paymentTypeDto, Guid adminId)
@@ -53,7 +53,7 @@ public class PaymentTypeServices(
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        var paymentDto = paymentType.ToDto(config.GetKey("url_file"));
+        var paymentDto = paymentType.ToDto(config["url_file"]??"");
 
         return new ObjectResult(paymentDto)
             { StatusCode = StatusCodes.Status201Created };
@@ -106,7 +106,7 @@ public class PaymentTypeServices(
                 { StatusCode = StatusCodes.Status409Conflict };
         }
 
-        var paymentDto = paymentType.ToDto(config.GetKey("url_file"));
+        var paymentDto = paymentType.ToDto(config["url_file"]??"");
 
         return new ObjectResult(paymentDto)
             { StatusCode = StatusCodes.Status200OK };
@@ -116,7 +116,7 @@ public class PaymentTypeServices(
     {
         var paymentTypes = await unitOfWork.PaymentTypeRepository.GetPaymentTypes(pageNum, pageSie);
 
-        var paymentTypesToDto = paymentTypes.Select(s => s.ToDto(config.GetKey("url_file"))).ToList();
+        var paymentTypesToDto = paymentTypes.Select(s => s.ToDto(config["url_file"]??"")).ToList();
         return new ObjectResult(paymentTypesToDto)
             { StatusCode = StatusCodes.Status200OK };
 

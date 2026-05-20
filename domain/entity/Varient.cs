@@ -1,8 +1,7 @@
 namespace api.domain.entity;
 
-public class Variant : GeneralShredInfo
+public class Variant : GeneralSharedInfoWithId
 {
-    public Guid Id { get; set; }
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public ICollection<ProductVariant> ProductVariants { get; set; }
 }

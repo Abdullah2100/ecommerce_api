@@ -1,4 +1,5 @@
 using System.Text;
+using api;
 using api.application;
 using api.application.Interface;
 using api.application.Services;
@@ -10,6 +11,7 @@ using api.Exceptions;
 using api.Filter;
 using api.Infrastructure;
 using api.Infrastructure.Repositories;
+using api.Settings;
 using api.shared.midleware;
 using api.shared.signalr;
 using FirebaseAdmin;
@@ -27,42 +29,18 @@ var configuration = builder.Configuration;
 
 builder.Services.AddOptions();
 
-builder.Services.AddTransient<IConfig, ConfigurationImplement>();
-
-builder.Services.AddKeyedScoped<IMessageService, EmailServices>(EnMessageService.Email);
-builder.Services.AddKeyedScoped<IMessageService, NotificationServices>(EnMessageService.Notification);
-
-builder.Services.AddScoped<IAuthenticationService, AuthenticationServices>();
+//setting
+builder.Services.AddSetting();
 
 
-//ifile serverice
-builder.Services.AddTransient<IFileServices, FileServices>();
-
-
-//unitofwork
-builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
-
+//unit of Work
+builder.Services.AddUnitOfWork();
 
 //services
-builder.Services.AddTransient<IUserServices, UserService>();
-builder.Services.AddTransient<IStoreServices, StoreServices>();
-builder.Services.AddTransient<ICategoryServices, CategoryServices>();
-builder.Services.AddTransient<ISubCategoryServices, SubCategoryServices>();
-builder.Services.AddTransient<IVariantServices, VariantServices>();
-builder.Services.AddTransient<IBannerServices, BannerServices>();
-builder.Services.AddTransient<IGeneralSettingServices, GeneralSettingServices>();
-builder.Services.AddTransient<IDeliveryServices, DeliveryServices>();
-builder.Services.AddTransient<IProductServices, ProductServices>();
-builder.Services.AddTransient<IOrderServices, OrderServices>();
-builder.Services.AddTransient<IOrderItemServices, OrderItemServices>();
-builder.Services.AddTransient<IRefreshTokenServices, RefreshTokenServices>();
-builder.Services.AddTransient<IAnalyseServices, AnalyseServices>();
-builder.Services.AddTransient<ICurrencyServices, CurrencyServices>();
-builder.Services.AddTransient<IPaymentTypeServices, PaymentTypeServices>();
+builder.Services.AddServices();
 
 //payment 
-builder.Services.AddTransient<IPaymentServices, StripPaymentServices>();
-
+/*
 
 var fireBaseConfig = Path.Combine(
     Directory.GetCurrentDirectory(),
@@ -74,10 +52,10 @@ FirebaseApp.Create(new AppOptions()
 {
     Credential = firebaseCredential
 });
+*/
 
 
-
-var corsName = "AllowAllOrigins";
+const string corsName = "AllowAllOrigins";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(corsName, policy =>
@@ -100,6 +78,17 @@ builder.Services.AddSignalR(option =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
+var credential = builder
+    .Configuration
+    .GetSection(CredentialSetting.Name)
+    .Get<CredentialSetting>();
+
+var stripeKey = builder
+    .Configuration
+    .GetSection(StripeSetting.Name)
+    .Get<StripeSetting>();
+
 // Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -111,10 +100,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(configuration["credentials:key"] ?? "")
+                Encoding.UTF8.GetBytes(credential?.key ?? "")
             ),
-            ValidIssuer = configuration["credentials:Issuer"],
-            ValidAudience = configuration["credentials:Audience"]
+            ValidIssuer = credential?.Issuer ?? "",
+            ValidAudience = credential?.Audience ?? ""
         };
     });
 
@@ -125,14 +114,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 
 //stripe services
-builder.Services.AddSingleton(new StripeClient(configuration["strip:publishable_key"]));
+builder.Services.AddSingleton(new StripeClient(stripeKey?.SecretKey));
 
-//excpeption service
+//exception service
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 var app = builder.Build();
-StripeConfiguration.ApiKey = builder.Configuration["strip:publishable_key"];
+StripeConfiguration.ApiKey = stripeKey?.SecretKey;
 
 
 app.UseExceptionHandler();

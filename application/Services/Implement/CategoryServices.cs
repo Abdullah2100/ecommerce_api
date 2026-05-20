@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace api.application.Services.Implement;
 
 public class CategoryServices(
-    IConfig config,
+    IConfiguration config,
     IUnitOfWork unitOfWork,
     IFileServices fileService)
     : ICategoryServices
@@ -62,7 +62,7 @@ public class CategoryServices(
         }
 
 
-        var categoryToDto = category?.ToDto(config.GetKey("url_file"));
+        var categoryToDto = category?.ToDto(config["url_file"]??"");
         return new ObjectResult(categoryToDto)
             { StatusCode = StatusCodes.Status201Created };
     }
@@ -167,7 +167,7 @@ public class CategoryServices(
     public async Task<IActionResult> GetCategories(int pageNumber, int pageSize)
     {
         var categories = (await unitOfWork.CategoryRepository.GetCategories(pageNumber, pageSize))
-            .Select(ca => ca.ToDto(config.GetKey("url_file")))
+            .Select(ca => ca.ToDto(config["url_file"]??""))
             .ToList();
         return new ObjectResult(categories)
             { StatusCode = StatusCodes.Status200OK };

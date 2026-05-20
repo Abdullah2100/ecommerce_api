@@ -116,7 +116,7 @@ public class DeliveryRepository(
         return (int)Math.Ceiling((decimal)(deliveriesCount) / deliveryPerSize);
     }
 
-    public async Task<DeliveryAnalyseDto> GetDeliveryAnalys(Guid id)
+    public async Task<DeliveryAnalyseDto?> GetDeliveryAnalys(Guid id)
     {
         using (var cmd = context.Database.GetDbConnection().CreateCommand())
         {

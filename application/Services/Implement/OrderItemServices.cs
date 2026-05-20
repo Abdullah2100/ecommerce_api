@@ -1,4 +1,3 @@
-using api.application.Interface;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
@@ -9,14 +8,12 @@ using api.shared.signalr;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
-namespace api.application.Services;
+namespace api.application.Services.Implement;
 
 public class OrderItemServices(
-    IConfig config,
+    IConfiguration config,
     IHubContext<OrderItemHub> hubContext,
-    IUnitOfWork unitOfWork,
-    IOrderServices orderServices
-)
+    IUnitOfWork unitOfWork)
     : IOrderItemServices
 {
     public async Task<IActionResult> GetOrderItems(
@@ -34,7 +31,7 @@ public class OrderItemServices(
 
         var orderItems = (await unitOfWork.OrderItemRepository
                 .GetOrderItems(storeId: user!.Store!.Id, pageNum: pageNum, pageSize: pageSize))
-            .Select(p => p.ToOrderItemDto(config.GetKey("url_file")))
+            .Select(p => p.ToOrderItemDto(config["url_file"]??""))
             .ToList();
 
         return new ObjectResult(orderItems)

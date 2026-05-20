@@ -6,7 +6,7 @@ namespace api.Presentation.dto.Response
         public Guid OrderId { get; set; }
         public decimal Price { get; set; }
         public int Quantity { get; set; }
-        public string OrderStatusName { get; set; }
+        public string OrderStatusName { get; set; } = "";
         public List<AddressWithTitleDto>? Address { get; set; } = null;
         public OrderProductDto? Product { get; set; }
         public List<OrderVariantDto>? ProductVariant { get; set; } = null;

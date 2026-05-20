@@ -1,9 +1,6 @@
-using api.application.Interface;
-using api.application.Result;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
-using api.Presentation.dto;
 using api.Presentation.dto.Request;
 using api.Presentation.dto.Response;
 using api.shared.mapper;
@@ -12,11 +9,11 @@ using api.util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
-namespace api.application.Services;
+namespace api.application.Services.Implement;
 
 public class OrderServices(
+    IConfiguration config,
     IUnitOfWork unitOfWork,
-    IConfig config,
     IHubContext<OrderHub> hubContext,
     IServiceProvider sp)
     : IOrderServices
@@ -155,7 +152,7 @@ public class OrderServices(
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        var dtoOrder = order.ToDto(config.GetKey("url_file"));
+        var dtoOrder = order.ToDto(config["url_file"]??"");
         await hubContext.Clients.All.SendAsync("createdOrder", dtoOrder);
         await SendNotification(order, 1);
 
@@ -169,7 +166,7 @@ public class OrderServices(
     {
         var orders = (await unitOfWork.OrderRepository
                 .GetOrders(userId, pageNum, pageSize))
-            .Select(o => o.ToDto(config.GetKey("url_file")))
+            .Select(o => o.ToDto(config["url_file"]??""))
             .ToList();
 
 
@@ -191,7 +188,7 @@ public class OrderServices(
 
         var orders = (await unitOfWork.OrderRepository
                 .GetOrders(pageNum, pageSize))
-            .Select(o => o.ToDto(config.GetKey("url_file")))
+            .Select(o => o.ToDto(config["url_file"]??""))
             .ToList();
 
         var orderPages = (int)Math.Ceiling((double)orders.Count / pageSize);
@@ -275,7 +272,7 @@ public class OrderServices(
 
         var orders = (await unitOfWork.OrderRepository
                 .GetOrderBelongToDelivery(deliveryId, pageNum, pageSize))
-            .Select(o => o.ToDto(config.GetKey("url_file")))
+            .Select(o => o.ToDto(config["url_file"]??""))
             .ToList();
 
 
@@ -294,7 +291,7 @@ public class OrderServices(
 
         var orders = (await unitOfWork.OrderRepository
                 .GetOrderNoBelongToAnyDelivery(pageNum, pageSize))
-            .Select(o => o.ToDto(config.GetKey("url_file")))
+            .Select(o => o.ToDto(config["url_file"]??""))
             .ToList();
 
 
@@ -398,7 +395,7 @@ public class OrderServices(
 
         }
 
-        await hubContext.Clients.All.SendAsync("createdOrder", order.ToDto(config.GetKey("url_file")));
+        await hubContext.Clients.All.SendAsync("createdOrder", order.ToDto(config["url_file"]??""));
 
        
         return new ObjectResult(null)
