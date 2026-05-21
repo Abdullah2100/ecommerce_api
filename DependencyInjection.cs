@@ -1,18 +1,23 @@
+using System.Text;
 using api.application;
 using api.application.Interface;
 using api.application.Services;
 using api.application.Services.Implement;
 using api.application.Services.Interface;
 using api.application.UnitOfWork;
+using api.Filter;
 using api.Infrastructure;
+using api.OpenApi;
 using api.Settings;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 namespace api;
 
-public  static class   DependencyInjection
+public static class DependencyInjection
 {
-
     extension(IServiceCollection services)
     {
         public IServiceCollection AddServices()
@@ -33,16 +38,16 @@ public  static class   DependencyInjection
             services.AddTransient<ICurrencyServices, CurrencyServices>();
             services.AddTransient<IPaymentTypeServices, PaymentTypeServices>();
             services.AddTransient<IFileServices, FileServices>();
-            
+
             services.AddKeyedScoped<IMessageService, EmailServices>(EnMessageService.Email);
             services.AddKeyedScoped<IMessageService, NotificationServices>(EnMessageService.Notification);
 
             services.AddScoped<IAuthenticationService, AuthenticationServices>();
-            
+
             services.AddTransient<IPaymentServices, StripPaymentServices>();
 
 
-            return  services;
+            return services;
         }
 
         public IServiceCollection AddUnitOfWork()
@@ -50,15 +55,95 @@ public  static class   DependencyInjection
             services.AddTransient<IUnitOfWork, UnitOfWork>();
             return services;
         }
-        
+
         public IServiceCollection AddSetting()
         {
-            services.AddScoped<SmtpSetting>(sp=>sp.GetRequiredService<IOptions<SmtpSetting>>().Value);
-            services.AddScoped<StripeSetting>(sp=>sp.GetRequiredService<IOptions<StripeSetting>>().Value);
-            services.AddScoped<CredentialSetting>(sp=>sp.GetRequiredService<IOptions<CredentialSetting>>().Value);
+            services.AddScoped<SmtpSetting>(sp => sp.GetRequiredService<IOptions<SmtpSetting>>().Value);
+            services.AddScoped<StripeSetting>(sp => sp.GetRequiredService<IOptions<StripeSetting>>().Value);
+            services.AddScoped<CredentialSetting>(sp => sp.GetRequiredService<IOptions<CredentialSetting>>().Value);
+            return services;
+        }
+
+        public IServiceCollection AddApiDocumentation()
+        {
+            var versions = new List<string>() { "v1", "v2" };
+            foreach (var version in versions)
+            {
+                services.AddOpenApi(version, option =>
+                {
+                    option.AddDocumentTransformer<VersionInfoTransformer>();
+                    option.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+                    option.AddOperationTransformer<BearerSecuritySchemeTransformer>();
+                });
+            }
+
+            return services;
+        }
+
+
+        public IServiceCollection AddJwtAuthentication(IConfiguration config)
+        {
+            var credential = config
+                .GetSection(CredentialSetting.Name)
+                .Get<CredentialSetting>();
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(credential?.key ?? "")
+                        ),
+                        ValidIssuer = credential?.Issuer ?? "",
+                        ValidAudience = credential?.Audience ?? ""
+                    };
+                });
+            return services;
+        }
+
+        public IServiceCollection AddDbConnection(IConfiguration config)
+        {
+            var connectionUrl = config["ConnectionStrings:connection_url"];
+
+            services.AddDbContext<AppDbContext>(options =>
+                options.UseNpgsql(connectionUrl));
+            return services;
+        }
+
+        public IServiceCollection AddCors(string corsName)
+        {
+            services.AddCors(options =>
+            {
+                options.AddPolicy(corsName, policy =>
+                {
+                    policy
+                        .WithOrigins("http://localhost:3000")
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials();
+                });
+            });
             return services;
         }
         
+        public IServiceCollection AddController()
+        {
+            services.AddControllers(option =>
+                option.Filters.Add(new CustomResultFilter())
+            ); 
+            return services;
+        }
         
+        public IServiceCollection AddSignalRService()
+        {
+            services.AddSignalR(option =>
+                option.EnableDetailedErrors = true
+            );
+            return services;
+        }
     }
 }
