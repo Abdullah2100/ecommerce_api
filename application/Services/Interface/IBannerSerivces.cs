@@ -9,6 +9,6 @@ public interface IBannerServices
     Task<IActionResult> DeleteBanner(Guid id, Guid userId);
 
     Task<IActionResult> GetBannersAll(Guid adminId, int pageNumber, int pageSize);
-    Task<IActionResult> GetBanners(Guid storeId, int pageNumber, int pageSize);
+    Task<IActionResult> GetBanners(Guid userId, int pageNumber, int pageSize);
     Task<IActionResult> GetBanners(int randomLenght);
 }

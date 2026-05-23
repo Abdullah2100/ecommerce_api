@@ -7,9 +7,9 @@ namespace api.application.Services.Implement;
 
 public class AnalyseServices(IUnitOfWork unitOfWork) : IAnalyseServices
 {
-    public async Task<IActionResult> GetMonthAnalysis(Guid adminId)
+    public async Task<IActionResult> GetMonthAnalysis(Guid userId)
     {
-        var user = await unitOfWork.UserRepository.GetUser(adminId);
+        var user = await unitOfWork.UserRepository.GetUser(userId);
 
         var validationResult = user.IsValidateFunc();
 

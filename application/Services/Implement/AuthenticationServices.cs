@@ -15,7 +15,8 @@ namespace api.application.Services.Implement
     {
         User,
         Admin,
-        Delivery
+        Delivery,
+        Store
     }
 
     public class AuthenticationServices(IOptions<CredentialSetting> credential, IUnitOfWork unitOfWork)

@@ -52,6 +52,8 @@ builder.Services.AddSignalRService();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddVersions();
+
 builder.Services.AddJwtAuthentication(configuration);
 
 

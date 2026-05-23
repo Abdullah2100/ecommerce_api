@@ -1,12 +1,10 @@
 using System.Net;
 using System.Net.Mail;
-using api.application.Interface;
 using api.application.Services.Interface;
-using api.Infrastructure;
 using api.Settings;
 using Microsoft.Extensions.Options;
 
-namespace api.application;
+namespace api.application.Services.Implement;
 
 public class EmailServices(IOptions<SmtpSetting> smtp) : IMessageService
 {

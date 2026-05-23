@@ -7,8 +7,9 @@ using api.application.Services.Interface;
 using api.application.UnitOfWork;
 using api.Filter;
 using api.Infrastructure;
-using api.OpenApi;
+using api.OpenApi.Transformers;
 using api.Settings;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -129,20 +130,39 @@ public static class DependencyInjection
             });
             return services;
         }
-        
+
         public IServiceCollection AddController()
         {
             services.AddControllers(option =>
                 option.Filters.Add(new CustomResultFilter())
-            ); 
+            );
             return services;
         }
-        
+
         public IServiceCollection AddSignalRService()
         {
             services.AddSignalR(option =>
                 option.EnableDetailedErrors = true
             );
+            return services;
+        }
+
+        public IServiceCollection AddVersions()
+        {
+            services.AddApiVersioning(options =>
+                {
+                    options.DefaultApiVersion = new ApiVersion(1);
+                    options.ReportApiVersions = true;
+                    options.AssumeDefaultVersionWhenUnspecified = true;
+                    options.ApiVersionReader = ApiVersionReader.Combine(
+                        new UrlSegmentApiVersionReader(),
+                        new HeaderApiVersionReader("X-Api-Version"));
+                }).AddMvc()
+                .AddApiExplorer(options =>
+                {
+                    options.GroupNameFormat = "'v'VVV";
+                    options.SubstituteApiVersionInUrl = true;
+                });
             return services;
         }
     }

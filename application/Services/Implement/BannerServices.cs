@@ -142,13 +142,20 @@ public class BannerServices(
     }
 
     public async Task<IActionResult> GetBanners(
-        Guid storeId,
+        Guid userId,
         int pageNumber,
         int pageSize
     )
     {
+        var store = await unitOfWork.StoreRepository.GetStoreByUserId(userId);
+
+        if (store is null)
+        {
+            return new ObjectResult("store  not found") { StatusCode = 404 };
+        }
+        
         var banners = (await unitOfWork.BannerRepository
-                .GetBanners(storeId, pageNumber, pageSize))
+                .GetBanners(userId, pageNumber, pageSize))
             .Select(ba => ba.ToDto(config["url_file"]??""))
             .ToList();
 
