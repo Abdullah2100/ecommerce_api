@@ -217,7 +217,7 @@ public class DeliveryServices(
         var user = await unitOfWork.UserRepository
             .GetUser(belongToId);
 
-        EnBelongToType belongType = (user?.IsUser == false) switch
+        var belongType = (user?.IsUser == false) switch
         {
             true => EnBelongToType.Admin,
             _ => EnBelongToType.Store

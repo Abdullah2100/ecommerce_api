@@ -39,6 +39,9 @@ public class DeliveryController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Admin,Store")]
+    [EndpointName("Create new Delivery")]
+    [EndpointDescription("This function used by admin or store owner to create delivery")]
     public async Task<IActionResult> CreateDelivery
         ([FromForm] CreateDeliveryDto delivery)
     {
@@ -58,6 +61,10 @@ public class DeliveryController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = "Store")]
+    [EndpointName("Get Deliveries for store")]
+    [EndpointDescription("This function used by  store owner to get deliveries belong to them")]
+
     public async Task<IActionResult> GetDelivery()
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -75,6 +82,9 @@ public class DeliveryController(
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Delivery")]
+    [EndpointName("Update Deliveries info")]
+    [EndpointDescription("This function used by delivery to update there info")]
     public async Task<IActionResult> UpdateDeliveryInfo([FromForm] UpdateDeliveryDto delivery)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -91,6 +101,9 @@ public class DeliveryController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = "Store")]
+    [EndpointName("Get Deliveries belong to store")]
+    [EndpointDescription("This function used by store owner to get deliveries belong to them by pagination")]
     public async Task<IActionResult> GetDelivery(int pageNumber)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -108,6 +121,9 @@ public class DeliveryController(
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Admin,Delivery")]
+    [EndpointName("block or unblock delivery")]
+    [EndpointDescription("This function used by store owner or admin to block or unblock delivery")]
     public async Task<IActionResult> UpdateDeliveryStatus(bool status)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -124,6 +140,9 @@ public class DeliveryController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = "Delivery")]
+    [EndpointName("Get order not own by any delivery")]
+    [EndpointDescription("This function used by delivery to get order not own by any another deliveries")]
     public async Task<IActionResult> GetOrderNotTookByDelivery
     (
         int pageNumber = 1
@@ -144,6 +163,9 @@ public class DeliveryController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = "Delivery")]
+    [EndpointName("Get order belong to me")]
+    [EndpointDescription("This function used by delivery to get order own by me delivery by page")]
     public async Task<IActionResult> GetOrderBelongToMe(int pageNumber = 1)
     {
         if (pageNumber < 1)
@@ -166,6 +188,9 @@ public class DeliveryController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Delivery")]
+    [EndpointName("update order delivery id ")]
+    [EndpointDescription("This function used by delivery submit order to specific delivery")]
     public async Task<IActionResult> UpdateOrderDeliveryId(Guid orderId)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -182,6 +207,10 @@ public class DeliveryController(
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Delivery")]
+    [EndpointName("cancel order delivery")]
+    [EndpointDescription("This function used by delivery to remove delivery Id from order")]
+
     public async Task<IActionResult> RenameOrderBelongToDelivery(Guid orderId)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;

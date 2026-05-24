@@ -8,6 +8,7 @@ using api.Settings;
 using api.util;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Extensions;
 
 namespace api.application.Services.Implement
 {
@@ -19,10 +20,12 @@ namespace api.application.Services.Implement
         Store
     }
 
-    public class AuthenticationServices(IOptions<CredentialSetting> credential, IUnitOfWork unitOfWork)
+    public class AuthenticationServices(
+        IOptions<CredentialSetting> credential, 
+        IUnitOfWork unitOfWork)
         : IAuthenticationService
     {
-        private async Task<Guid> GenerateRefreshToken(Guid userId, string role)
+        private async Task<Guid> GenerateRefreshToken(Guid userId, List<string> role)
         {
             var userRefreshTokenHolder = new UserRefreshToken()
             {
@@ -30,14 +33,14 @@ namespace api.application.Services.Implement
                 UserId = userId,
                 Id = Guid.CreateVersion7(),
                 Refresh = Guid.CreateVersion7(),
-                Role = role
+                Role = string.Join(',',role)
             };
             await unitOfWork.UserRefreshTokenRepository.Save(userRefreshTokenHolder);
             await unitOfWork.SaveChanges();
             return userRefreshTokenHolder.Refresh;
         }
 
-        public async Task<AuthDto> GenerateToken(Guid id, string email, EnUserType type)
+        public async Task<AuthDto> GenerateToken(Guid id, string email, List<EnUserType> types)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = credential.Value.key;
@@ -48,8 +51,9 @@ namespace api.application.Services.Implement
             [
                 new(ClaimTypes.NameIdentifier, id.ToString() ?? ""),
                 new(ClaimTypes.Email, email),
-                new(ClaimTypes.Role, type.ToString())
             ];
+            
+            claims.AddRange(types.Select(type => new Claim(ClaimTypes.Role, type.GetDisplayName())));
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -66,7 +70,7 @@ namespace api.application.Services.Implement
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenData = tokenHandler.WriteToken(token);
-            var refreshToken = await GenerateRefreshToken(id, type.ToString());
+            var refreshToken = await GenerateRefreshToken(id, types.Select(value=>value.GetDisplayName()).ToList());
             return new AuthDto() { Token = tokenData, RefreshToken = refreshToken };
         }
     }

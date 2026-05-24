@@ -5,5 +5,6 @@ namespace api.application.Services.Interface;
 
 public interface IAuthenticationService
 {
-    Task<AuthDto> GenerateToken(Guid id, string email,EnUserType type);
+     Task<AuthDto> GenerateToken(Guid id, string email, List<EnUserType> types);
+
 }
