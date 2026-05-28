@@ -1,4 +1,3 @@
-using api.application.Interface;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
@@ -70,7 +69,7 @@ public class DeliveryServices(
         var tokenData = await authenticationService.GenerateToken(
             id: user!.Id,
             email: user.Email,
-            EnUserType.Delivery
+            [EnUserType.Delivery]
         );
 
 

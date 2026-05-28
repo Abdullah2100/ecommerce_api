@@ -1,11 +1,10 @@
-using api.application.Interface;
 using api.application.Services.Interface;
 using api.Filter;
 using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace api.Presentation.controller;
+namespace api.Presentation.controller.v1;
 
 [Authorize]
 [ApiController]
@@ -23,6 +22,9 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "User,Admin")]
+    [EndpointName("Create Store")]
+    [EndpointDescription("This function is used by admin or user to create store")]
     public async Task<IActionResult> CreateNewStore(
         [FromForm] CreateStoreDto store)
     {
@@ -42,6 +44,9 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Store,Admin")]
+    [EndpointName("Update Store")]
+    [EndpointDescription("This function is used by admin or user to update store info")]
     public async Task<IActionResult> UpdateStore(
         [FromForm] UpdateStoreDto store)
     {
@@ -61,6 +66,9 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Admin")]
+    [EndpointName("Update Store status")]
+    [EndpointDescription("This function is used by admin update store status")]
     public async Task<IActionResult> UpdateStoreStatus(
         Guid storeId
     )
@@ -80,6 +88,9 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = "Store,User")]
+    [EndpointName("Get  Store info")]
+    [EndpointDescription("This function is used by User or Store to  get Store Info")]
     public async Task<IActionResult> GetMyStore()
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -94,6 +105,9 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = "Admin")]
+    [EndpointName("Get Store Pages num")]
+    [EndpointDescription("This function is used by admin To Get Store Pages num")]
     public async Task<IActionResult> GetStoresPages(Guid storeId)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -107,6 +121,9 @@ public class StoreController(
     [HttpGet("{storeId:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = "User,Admin")]
+    [EndpointName("Get Store")]
+    [EndpointDescription("This function is used by admin or user to get Store Info by StoreId")]
     public async Task<IActionResult> GetStoreById(Guid storeId)
     {
         var result = await storeServices.GetStoreByStoreId(storeId);
@@ -120,6 +137,9 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = "Admin")]
+    [EndpointName("Get Stores by Pages")]
+    [EndpointDescription("This function is used by admin to get stores page by page")]
     public async Task<IActionResult> GetStores(int page = 1)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -135,6 +155,9 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = "User,Admin")]
+    [EndpointName("Get Store")]
+    [EndpointDescription("This function is used by admin or user to get Store by name")]
     public async Task<IActionResult> GetStores(string prefix)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -151,6 +174,9 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Store")]
+    [EndpointName("Create Banner For Store")]
+    [EndpointDescription("This function is used by Store to Create Banner")]
     public async Task<IActionResult> CreateBanner(
         Guid storeId, [FromForm] CreateBannerDto banner
     )
@@ -169,6 +195,9 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Store")]
+    [EndpointName("Delete Banner")]
+    [EndpointDescription("This function is used by Store to delete Banner")]
     public async Task<IActionResult> DeleteBanner(
         Guid storeId, Guid bannerId
     )
@@ -185,6 +214,9 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = "Store,User")]
+    [EndpointName("Get banners by storeId")]
+    [EndpointDescription("This function is used by Store to get banners by storeId")]
     public async Task<IActionResult> GetBanner(
         Guid storeId, int pageNumber
     )
@@ -203,6 +235,9 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Store")]
+    [EndpointName("Create  Sub Category")]
+    [EndpointDescription("This function is used by Store to Create  Sub Category")]
     public async Task<IActionResult> CreatSubCategory(
         Guid storeId,
         [FromBody] CreateSubCategoryDto subCategory)
@@ -217,6 +252,9 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Store")]
+    [EndpointName("Update  Sub Category")]
+    [EndpointDescription("This function is used by Store to update  Sub Category")]
     public async Task<IActionResult> UpdateSubCategory(
         Guid storeId,
         [FromBody] UpdateSubCategoryDto subCategory)
@@ -231,6 +269,9 @@ public class StoreController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Store")]
+    [EndpointName("Delete  Sub Category")]
+    [EndpointDescription("This function is used by Store to delete Sub Category")]
     public async Task<IActionResult> DeleteSubCategory
         (Guid storeId, Guid subCategoryId)
 
@@ -245,6 +286,9 @@ public class StoreController(
     [HttpGet("{storeId:guid}/subCategories")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = "Store,User")]
+    [EndpointName("get Sub Categories")]
+    [EndpointDescription("This function is used by Store or User to get Sub Categories page by page")]
     public async Task<IActionResult> GetSubCategory(Guid storeId, int page)
     {
         var result = await subCategoryServices.GetSubCategories(

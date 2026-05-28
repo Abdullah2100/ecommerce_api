@@ -1,7 +1,7 @@
 using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Mvc;
 
-namespace api.application.Interface;
+namespace api.application.Services.Interface;
 
 public interface IStoreServices
 {

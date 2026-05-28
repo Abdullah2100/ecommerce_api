@@ -1,16 +1,12 @@
-using api.application.Interface;
-using api.application.Result;
 using api.application.Services.Interface;
 using api.domain.entity;
-using api.Presentation.dto;
 using api.Infrastructure;
 using api.Presentation.dto.Request;
-using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.util;
 using Microsoft.AspNetCore.Mvc;
 
-namespace api.application.Services;
+namespace api.application.Services.Implement;
 
 public class PaymentTypeServices(
     IUnitOfWork unitOfWork,

@@ -1,8 +1,7 @@
-using api.application.Interface;
 using api.application.Services.Interface;
 using Stripe;
 
-namespace api.application.Services;
+namespace api.application.Services.Implement;
 
 public class StripPaymentServices : IPaymentServices
 {

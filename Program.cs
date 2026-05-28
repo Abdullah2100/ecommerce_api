@@ -1,5 +1,6 @@
 using api;
 using api.Exceptions;
+using api.Filter;
 using api.Settings;
 using api.shared.midleware;
 using api.shared.signalr;
@@ -85,12 +86,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(options => // UseSwaggerUI is called only in Development.
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        options.SwaggerEndpoint("/swagger/v2/swagger.json", "v2");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "ِApi V1");
+        options.SwaggerEndpoint("/swagger/v2/swagger.json", "Api V2");
         options.RoutePrefix = string.Empty;
     });
 }
-
 
 
 app.UseHttpsRedirection();

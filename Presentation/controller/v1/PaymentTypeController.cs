@@ -1,11 +1,10 @@
-using api.application.Interface;
 using api.application.Services.Interface;
 using api.Filter;
 using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace api.Presentation.controller;
+namespace api.Presentation.controller.v1;
 
 [Authorize]
 [ApiController]
@@ -18,6 +17,10 @@ public class PaymentTypeController(IPaymentTypeServices paymentTypeServices) : C
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Admin")]
+    [EndpointName("create paymentType")]
+    [EndpointDescription("This function is used by admin to create new paymentType")]
+
     public async Task<IActionResult> CreatePaymentType
     (
         [FromForm] CreatePaymentTypeDto paymentTypeDto
@@ -38,6 +41,10 @@ public class PaymentTypeController(IPaymentTypeServices paymentTypeServices) : C
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Admin")]
+    [EndpointName("update paymentType")]
+    [EndpointDescription("This function is used by admin to update paymentType")]
+
     public async Task<IActionResult> UpdatePaymentType
     (
         [FromForm] UpdatePaymentTypeDto paymentTypeDto
@@ -53,7 +60,11 @@ public class PaymentTypeController(IPaymentTypeServices paymentTypeServices) : C
     [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetProducts([FromQuery] int pageNumber)
+    [Authorize(Roles = "Admin")]
+    [EndpointName("Get paymentTypes")]
+    [EndpointDescription("This function is used by admin to get paymentTypes list by page")]
+
+    public async Task<IActionResult> GetPaymentTypes([FromQuery] int pageNumber)
     {
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");

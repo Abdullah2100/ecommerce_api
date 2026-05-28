@@ -1,10 +1,10 @@
-using api.application.Interface;
+using api.application.Services.Interface;
 using api.Filter;
 using api.Presentation.dto.Request;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace api.Presentation.controller;
+namespace api.Presentation.controller.v1;
 
 [Authorize]
 [ApiController]
@@ -14,8 +14,10 @@ public class ProductController(IProductServices productServices) : ControllerBas
     [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetProducts
-        ([FromQuery] Guid storeId, [FromQuery] int pageNumber)
+    [Authorize(Roles = "Store")]
+    [EndpointName("get products by storeId")]
+    [EndpointDescription("This function is used by store to get their own product  page by page")]
+    public async Task<IActionResult> GetProducts(Guid storeId, int pageNumber)
     {
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
@@ -26,13 +28,13 @@ public class ProductController(IProductServices productServices) : ControllerBas
     }
 
 
-    [HttpGet()]
+    [HttpGet("/")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetProductsByCategory
-    (
-        [FromQuery] Guid categoryId, [FromQuery] int pageNumber
-    )
+    [Authorize(Roles = "User,Store")]
+    [EndpointName("get products by categoryId")]
+    [EndpointDescription("This function is used by user to get products by categoryId page by page")]
+    public async Task<IActionResult> GetProductsByCategory(Guid categoryId, int pageNumber)
     {
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
@@ -42,14 +44,17 @@ public class ProductController(IProductServices productServices) : ControllerBas
     }
 
 
-    [HttpGet()]
+    [HttpGet("")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = "User,Store")]
+    [EndpointName("get products by storeId and subCategoryId")]
+    [EndpointDescription("This function is used by user to get products by storeId and subcategoryId")]
     public async Task<IActionResult> GetProducts
     (
-        [FromQuery] Guid storeId,
-        [FromQuery] Guid subcategoryId,
-        [FromQuery] int pageNumber
+        Guid storeId,
+        Guid subcategoryId,
+        int pageNumber
     )
     {
         if (pageNumber < 1)
@@ -68,8 +73,10 @@ public class ProductController(IProductServices productServices) : ControllerBas
     [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetProducts
-        ([FromQuery] int pageNumber)
+    [Authorize(Roles = "Admin,User")]
+    [EndpointName("get products by page")]
+    [EndpointDescription("This function is used by user or admin to get products page by page")]
+    public async Task<IActionResult> GetProducts( int pageNumber)
     {
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
@@ -85,6 +92,9 @@ public class ProductController(IProductServices productServices) : ControllerBas
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = "Admin")]
+    [EndpointName("get products by page for admin")]
+    [EndpointDescription("This function is used by admin to get products page by page")]
     public async Task<IActionResult> GetProductsAdmin
         ([FromQuery] int pageNumber, [FromHeader] string header)
     {
@@ -108,6 +118,9 @@ public class ProductController(IProductServices productServices) : ControllerBas
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = "Admin")]
+    [EndpointName("get products pages num ")]
+    [EndpointDescription("This function is used by admin to get product pages num for dashboard")]
     public async Task<IActionResult> GetProductsPagesNum()
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -125,6 +138,10 @@ public class ProductController(IProductServices productServices) : ControllerBas
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Admin,Store")]
+    [EndpointName("create products")]
+    [EndpointDescription("This function is used by admin or store to create new product")]
+
     public async Task<IActionResult> CreateProduct
     (
         [FromForm] CreateProductDto product
@@ -146,6 +163,9 @@ public class ProductController(IProductServices productServices) : ControllerBas
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Admin,Store")]
+    [EndpointName("update products")]
+    [EndpointDescription("This function is used by admin or store to update product info")]
     public async Task<IActionResult> UpdateProduct
     (
         [FromForm] UpdateProductDto product
@@ -167,6 +187,9 @@ public class ProductController(IProductServices productServices) : ControllerBas
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "Admin,Store")]
+    [EndpointName("delete products")]
+    [EndpointDescription("This function is used by admin or store to delete product")]
     public async Task<IActionResult> DeleteProduct
     (
         Guid productId,

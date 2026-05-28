@@ -1,7 +1,7 @@
 
 using api.application.Services.Interface;
 
-namespace api.application.Services;
+namespace api.application.Services.Implement;
 
 public class PaymentServices(IPaymentServices paymentServices)
 {

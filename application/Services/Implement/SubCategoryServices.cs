@@ -1,4 +1,4 @@
-using api.application.Interface;
+using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
 using api.Presentation.dto.Request;
@@ -7,7 +7,7 @@ using api.shared.mapper;
 using api.util;
 using Microsoft.AspNetCore.Mvc;
 
-namespace api.application.Services;
+namespace api.application.Services.Implement;
 
 public class SubCategoryServices(
     IUnitOfWork unitOfWork)

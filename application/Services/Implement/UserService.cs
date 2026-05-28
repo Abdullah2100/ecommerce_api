@@ -1,4 +1,3 @@
-using api.application.Interface;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
@@ -84,7 +83,7 @@ public class UserService(
         var tokenData = await authenticationService.GenerateToken(
             id: userId,
             email: signupDto.Email,
-            EnUserType.User);
+            [EnUserType.User]);
 
 
         return new ObjectResult(tokenData)
@@ -128,7 +127,7 @@ public class UserService(
         var tokenData = await authenticationService.GenerateToken(
             id: user!.Id,
             email: user.Email,
-            role
+            [role]
         );
 
 
@@ -677,7 +676,7 @@ public class UserService(
         var tokenData = await authenticationService.GenerateToken(
             id: user!.Id,
             email: user.Email,
-            role
+            [role]
         );
 
 

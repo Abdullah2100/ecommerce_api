@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
 
-namespace api.Presentation.controller;
+namespace api.Presentation.controller.v1;
 
 [Authorize]
 [ApiController]
@@ -14,6 +14,9 @@ public class PaymentController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = "User")]
+    [EndpointName("create payment sessionId")]
+    [EndpointDescription("This function is user when start submit order to create session id when using strip as payment getway")]
     public async Task<IActionResult> CreateSession([FromBody] PaymentRequirementData paymentRequirementData)
     {
         var options = new PaymentIntentCreateOptions

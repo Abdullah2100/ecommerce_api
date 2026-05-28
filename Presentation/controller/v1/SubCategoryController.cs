@@ -1,9 +1,9 @@
-using api.application.Interface;
+using api.application.Services.Interface;
 using api.Filter;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace api.Presentation.controller;
+namespace api.Presentation.controller.v1;
 
 [Authorize]
 [ApiController]
@@ -15,6 +15,10 @@ public class SubCategoryController(ISubCategoryServices subCategoryServices) : C
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = "Admin")]
+    [EndpointName("Get Sub Categories")]
+    [EndpointDescription("This function is used by Admin to get Sub Categories")]
+
     public async Task<IActionResult> GetSubCategory(int page)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
