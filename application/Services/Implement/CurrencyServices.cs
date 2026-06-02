@@ -4,7 +4,9 @@ using api.Infrastructure;
 using api.Presentation.dto.Request;
 using api.shared.mapper;
 using api.util;
+using ecommerce_api.util;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace api.application.Services.Implement;
 
@@ -38,8 +40,9 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
         if (result == 0)
         {
             return new ObjectResult("Could not Save New Currency")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
+
 
         var currencyToDto = currency.ToPaymentDto();
         return new ObjectResult(currencyToDto) { StatusCode = StatusCodes.Status201Created };
@@ -74,7 +77,7 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
         if (result == 0)
         {
             return new ObjectResult("Could not Update Currency")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         return new ObjectResult(null) { StatusCode = StatusCodes.Status204NoContent };
@@ -104,7 +107,7 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
         if (result == 0)
         {
             return new ObjectResult("Could not Delete Currency")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
 
@@ -113,11 +116,14 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
 
     public async Task<IActionResult> GetCurrency(int pageNum, int pageSize)
     {
-        var payments = await unitOfWork.CurrencyRepository.GetAll(pageNum, pageSize);
 
-        var paymentToDto = payments.Select(payment => payment.ToPaymentDto()).ToList();
-        return new ObjectResult(paymentToDto)
-            { StatusCode = StatusCodes.Status200OK };
+        var paymentsDto = (await unitOfWork.CurrencyRepository
+        .GetAll(pageNum, pageSize))
+        .Select(payment => payment.ToPaymentDto()).ToList();
+
+
+        return new ObjectResult(paymentsDto)
+        { StatusCode = StatusCodes.Status200OK };
 
     }
 }

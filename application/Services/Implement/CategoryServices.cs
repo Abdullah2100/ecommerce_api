@@ -4,7 +4,9 @@ using api.Infrastructure;
 using api.Presentation.dto.Request;
 using api.shared.mapper;
 using api.util;
+using ecommerce_api.util;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace api.application.Services.Implement;
 
@@ -128,6 +130,7 @@ public class CategoryServices(
         if (image != null)
             fileService.DeleteFile(image);
 
+    
         return new ObjectResult("error while update category")
             { StatusCode = StatusCodes.Status500InternalServerError };
     }
