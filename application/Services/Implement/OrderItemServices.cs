@@ -31,7 +31,7 @@ public class OrderItemServices(
 
         var orderItems = (await unitOfWork.OrderItemRepository
                 .GetOrderItems(storeId: user!.Store!.Id, pageNum: pageNum, pageSize: pageSize))
-            .Select(p => p.ToOrderItemDto(config["url_file"]??""))
+            .Select(p => p.ToOrderItemDto(config["url_file"] ?? ""))
             .ToList();
 
         return new ObjectResult(orderItems)

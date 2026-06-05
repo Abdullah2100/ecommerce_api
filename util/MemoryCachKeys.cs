@@ -1,7 +1,8 @@
-namespace ecommerce_api.util
+namespace api.util
 {
     public sealed class MemoryCachKeys
     {
-        public const string VairantsKey = "VariantKey";
+        public const string VariantsKey = "VariantKey";
+        public const string CategoriesKey = "CategorieKey";
     }
 }

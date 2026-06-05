@@ -147,7 +147,7 @@ public class DeliveryServices(
         delivery = await unitOfWork.DeliveryRepository.GetDelivery(id);
 
 
-        var deliveryToDot = delivery?.ToDto(config["url_file"]??"");
+        var deliveryToDot = delivery?.ToDto(config["url_file"] ?? "");
 
         return new ObjectResult(deliveryToDot)
             { StatusCode = StatusCodes.Status201Created };
@@ -197,7 +197,7 @@ public class DeliveryServices(
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        var deliveryDto = delivery?.ToDto(config["url_file"]??"");
+        var deliveryDto = delivery?.ToDto(config["url_file"] ?? "");
         deliveryDto?.Analyse = await unitOfWork.DeliveryRepository.GetDeliveryAnalys(delivery!.Id!);
 
         return new ObjectResult(deliveryDto)
@@ -252,7 +252,7 @@ public class DeliveryServices(
 
         var deliveryDto = (await unitOfWork.DeliveryRepository
                 .GetDeliveriesByBelongTo(id, pageNumber, pageSize))
-            ?.Select((de) => de.ToDto(config["url_file"]??""))
+            ?.Select((de) => de.ToDto(config["url_file"] ?? ""))
             .ToList();
 
         if (deliveryDto is null) return new ObjectResult(deliveryDto) { StatusCode = StatusCodes.Status200OK };

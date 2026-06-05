@@ -26,7 +26,7 @@ public class StoreServices(
                 .GetStores(prefix, pageSize)
             );
         var storeToDto = stores?
-            .Select(st => st.ToDto(config["url_file"]??""))
+            .Select(st => st.ToDto(config["url_file"] ?? ""))
             .ToList();
 
         return new ObjectResult(storeToDto)
@@ -129,7 +129,7 @@ public class StoreServices(
         storeData!.Addresses = new List<Address> { address };
 
 
-        var storeToDto = storeData?.ToDto(config["url_file"]??"");
+        var storeToDto = storeData?.ToDto(config["url_file"] ?? "");
 
         return new ObjectResult(storeToDto)
             { StatusCode = StatusCodes.Status201Created };
@@ -251,7 +251,7 @@ public class StoreServices(
                 { StatusCode = StatusCodes.Status404NotFound };
 
 
-        var storeToDto = store.ToDto(config["url_file"]??"");
+        var storeToDto = store.ToDto(config["url_file"] ?? "");
         return new ObjectResult(storeToDto)
             { StatusCode = StatusCodes.Status200OK };
     }
@@ -266,7 +266,7 @@ public class StoreServices(
                 { StatusCode = StatusCodes.Status404NotFound };
 
 
-        var storeToDto = store.ToDto(config["url_file"]??"");
+        var storeToDto = store.ToDto(config["url_file"] ?? "");
         return new ObjectResult(storeToDto)
             { StatusCode = StatusCodes.Status200OK };
     }
@@ -286,7 +286,7 @@ public class StoreServices(
 
         var storesToDto = (await unitOfWork.StoreRepository
                 .GetStores(pageNumber, pageSize)
-            ).Select(st => st.ToDto(config["url_file"]??""))
+            ).Select(st => st.ToDto(config["url_file"] ?? ""))
             .ToList();
 
         return new ObjectResult(storesToDto)

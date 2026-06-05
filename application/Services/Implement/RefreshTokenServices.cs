@@ -27,14 +27,14 @@ public class RefreshTokenServices(
             return new ObjectResult("error Credentials") { StatusCode = StatusCodes.Status401Unauthorized };
 
         var idHolder = Guid.Parse(value);
-        
+
         var user = await unitOfWork.UserRepository
             .GetUser(idHolder);
 
         var delivery = await unitOfWork.DeliveryRepository.GetDelivery(idHolder);
 
         var validationResult = user.IsValidateFunc(false);
-        
+
         if (validationResult is not null && delivery is null)
         {
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
@@ -46,27 +46,27 @@ public class RefreshTokenServices(
                 { StatusCode = StatusCodes.Status400BadRequest };
         }
 
-        
+
         var userRefreshTokenHolder = await unitOfWork.UserRefreshTokenRepository.GetByUserId(user!.Id);
-        
-        
-        if(userRefreshTokenHolder is null)
+
+
+        if (userRefreshTokenHolder is null)
             return new ObjectResult("error Credentials") { StatusCode = StatusCodes.Status401Unauthorized };
-        
+
 
         var roleList = new List<EnUserType> { user.IsUser ? EnUserType.User : EnUserType.Admin };
 
-        if(user.Store!=null)
+        if (user.Store != null)
             roleList.Add(EnUserType.Store);
-        
-        if(delivery !=null)
+
+        if (delivery != null)
             roleList.Add(EnUserType.Delivery);
-        
+
 
         var tokenData = await authenticationService.GenerateToken(
             id: user!.Id,
             email: user.Email,
-            roleList 
+            roleList
         );
 
 

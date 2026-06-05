@@ -138,6 +138,4 @@ public class GeneralSettingServices(IUnitOfWork unitOfWork) : IGeneralSettingSer
         return new ObjectResult(categoriesToDto)
             { StatusCode = StatusCodes.Status200OK };
     }
-    
-    
 }

@@ -93,7 +93,6 @@ public class VariantController(IVariantServices variantServices) : ControllerBas
     [Authorize(Roles = "Admin")]
     [EndpointName("Get variant pages")]
     [EndpointDescription("This function is used by admin to get variants page by page")]
-
     public async Task<IActionResult> GetVariantPages()
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;

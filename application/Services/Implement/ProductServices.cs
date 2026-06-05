@@ -4,7 +4,6 @@ using api.Infrastructure;
 using api.Presentation.dto.Request;
 using api.shared.mapper;
 using api.util;
-using ecommerce_api.util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -14,7 +13,7 @@ public class ProductServices(
     IConfiguration config,
     IUnitOfWork unitOfWork,
     IFileServices fileServices
-    )
+)
     : IProductServices
 {
     private void DeleteProductImages(List<string>? images = null, string? savedThumbnail = null)
@@ -37,7 +36,6 @@ public class ProductServices(
             .ToList();
 
 
-
         return new ObjectResult(productsDto)
         {
             StatusCode = StatusCodes.Status200OK
@@ -56,7 +54,6 @@ public class ProductServices(
             .ToList();
 
 
-
         return new ObjectResult(productsDto)
         {
             StatusCode = StatusCodes.Status200OK
@@ -70,12 +67,10 @@ public class ProductServices(
         int pageSize
     )
     {
-
         var productsDto = (await unitOfWork.ProductRepository
-           .GetProducts(storeId, subCategoryId, pageNum, pageSize))
-       .Select((de) => de.ToDto(config["url_file"] ?? ""))
-       .ToList();
-
+                .GetProducts(storeId, subCategoryId, pageNum, pageSize))
+            .Select((de) => de.ToDto(config["url_file"] ?? ""))
+            .ToList();
 
 
         return new ObjectResult(productsDto)
@@ -89,13 +84,10 @@ public class ProductServices(
         int pageSize
     )
     {
-
         var productsDto = (await unitOfWork.ProductRepository
-                  .GetProducts(pageNum, pageSize))
-                  .Select((de) => de.ToDto(config["url_file"] ?? ""))
-                  .ToList();
-
-
+                .GetProducts(pageNum, pageSize))
+            .Select((de) => de.ToDto(config["url_file"] ?? ""))
+            .ToList();
 
 
         return new ObjectResult(productsDto)
@@ -126,7 +118,7 @@ public class ProductServices(
 
 
         return new ObjectResult(productsToDto)
-        { StatusCode = StatusCodes.Status200OK };
+            { StatusCode = StatusCodes.Status200OK };
     }
 
     public async Task<IActionResult> GetProductsPagesForAdmin(Guid adminId, int length = 25)
@@ -146,7 +138,7 @@ public class ProductServices(
         var productsPerPage = productPageLength != null ? (int)Math.Ceiling((double)productPageLength / length) : 0;
 
         return new ObjectResult(productsPerPage)
-        { StatusCode = StatusCodes.Status200OK };
+            { StatusCode = StatusCodes.Status200OK };
     }
 
     public async Task<IActionResult> CreateProducts(
@@ -169,7 +161,7 @@ public class ProductServices(
         if (!isExistCurrency)
         {
             return new ObjectResult("Currency is Not Exist")
-            { StatusCode = StatusCodes.Status404NotFound };
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
 
@@ -186,18 +178,18 @@ public class ProductServices(
             DeleteProductImages(savedImage, savedThumbnail);
 
             return new ObjectResult("error while saving image ")
-            { StatusCode = StatusCodes.Status500InternalServerError };
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
 
         var id = ClsUtil.GenerateGuid();
 
         var images = savedImage.Select(pi => new ProductImage
-        {
-            Id = ClsUtil.GenerateGuid(),
-            Path = pi,
-            ProductId = id
-        })
+            {
+                Id = ClsUtil.GenerateGuid(),
+                Path = pi,
+                ProductId = id
+            })
             .ToList();
 
         if ((images.Count) > 20)
@@ -205,7 +197,7 @@ public class ProductServices(
             DeleteProductImages(savedImage, savedThumbnail);
 
             return new ObjectResult("product image can maximum has 20 images")
-            { StatusCode = StatusCodes.Status403Forbidden };
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
 
 
@@ -229,7 +221,7 @@ public class ProductServices(
             DeleteProductImages(savedImage, savedThumbnail);
 
             return new ObjectResult("productVariant  can maximum has 20 images")
-            { StatusCode = StatusCodes.Status403Forbidden };
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         var product = new Product
@@ -261,7 +253,7 @@ public class ProductServices(
 
 
             return new ObjectResult("error while adding product")
-            { StatusCode = StatusCodes.Status500InternalServerError };
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         product = await unitOfWork.ProductRepository.GetProduct(product.Id);
@@ -269,7 +261,7 @@ public class ProductServices(
         var productToDto = product?.ToDto(config["url_file"] ?? "");
 
         return new ObjectResult(productToDto)
-        { StatusCode = StatusCodes.Status201Created };
+            { StatusCode = StatusCodes.Status201Created };
     }
 
 
@@ -279,7 +271,7 @@ public class ProductServices(
     {
         if (productDto.IsEmpty())
             return new ObjectResult("No Product Change Found")
-            { StatusCode = StatusCodes.Status400BadRequest };
+                { StatusCode = StatusCodes.Status400BadRequest };
 
 
         var user = await unitOfWork.UserRepository.GetUser(userId);
@@ -298,7 +290,7 @@ public class ProductServices(
             if (!isExistCurrency)
             {
                 return new ObjectResult("Currency is Not Exist")
-                { StatusCode = StatusCodes.Status404NotFound };
+                    { StatusCode = StatusCodes.Status404NotFound };
             }
         }
 
@@ -306,7 +298,7 @@ public class ProductServices(
             !(await unitOfWork.SubCategoryRepository.IsExist((Guid)productDto!.SubcategoryId!)))
         {
             return new ObjectResult("subCategory  is not found ")
-            { StatusCode = StatusCodes.Status404NotFound };
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         var product = await unitOfWork.ProductRepository.GetProduct(productDto.Id, productDto.StoreId);
@@ -314,7 +306,7 @@ public class ProductServices(
         if (product is null)
         {
             return new ObjectResult("product is not found ")
-            { StatusCode = StatusCodes.Status404NotFound };
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         int result = 0;
@@ -361,7 +353,7 @@ public class ProductServices(
             DeleteProductImages(savedImage.Select(value => value.Path).ToList(), savedThumbnail);
 
             return new ObjectResult("product image can maximum has 20 images")
-            { StatusCode = StatusCodes.Status403Forbidden };
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         if ((savedImage?.Count + product?.ProductImages?.Count) < 1)
@@ -369,7 +361,7 @@ public class ProductServices(
             DeleteProductImages(savedImage?.Select(value => value.Path).ToList(), savedThumbnail);
 
             return new ObjectResult("product image must  has 2 image at least ")
-            { StatusCode = StatusCodes.Status403Forbidden };
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         List<ProductVariant>? productVariants = null;
@@ -393,7 +385,7 @@ public class ProductServices(
 
 
             return new ObjectResult("product variant can maximum has 20 variants")
-            { StatusCode = StatusCodes.Status403Forbidden };
+                { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         if (productVariants is not null)
@@ -423,7 +415,7 @@ public class ProductServices(
 
 
             return new ObjectResult("error while updating product")
-            { StatusCode = StatusCodes.Status500InternalServerError };
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         product = await unitOfWork.ProductRepository.GetProduct(product.Id);
@@ -431,7 +423,7 @@ public class ProductServices(
         var productToDto = product?.ToDto(config["url_file"] ?? "");
 
         return new ObjectResult(productToDto)
-        { StatusCode = StatusCodes.Status200OK };
+            { StatusCode = StatusCodes.Status200OK };
     }
 
     public async Task<IActionResult> DeleteProducts(
@@ -454,7 +446,7 @@ public class ProductServices(
         if (product is null || id != product.Id || product.Store.Id != storeId)
         {
             return new ObjectResult("product is not found ")
-            { StatusCode = StatusCodes.Status404NotFound };
+                { StatusCode = StatusCodes.Status404NotFound };
         }
 
         unitOfWork.ProductRepository.Delete(product.Id);
@@ -463,7 +455,7 @@ public class ProductServices(
         if (result == 0)
         {
             return new ObjectResult("product had link with some order")
-            { StatusCode = StatusCodes.Status409Conflict };
+                { StatusCode = StatusCodes.Status409Conflict };
         }
 
         if (product.ProductImages is not null)
@@ -476,6 +468,6 @@ public class ProductServices(
             fileServices.DeleteFile(product.Thumbnail);
 
         return new ObjectResult(null)
-        { StatusCode = StatusCodes.Status204NoContent };
+            { StatusCode = StatusCodes.Status204NoContent };
     }
 }

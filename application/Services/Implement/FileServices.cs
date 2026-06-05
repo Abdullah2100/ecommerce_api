@@ -56,7 +56,7 @@ namespace api.application.Services.Implement
         public async Task<List<string>?> SaveFile(List<IFormFile> file, EnImageType type)
         {
             List<string> images = [];
-            
+
             foreach (var t in file)
             {
                 var path = await SaveFile(t, type);
@@ -82,7 +82,6 @@ namespace api.application.Services.Implement
                 if (!File.Exists(fileRealPath)) return false;
                 File.Delete(fileRealPath);
                 return true;
-
             }
             catch (Exception ex)
             {

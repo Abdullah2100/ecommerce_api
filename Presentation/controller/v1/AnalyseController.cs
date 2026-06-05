@@ -22,7 +22,8 @@ public class AnalyseController(IAnalyseServices analyseServices) : ControllerBas
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Authorize(Roles = "Admin")]
     [EndpointName("Current month Analysis")]
-    [EndpointDescription("This function is returning the Analysis of the api like total fee ,total order and total delivery distance  for current month for Admin")]
+    [EndpointDescription(
+        "This function is returning the Analysis of the api like total fee ,total order and total delivery distance  for current month for Admin")]
     public async Task<IActionResult> GetOrderStatus()
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;

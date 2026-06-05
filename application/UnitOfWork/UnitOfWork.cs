@@ -1,6 +1,9 @@
 using api.domain.Interface;
 using api.Infrastructure;
 using api.Infrastructure.Repositories;
+using Microsoft.CodeAnalysis.Elfie.Diagnostics;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace api.application.UnitOfWork;
 
@@ -27,7 +30,7 @@ public class UnitOfWork : IUnitOfWork
         StoreRepository = new StoreRepository(_context);
         SubCategoryRepository = new SubCategoryRepository(_context);
         UserRepository = new UserRepository(_context);
-        VariantRepository = new VarientRepository(_context);
+        VariantRepository = new VariantRepository(_context);
         OrderProductVariantRepository = new OrderProductVariantRepository(context);
         AnalyseRepository = new AnalyseRepository(_context);
         CurrencyRepository = new CurrencyRepository(_context);
@@ -56,6 +59,12 @@ public class UnitOfWork : IUnitOfWork
             Console.WriteLine($"this the exption error {ex.Message}");
             return 0;
         }
+    }
+
+    public async Task DeleteFromCache(string key)
+    {
+        var keyHolder = $"{key}%";
+        await _context.Database.ExecuteSqlRawAsync($"DELETE FROM Cache where key like {0}", keyHolder);
     }
 
     public IAddressRepository AddressRepository { get; }

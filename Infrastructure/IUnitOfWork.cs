@@ -24,8 +24,8 @@ public interface IUnitOfWork : IDisposable
     public ICurrencyRepository CurrencyRepository { get; }
     public IPaymentTypeRepository PaymentTypeRepository { get; set; }
     public IUserRefreshTokenRepository UserRefreshTokenRepository { get; set; }
-    
 
 
     public Task<int> SaveChanges();
+    public Task DeleteFromCache(string key);
 }

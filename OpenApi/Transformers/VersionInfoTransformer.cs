@@ -5,7 +5,8 @@ namespace api.OpenApi.Transformers;
 
 internal sealed class VersionInfoTransformer : IOpenApiDocumentTransformer
 {
-    public Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
+    public Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context,
+        CancellationToken cancellationToken)
     {
         var version = context.DocumentName;
 

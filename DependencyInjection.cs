@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Sats.PostgreSqlDistributedCache;
 
 namespace api;
 
@@ -162,6 +163,18 @@ public static class DependencyInjection
                     options.GroupNameFormat = "'v'VVV";
                     options.SubstituteApiVersionInUrl = true;
                 });
+            return services;
+        }
+
+        public IServiceCollection AddPostgresCaching(IConfiguration config)
+        {
+            services.AddPostgresDistributedCache(options =>
+            {
+                options.ConnectionString = config?.GetConnectionString("Postgres") ?? "";
+                options.SchemaName = "public"; // Optional: defaults to "public"
+                options.TableName = "Cache";
+                options.ExpiredItemsDeletionInterval = TimeSpan.FromMinutes(5);
+            });
             return services;
         }
     }

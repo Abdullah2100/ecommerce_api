@@ -152,7 +152,7 @@ public class OrderServices(
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        var dtoOrder = order.ToDto(config["url_file"]??"");
+        var dtoOrder = order.ToDto(config["url_file"] ?? "");
         await hubContext.Clients.All.SendAsync("createdOrder", dtoOrder);
         await SendNotification(order, 1);
 
@@ -166,7 +166,7 @@ public class OrderServices(
     {
         var orders = (await unitOfWork.OrderRepository
                 .GetOrders(userId, pageNum, pageSize))
-            .Select(o => o.ToDto(config["url_file"]??""))
+            .Select(o => o.ToDto(config["url_file"] ?? ""))
             .ToList();
 
 
@@ -188,7 +188,7 @@ public class OrderServices(
 
         var orders = (await unitOfWork.OrderRepository
                 .GetOrders(pageNum, pageSize))
-            .Select(o => o.ToDto(config["url_file"]??""))
+            .Select(o => o.ToDto(config["url_file"] ?? ""))
             .ToList();
 
         var orderPages = (int)Math.Ceiling((double)orders.Count / pageSize);
@@ -272,7 +272,7 @@ public class OrderServices(
 
         var orders = (await unitOfWork.OrderRepository
                 .GetOrderBelongToDelivery(deliveryId, pageNum, pageSize))
-            .Select(o => o.ToDto(config["url_file"]??""))
+            .Select(o => o.ToDto(config["url_file"] ?? ""))
             .ToList();
 
 
@@ -291,7 +291,7 @@ public class OrderServices(
 
         var orders = (await unitOfWork.OrderRepository
                 .GetOrderNoBelongToAnyDelivery(pageNum, pageSize))
-            .Select(o => o.ToDto(config["url_file"]??""))
+            .Select(o => o.ToDto(config["url_file"] ?? ""))
             .ToList();
 
 
@@ -389,18 +389,15 @@ public class OrderServices(
 
         if (result == 0)
         {
-           
             return new ObjectResult("error while remove order from delivery")
                 { StatusCode = StatusCodes.Status500InternalServerError };
-
         }
 
-        await hubContext.Clients.All.SendAsync("createdOrder", order.ToDto(config["url_file"]??""));
+        await hubContext.Clients.All.SendAsync("createdOrder", order.ToDto(config["url_file"] ?? ""));
 
-       
+
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
-
     }
 
     public async Task<IActionResult> GetOrdersStatus(Guid adminId)
@@ -411,13 +408,11 @@ public class OrderServices(
         if (validationResult is not null)
         {
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
- 
         }
 
-       
+
         return new ObjectResult(OrderStatus)
             { StatusCode = StatusCodes.Status200OK };
-
     }
 
     private async Task SendNotification(Order order, int status)

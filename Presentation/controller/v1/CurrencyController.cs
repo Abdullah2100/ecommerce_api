@@ -20,7 +20,6 @@ public class CurrencyController(ICurrencyServices currencyServices) : Controller
     [Authorize(Roles = "Admin")]
     [EndpointName("Create new Currency")]
     [EndpointDescription("This function is used from admin to create currency")]
-
     public async Task<IActionResult> CreateCurrency([FromBody] CreateCurrencyDto currencyDto)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -39,7 +38,6 @@ public class CurrencyController(ICurrencyServices currencyServices) : Controller
     [Authorize(Roles = "Admin")]
     [EndpointName("update Currency")]
     [EndpointDescription("This function is used from admin to update currency")]
-
     public async Task<IActionResult> UpdateCurrency([FromBody] UpdateCurrencyDto currencyDto)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -59,7 +57,6 @@ public class CurrencyController(ICurrencyServices currencyServices) : Controller
     [Authorize(Roles = "Admin")]
     [EndpointName("Delete Currency")]
     [EndpointDescription("This function is used from admin to delete currency")]
-
     public async Task<IActionResult> DeleteCurrency(Guid currencyId)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -76,7 +73,6 @@ public class CurrencyController(ICurrencyServices currencyServices) : Controller
     [Authorize(Roles = "Admin, User, Store")]
     [EndpointName($"Get currencies")]
     [EndpointDescription("This function is used to  retrieve the currencies")]
-
     public async Task<IActionResult> GetCurrencies(int pageNumber = 1)
     {
         if (pageNumber < 1)

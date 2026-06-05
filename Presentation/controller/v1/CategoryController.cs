@@ -80,7 +80,6 @@ public class CategoryController(ICategoryServices categoryServices) : Controller
     [Authorize(Roles = "Admin, User, Store")]
     [EndpointName("Get categories by page number")]
     [EndpointDescription("This function is used to retrieve the categories by page")]
-
     public async Task<IActionResult> GetCategories(int pageNumber = 1)
     {
         if (pageNumber < 1)

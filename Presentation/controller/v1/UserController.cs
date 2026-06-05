@@ -80,7 +80,7 @@ public class UserController(IUserServices userServices) : ControllerBase
         return result;
     }
 
-    
+
     //this to get user per pages like we hav 20 pages of user 25 user at one per page 
     [HttpGet("pages")]
     [GetUserIdFromUserClaims]

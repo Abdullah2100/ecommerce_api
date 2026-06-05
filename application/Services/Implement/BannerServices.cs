@@ -7,6 +7,7 @@ using api.shared.signalr;
 using api.util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Sats.PostgreSqlDistributedCache;
 
 namespace api.application.Services.Implement;
 
@@ -14,7 +15,8 @@ public class BannerServices(
     IConfiguration config,
     IHubContext<BannerHub> hubContext,
     IUnitOfWork unitOfWork,
-    IFileServices fileServices)
+    IFileServices fileServices ,
+    PostgreSqlDistributedCache postgresCache)
     : IBannerServices
 {
     public async Task<IActionResult> CreateBanner(
@@ -72,7 +74,7 @@ public class BannerServices(
 
         await hubContext.Clients.All.SendAsync("createdBanner", result);
 
-        var bannerToDto = banner.ToDto(config["url_file"]??"");
+        var bannerToDto = banner.ToDto(config["url_file"] ?? "");
         return new ObjectResult(bannerToDto) { StatusCode = 201 };
     }
 
@@ -135,7 +137,7 @@ public class BannerServices(
         var banners = (await unitOfWork.BannerRepository
                 .GetBanners(pageNumber, pageSize)
             )
-            .Select(ba => ba.ToDto(config["url_file"]??""))
+            .Select(ba => ba.ToDto(config["url_file"] ?? ""))
             .ToList();
 
         return new ObjectResult(banners) { StatusCode = 200 };
@@ -153,10 +155,10 @@ public class BannerServices(
         {
             return new ObjectResult("store  not found") { StatusCode = 404 };
         }
-        
+
         var banners = (await unitOfWork.BannerRepository
                 .GetBanners(userId, pageNumber, pageSize))
-            .Select(ba => ba.ToDto(config["url_file"]??""))
+            .Select(ba => ba.ToDto(config["url_file"] ?? ""))
             .ToList();
 
         return new ObjectResult(banners) { StatusCode = 200 };
@@ -168,7 +170,7 @@ public class BannerServices(
     {
         var banners = (await unitOfWork.BannerRepository
                 .GetBanners(randomLenght))
-            .Select(ba => ba.ToDto(config["url_file"]??""))
+            .Select(ba => ba.ToDto(config["url_file"] ?? ""))
             .ToList();
 
         return new ObjectResult(banners) { StatusCode = 200 };

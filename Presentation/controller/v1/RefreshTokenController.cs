@@ -16,7 +16,6 @@ public class RefreshTokenController(IRefreshTokenServices refreshTokenServices) 
     [Authorize(Roles = "Store,Admin")]
     [EndpointName("create Banner")]
     [EndpointDescription("This function is used by Store or Admin to create Banner")]
-
     public async Task<IActionResult> CreateBanner([FromQuery] string token)
     {
         var claimsPrincipal = HttpContext.User;

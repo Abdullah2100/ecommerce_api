@@ -38,7 +38,8 @@ public class OrderController(IOrderServices orderServices) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Authorize(Roles = "Admin")]
     [EndpointName("Get order Status List")]
-    [EndpointDescription("This function is used by admin at dashboard to convert the order enum to readable string that admin can understand it ")]
+    [EndpointDescription(
+        "This function is used by admin at dashboard to convert the order enum to readable string that admin can understand it ")]
     public async Task<IActionResult> GetOrderStatus()
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -104,7 +105,6 @@ public class OrderController(IOrderServices orderServices) : ControllerBase
     [Authorize(Roles = "Delivery")]
     [EndpointName("Get orders not belong to any deliveries")]
     [EndpointDescription("This function is used by deliveries to orders not belong to another deliveries  by pages")]
-
     public async Task<IActionResult> GetOrderNotBelongToDelivery(int pageNumber = 1)
     {
         if (pageNumber < 1)

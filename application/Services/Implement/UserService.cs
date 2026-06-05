@@ -113,7 +113,6 @@ public class UserService(
                 { StatusCode = StatusCodes.Status500InternalServerError };
 
 
-      
         var userRefreshTokenHolder = await unitOfWork.UserRefreshTokenRepository.GetByUserId(user!.Id);
 
         var role = userRefreshTokenHolder!.Role switch
@@ -147,7 +146,7 @@ public class UserService(
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        var userToDto = user!.ToUserInfoDto(config["url_file"]??"");
+        var userToDto = user!.ToUserInfoDto(config["url_file"] ?? "");
         return new ObjectResult(userToDto) { StatusCode = StatusCodes.Status200OK };
     }
 
@@ -167,7 +166,7 @@ public class UserService(
 
         var usersToDto = (await unitOfWork.UserRepository
                 .GetUsers(page, 25))
-            .Select(u => u.ToUserInfoDto(config["url_file"]??""))
+            .Select(u => u.ToUserInfoDto(config["url_file"] ?? ""))
             .ToList();
 
 

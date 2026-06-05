@@ -20,7 +20,6 @@ public class PaymentTypeController(IPaymentTypeServices paymentTypeServices) : C
     [Authorize(Roles = "Admin")]
     [EndpointName("create paymentType")]
     [EndpointDescription("This function is used by admin to create new paymentType")]
-
     public async Task<IActionResult> CreatePaymentType
     (
         [FromForm] CreatePaymentTypeDto paymentTypeDto
@@ -44,7 +43,6 @@ public class PaymentTypeController(IPaymentTypeServices paymentTypeServices) : C
     [Authorize(Roles = "Admin")]
     [EndpointName("update paymentType")]
     [EndpointDescription("This function is used by admin to update paymentType")]
-
     public async Task<IActionResult> UpdatePaymentType
     (
         [FromForm] UpdatePaymentTypeDto paymentTypeDto
@@ -63,7 +61,6 @@ public class PaymentTypeController(IPaymentTypeServices paymentTypeServices) : C
     [Authorize(Roles = "Admin")]
     [EndpointName("Get paymentTypes")]
     [EndpointDescription("This function is used by admin to get paymentTypes list by page")]
-
     public async Task<IActionResult> GetPaymentTypes([FromQuery] int pageNumber)
     {
         if (pageNumber < 1)

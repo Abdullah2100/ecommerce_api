@@ -16,7 +16,8 @@ public class PaymentController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Authorize(Roles = "User")]
     [EndpointName("create payment sessionId")]
-    [EndpointDescription("This function is user when start submit order to create session id when using strip as payment getway")]
+    [EndpointDescription(
+        "This function is user when start submit order to create session id when using strip as payment getway")]
     public async Task<IActionResult> CreateSession([FromBody] PaymentRequirementData paymentRequirementData)
     {
         var options = new PaymentIntentCreateOptions

@@ -4,7 +4,6 @@ using api.Infrastructure;
 using api.Presentation.dto.Request;
 using api.shared.mapper;
 using api.util;
-using ecommerce_api.util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -24,7 +23,6 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
         }
 
 
-
         var currency = new Currency
         {
             Id = ClsUtil.GenerateGuid(),
@@ -40,7 +38,7 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
         if (result == 0)
         {
             return new ObjectResult("Could not Save New Currency")
-            { StatusCode = StatusCodes.Status500InternalServerError };
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
 
@@ -77,7 +75,7 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
         if (result == 0)
         {
             return new ObjectResult("Could not Update Currency")
-            { StatusCode = StatusCodes.Status500InternalServerError };
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         return new ObjectResult(null) { StatusCode = StatusCodes.Status204NoContent };
@@ -107,7 +105,7 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
         if (result == 0)
         {
             return new ObjectResult("Could not Delete Currency")
-            { StatusCode = StatusCodes.Status500InternalServerError };
+                { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
 
@@ -116,14 +114,12 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
 
     public async Task<IActionResult> GetCurrency(int pageNum, int pageSize)
     {
-
         var paymentsDto = (await unitOfWork.CurrencyRepository
-        .GetAll(pageNum, pageSize))
-        .Select(payment => payment.ToPaymentDto()).ToList();
+                .GetAll(pageNum, pageSize))
+            .Select(payment => payment.ToPaymentDto()).ToList();
 
 
         return new ObjectResult(paymentsDto)
-        { StatusCode = StatusCodes.Status200OK };
-
+            { StatusCode = StatusCodes.Status200OK };
     }
 }

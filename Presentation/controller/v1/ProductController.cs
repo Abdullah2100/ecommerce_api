@@ -76,7 +76,7 @@ public class ProductController(IProductServices productServices) : ControllerBas
     [Authorize(Roles = "Admin,User")]
     [EndpointName("get products by page")]
     [EndpointDescription("This function is used by user or admin to get products page by page")]
-    public async Task<IActionResult> GetProducts( int pageNumber)
+    public async Task<IActionResult> GetProducts(int pageNumber)
     {
         if (pageNumber < 1)
             return BadRequest("رقم الصفحة لا بد ان تكون اكبر من الصفر");
@@ -141,7 +141,6 @@ public class ProductController(IProductServices productServices) : ControllerBas
     [Authorize(Roles = "Admin,Store")]
     [EndpointName("create products")]
     [EndpointDescription("This function is used by admin or store to create new product")]
-
     public async Task<IActionResult> CreateProduct
     (
         [FromForm] CreateProductDto product

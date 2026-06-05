@@ -2,18 +2,22 @@ using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
 using api.Presentation.dto.Request;
+using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.util;
-using ecommerce_api.util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json;
+using Sats.PostgresDistributedCache;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace api.application.Services.Implement;
 
 public class CategoryServices(
     IConfiguration config,
     IUnitOfWork unitOfWork,
-    IFileServices fileService)
+    IFileServices fileService,
+    IPostgreSqlDistributedCache postgresCache)
     : ICategoryServices
 {
     public async Task<IActionResult> CreateCategory(CreateCategoryDto categoryDto, Guid adminId)
@@ -63,8 +67,9 @@ public class CategoryServices(
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
+        await unitOfWork.DeleteFromCache(MemoryCachKeys.CategoriesKey);
 
-        var categoryToDto = category?.ToDto(config["url_file"]??"");
+        var categoryToDto = category?.ToDto(config["url_file"] ?? "");
         return new ObjectResult(categoryToDto)
             { StatusCode = StatusCodes.Status201Created };
     }
@@ -92,8 +97,6 @@ public class CategoryServices(
                     { StatusCode = StatusCodes.Status409Conflict };
             }
 
-
-        
 
         var category = await unitOfWork.CategoryRepository.GetCategory(categoryDto.Id);
 
@@ -130,7 +133,8 @@ public class CategoryServices(
         if (image != null)
             fileService.DeleteFile(image);
 
-    
+        await unitOfWork.DeleteFromCache(MemoryCachKeys.CategoriesKey);
+
         return new ObjectResult("error while update category")
             { StatusCode = StatusCodes.Status500InternalServerError };
     }
@@ -163,15 +167,32 @@ public class CategoryServices(
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
+        await unitOfWork.DeleteFromCache(MemoryCachKeys.CategoriesKey);
+
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
     }
 
     public async Task<IActionResult> GetCategories(int pageNumber, int pageSize)
     {
-        var categories = (await unitOfWork.CategoryRepository.GetCategories(pageNumber, pageSize))
-            .Select(ca => ca.ToDto(config["url_file"]??""))
-            .ToList();
+        var categoriesCache = await postgresCache.GetStringAsync(MemoryCachKeys.CategoriesKey);
+
+        if (categoriesCache == null)
+        {
+            var categoriesList = (await unitOfWork
+                    .CategoryRepository
+                    .GetCategories(pageNumber, pageSize))
+                .Select(ca => ca.ToDto(config["url_file"] ?? ""))
+                .ToList();
+            var jsonCategories = JsonConvert.SerializeObject(categoriesList);
+
+            await postgresCache.SetStringAsync(MemoryCachKeys.CategoriesKey + pageNumber, jsonCategories,
+                TimeSpan.FromMinutes(5));
+            return new ObjectResult(categoriesList)
+                { StatusCode = StatusCodes.Status200OK };
+        }
+
+        var categories = JsonSerializer.Deserialize<List<CategoryDto>>(categoriesCache);
         return new ObjectResult(categories)
             { StatusCode = StatusCodes.Status200OK };
     }

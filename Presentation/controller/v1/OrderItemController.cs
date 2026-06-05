@@ -19,7 +19,6 @@ public class OrderItemController(IOrderItemServices orderItemServices) : Control
     [Authorize(Roles = "Store")]
     [EndpointName("Get OrderItems for Store")]
     [EndpointDescription("This function is used by store to get orderItem that order it by users")]
-
     public async Task<IActionResult> GetOrdersItemForStore(int pageNumber = 1)
     {
         if (pageNumber < 1)
@@ -45,7 +44,6 @@ public class OrderItemController(IOrderItemServices orderItemServices) : Control
     [Authorize(Roles = "Store,Delivery")]
     [EndpointName("Update orderItems status")]
     [EndpointDescription("This function is used by store owner or delivery to change the orderItems status")]
-
     public async Task<IActionResult> UpdateOrderItemStatus
         ([FromBody] UpdateOrderItemStatusDto orderItemStatusDto)
     {

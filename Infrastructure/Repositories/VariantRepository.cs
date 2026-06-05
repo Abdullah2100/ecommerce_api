@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace api.Infrastructure.Repositories;
 
-public class VarientRepository(AppDbContext context) : IVarientRepository
+public class VariantRepository(AppDbContext context) : IVarientRepository
 {
     public async Task<IEnumerable<Variant>> GetAllAsync(int page, int length)
     {

@@ -21,7 +21,6 @@ public class GeneralController(IGeneralSettingServices generalSettingServices) :
     [Authorize(Roles = "Admin")]
     [EndpointName("Create GeneralSetting")]
     [EndpointDescription("This function used by Admin to create new General Setting like distance fee ber kilo ...etc")]
-
     public async Task<IActionResult> CreateGeneralSetting(
         [FromBody] GeneralSettingDto generalSetting
     )
@@ -68,7 +67,6 @@ public class GeneralController(IGeneralSettingServices generalSettingServices) :
     [Authorize(Roles = "Admin")]
     [EndpointName("update GeneralSetting")]
     [EndpointDescription("This function used by Admin to create update General Setting")]
-
     public async Task<IActionResult> UpdateGeneralSetting(
         Guid generalSettingId,
         [FromBody] UpdateGeneralSettingDto generalSetting
@@ -91,7 +89,6 @@ public class GeneralController(IGeneralSettingServices generalSettingServices) :
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [EndpointName("Get GeneralSetting")]
     [EndpointDescription("This function used to  General Settings ")]
-
     public async Task<IActionResult> GetGeneralSettings(
         int pageNumber
     )

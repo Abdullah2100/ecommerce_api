@@ -18,7 +18,6 @@ public class SubCategoryController(ISubCategoryServices subCategoryServices) : C
     [Authorize(Roles = "Admin")]
     [EndpointName("Get Sub Categories")]
     [EndpointDescription("This function is used by Admin to get Sub Categories")]
-
     public async Task<IActionResult> GetSubCategory(int page)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;

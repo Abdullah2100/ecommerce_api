@@ -21,7 +21,7 @@ namespace api.application.Services.Implement
     }
 
     public class AuthenticationServices(
-        IOptions<CredentialSetting> credential, 
+        IOptions<CredentialSetting> credential,
         IUnitOfWork unitOfWork)
         : IAuthenticationService
     {
@@ -33,7 +33,7 @@ namespace api.application.Services.Implement
                 UserId = userId,
                 Id = Guid.CreateVersion7(),
                 Refresh = Guid.CreateVersion7(),
-                Role = string.Join(',',role)
+                Role = string.Join(',', role)
             };
             await unitOfWork.UserRefreshTokenRepository.Save(userRefreshTokenHolder);
             await unitOfWork.SaveChanges();
@@ -52,7 +52,7 @@ namespace api.application.Services.Implement
                 new(ClaimTypes.NameIdentifier, id.ToString() ?? ""),
                 new(ClaimTypes.Email, email),
             ];
-            
+
             claims.AddRange(types.Select(type => new Claim(ClaimTypes.Role, type.GetDisplayName())));
 
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -70,7 +70,7 @@ namespace api.application.Services.Implement
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenData = tokenHandler.WriteToken(token);
-            var refreshToken = await GenerateRefreshToken(id, types.Select(value=>value.GetDisplayName()).ToList());
+            var refreshToken = await GenerateRefreshToken(id, types.Select(value => value.GetDisplayName()).ToList());
             return new AuthDto() { Token = tokenData, RefreshToken = refreshToken };
         }
     }

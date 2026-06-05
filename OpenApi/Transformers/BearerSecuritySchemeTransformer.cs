@@ -9,7 +9,8 @@ internal sealed class BearerSecuritySchemeTransformer : IOpenApiDocumentTransfor
 {
     private const string SchemeId = JwtBearerDefaults.AuthenticationScheme;
 
-    public Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
+    public Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context,
+        CancellationToken cancellationToken)
     {
         document.Components ??= new();
         document.Components.SecuritySchemes ??= new Dictionary<string, OpenApiSecurityScheme>();
@@ -32,7 +33,8 @@ internal sealed class BearerSecuritySchemeTransformer : IOpenApiDocumentTransfor
         return Task.CompletedTask;
     }
 
-    public Task TransformAsync(OpenApiOperation operation, OpenApiOperationTransformerContext context, CancellationToken cancellationToken)
+    public Task TransformAsync(OpenApiOperation operation, OpenApiOperationTransformerContext context,
+        CancellationToken cancellationToken)
     {
         if (context.Description.ActionDescriptor.EndpointMetadata.OfType<IAuthorizeData>().Any())
         {
@@ -48,7 +50,7 @@ internal sealed class BearerSecuritySchemeTransformer : IOpenApiDocumentTransfor
 
             var requirement = new OpenApiSecurityRequirement
             {
-                {key, []}
+                { key, [] }
             };
 
             operation.Security.Add(requirement);

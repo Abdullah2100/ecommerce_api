@@ -63,7 +63,6 @@ public class DeliveryController(
     [Authorize(Roles = "Store")]
     [EndpointName("Get Deliveries for store")]
     [EndpointDescription("This function used by  store owner to get deliveries belong to them")]
-
     public async Task<IActionResult> GetDelivery()
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;
@@ -209,7 +208,6 @@ public class DeliveryController(
     [Authorize(Roles = "Delivery")]
     [EndpointName("cancel order delivery")]
     [EndpointDescription("This function used by delivery to remove delivery Id from order")]
-
     public async Task<IActionResult> RenameOrderBelongToDelivery(Guid orderId)
     {
         var id = HttpContext.Items["id"] as Guid? ?? Guid.Empty;

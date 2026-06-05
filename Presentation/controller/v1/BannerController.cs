@@ -17,7 +17,8 @@ public class BannerController(IBannerServices bannerServices) : ControllerBase
     [GetUserIdFromUserClaims]
     [Authorize(Roles = "Store, User ,Admin")]
     [EndpointName("Get banners belong to user")]
-    [EndpointDescription("This function is returning the Analysis of the api like total fee ,total order and total delivery distance  for current month for Admin")]
+    [EndpointDescription(
+        "This function is returning the Analysis of the api like total fee ,total order and total delivery distance  for current month for Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetBannerRandom(int pageNumber)
@@ -33,7 +34,8 @@ public class BannerController(IBannerServices bannerServices) : ControllerBase
     [HttpGet("")]
     [Authorize(Roles = "Store, User ,Admin")]
     [EndpointName("Get random Banners")]
-    [EndpointDescription("This function is returning random banner belong to many store it used in ecommerce app for user")]
+    [EndpointDescription(
+        "This function is returning random banner belong to many store it used in ecommerce app for user")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetBannerRandom()
     {
