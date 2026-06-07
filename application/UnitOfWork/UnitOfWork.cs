@@ -61,11 +61,7 @@ public class UnitOfWork : IUnitOfWork
         }
     }
 
-    public async Task DeleteFromCache(string key)
-    {
-        var keyHolder = $"{key}%";
-        await _context.Database.ExecuteSqlRawAsync($"DELETE FROM Cache where key like {0}", keyHolder);
-    }
+  
 
     public IAddressRepository AddressRepository { get; }
     public IBannerRepository BannerRepository { get; }

@@ -55,7 +55,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddVersions();
 
-builder.Services.AddPostgresCaching(configuration);
+builder.Services.AddCaching(configuration);
 
 builder.Services.AddJwtAuthentication(configuration);
 

@@ -6,11 +6,13 @@ using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.util;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace api.application.Services.Implement;
 
 public class SubCategoryServices(
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    HybridCache cache)
     : ISubCategoryServices
 {
     public async Task<IActionResult> CreateSubCategory(
@@ -18,7 +20,7 @@ public class SubCategoryServices(
         CreateSubCategoryDto subCategoryDto
     )
     {
-        Store? store = await unitOfWork.StoreRepository
+        var store = await unitOfWork.StoreRepository
             .GetStore(storeId);
 
 
@@ -60,6 +62,8 @@ public class SubCategoryServices(
         }
 
         var subCategoryToDto = subCategory.ToDto();
+
+        await cache.RemoveByTagAsync(MemoryCacheKeys.StoreSubCategoriesKey);
 
         return new ObjectResult(subCategoryToDto)
             { StatusCode = StatusCodes.Status201Created };
@@ -116,6 +120,7 @@ public class SubCategoryServices(
                 { StatusCode = StatusCodes.Status404NotFound };
         }
 
+        await cache.RemoveByTagAsync(MemoryCacheKeys.StoreSubCategoriesKey);
 
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
@@ -155,25 +160,29 @@ public class SubCategoryServices(
             return new ObjectResult("error while deleting subcategory")
                 { StatusCode = StatusCodes.Status403Forbidden };
 
+        await cache.RemoveByTagAsync(MemoryCacheKeys.StoreSubCategoriesKey);
 
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
     }
 
-    public async Task<IActionResult> GetSubCategories(Guid id, int page, int length)
+    public async Task<IActionResult> GetSubCategories(Guid storeId, int page, int length)
     {
-        var subCategories = (await unitOfWork.SubCategoryRepository
-                .GetSubCategories(id, page, length))
-            .Select(su => su.ToDto())
-            .ToList();
-        return (subCategories.Count > 0) switch
-        {
-            true => new ObjectResult(subCategories)
-                { StatusCode = StatusCodes.Status200OK },
-            _ =>
-                new ObjectResult(new List<SubCategoryDto>())
-                    { StatusCode = StatusCodes.Status200OK },
-        };
+        var subCategories = await cache.GetOrCreateAsync(
+            MemoryCacheKeys.StoreSubCategoriesKey + '/' + storeId + '/' + page,
+            async ct =>
+            {
+                var subCategories = (await unitOfWork.SubCategoryRepository
+                        .GetSubCategories(storeId, page, length))
+                    .Select(su => su.ToDto())
+                    .ToList();
+                return subCategories;
+            },
+            tags: [MemoryCacheKeys.StoreSubCategoriesKey]);
+
+
+        return new ObjectResult(subCategories)
+            { StatusCode = StatusCodes.Status200OK };
     }
 
     public async Task<IActionResult> GetSubCategoryAll(
@@ -190,11 +199,17 @@ public class SubCategoryServices(
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-
-        var subcategories = (await unitOfWork.SubCategoryRepository
-                .GetSubCategories(page, length))
-            .Select(ba => ba.ToDto())
-            .ToList();
+        var subcategories = await cache.GetOrCreateAsync(
+            MemoryCacheKeys.StoreSubCategoriesKey + "/admin/" + adminId + '/' + page,
+            async ct =>
+            {
+                var subcategories = (await unitOfWork.SubCategoryRepository
+                        .GetSubCategories(page, length))
+                    .Select(ba => ba.ToDto())
+                    .ToList();
+                return subcategories;
+            },
+            tags: [MemoryCacheKeys.StoreSubCategoriesKey]);
 
 
         return new ObjectResult(subcategories)

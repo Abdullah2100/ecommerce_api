@@ -8,6 +8,7 @@ using api.shared.signalr;
 using api.util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace api.application.Services.Implement;
 
@@ -16,20 +17,28 @@ public class StoreServices(
     IConfiguration config,
     IFileServices fileServices,
     IUnitOfWork unitOfWork,
-    IHubContext<StoreHub> hubContext
+    IHubContext<StoreHub> hubContext,
+    HybridCache cache
 )
     : IStoreServices
 {
     public async Task<IActionResult> GetStores(Guid adminId, string prefix, int pageSize)
     {
-        var stores = (await unitOfWork.StoreRepository
-                .GetStores(prefix, pageSize)
-            );
-        var storeToDto = stores?
-            .Select(st => st.ToDto(config["url_file"] ?? ""))
-            .ToList();
+        var stores = await cache.GetOrCreateAsync(
+            MemoryCacheKeys.StoresKey + "/" + adminId + "/" + prefix + '/' + pageSize,
+            async ct =>
+            {
+                var stores = (await unitOfWork.StoreRepository
+                        .GetStores(prefix, pageSize))
+                    .Select(st => st.ToDto(config["url_file"] ?? ""))
+                    .ToList();
 
-        return new ObjectResult(storeToDto)
+                return stores;
+            },
+            tags: [MemoryCacheKeys.StoresKey]);
+
+
+        return new ObjectResult(stores)
             { StatusCode = StatusCodes.Status200OK };
     }
 
@@ -114,7 +123,7 @@ public class StoreServices(
         unitOfWork.AddressRepository.Add(address);
 
 
-        int result = await unitOfWork.SaveChanges();
+        var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
@@ -130,6 +139,8 @@ public class StoreServices(
 
 
         var storeToDto = storeData?.ToDto(config["url_file"] ?? "");
+
+        await cache.RemoveByTagAsync(MemoryCacheKeys.StoresKey);
 
         return new ObjectResult(storeToDto)
             { StatusCode = StatusCodes.Status201Created };
@@ -218,7 +229,8 @@ public class StoreServices(
         var store = await unitOfWork.StoreRepository.GetStore(user.Store.Id);
         store?.Addresses = await unitOfWork.AddressRepository.GetAllAddressByOwnerId(store!.Id);
 
-        //   var storeToDto=  store?.ToDto(config["url_file"]??"");
+        await cache.RemoveByTagAsync(MemoryCacheKeys.StoresKey);
+
 
         return new ObjectResult(null) { StatusCode = StatusCodes.Status204NoContent };
     }
@@ -284,12 +296,21 @@ public class StoreServices(
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        var storesToDto = (await unitOfWork.StoreRepository
-                .GetStores(pageNumber, pageSize)
-            ).Select(st => st.ToDto(config["url_file"] ?? ""))
-            .ToList();
+        var stores = await cache.GetOrCreateAsync(
+            MemoryCacheKeys.StoresKey + "/" + adminId + '/' + pageNumber,
+            async ct =>
+            {
+                var stores = (await unitOfWork.StoreRepository
+                        .GetStores(pageNumber, pageSize)
+                    ).Select(st => st.ToDto(config["url_file"] ?? ""))
+                    .ToList();
 
-        return new ObjectResult(storesToDto)
+                return stores;
+            },
+            tags: [MemoryCacheKeys.StoresKey]);
+
+
+        return new ObjectResult(stores)
             { StatusCode = StatusCodes.Status200OK };
     }
 
@@ -337,6 +358,7 @@ public class StoreServices(
             StoreId = storeId,
             Status = true
         });
+        await cache.RemoveByTagAsync(MemoryCacheKeys.StoresKey);
 
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };

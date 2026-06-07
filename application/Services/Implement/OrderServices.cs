@@ -8,6 +8,7 @@ using api.shared.signalr;
 using api.util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace api.application.Services.Implement;
 
@@ -15,7 +16,8 @@ public class OrderServices(
     IConfiguration config,
     IUnitOfWork unitOfWork,
     IHubContext<OrderHub> hubContext,
-    IServiceProvider sp)
+    IServiceProvider sp,
+    HybridCache cache)
     : IOrderServices
 {
     private static readonly List<string> OrderStatus = new List<string>
@@ -46,8 +48,10 @@ public class OrderServices(
                 { StatusCode = StatusCodes.Status409Conflict };
         }
 
-        var paymentType =
-            (await unitOfWork.PaymentTypeRepository.GetPaymentTypeGetPayment(orderDto.PaymentTypeId));
+        var paymentType = (await unitOfWork
+        .PaymentTypeRepository
+        .GetPaymentTypeGetPayment(orderDto.PaymentTypeId));
+
 
         if (paymentType is null)
         {
@@ -156,7 +160,7 @@ public class OrderServices(
         await hubContext.Clients.All.SendAsync("createdOrder", dtoOrder);
         await SendNotification(order, 1);
 
-
+        await cache.RemoveByTagAsync(MemoryCacheKeys.OrdersKey);
         return new ObjectResult(dtoOrder)
             { StatusCode = StatusCodes.Status201Created };
     }
@@ -164,10 +168,15 @@ public class OrderServices(
 
     public async Task<IActionResult> GetMyOrders(Guid userId, int pageNum, int pageSize)
     {
-        var orders = (await unitOfWork.OrderRepository
-                .GetOrders(userId, pageNum, pageSize))
-            .Select(o => o.ToDto(config["url_file"] ?? ""))
-            .ToList();
+        var orders = await cache.GetOrCreateAsync(MemoryCacheKeys.OrdersKey + "/" + userId + "/" + pageNum, async ct =>
+            {
+                var orders = (await unitOfWork.OrderRepository
+                        .GetOrders(userId, pageNum, pageSize))
+                    .Select(o => o.ToDto(config["url_file"] ?? ""))
+                    .ToList();
+                return orders;
+            },
+            tags: [MemoryCacheKeys.OrdersKey]);
 
 
         return new ObjectResult(orders)
@@ -186,19 +195,27 @@ public class OrderServices(
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        var orders = (await unitOfWork.OrderRepository
-                .GetOrders(pageNum, pageSize))
-            .Select(o => o.ToDto(config["url_file"] ?? ""))
-            .ToList();
+        var orders = await cache.GetOrCreateAsync(MemoryCacheKeys.OrdersKey + "/dashbord" + userId + "/" + pageNum,
+            async ct =>
+            {
+                var orders = (await unitOfWork.OrderRepository
+                        .GetOrders(pageNum, pageSize))
+                    .Select(o => o.ToDto(config["url_file"] ?? ""))
+                    .ToList();
 
-        var orderPages = (int)Math.Ceiling((double)orders.Count / pageSize);
+                var orderPages = (int)Math.Ceiling((double)orders.Count / pageSize);
 
-        var holder = new AdminOrderDto { Orders = orders, pageNum = orderPages };
+                var holder = new AdminOrderDto { Orders = orders, pageNum = orderPages };
+                return orders;
+            },
+            tags: [MemoryCacheKeys.OrdersKey]);
 
-        return new ObjectResult(holder)
+
+        return new ObjectResult(orders)
             { StatusCode = StatusCodes.Status200OK };
     }
 
+   
     public async Task<IActionResult> UpdateOrderStatus(Guid id, int status)
     {
         var order = await unitOfWork.OrderRepository
@@ -230,10 +247,13 @@ public class OrderServices(
 
         await SendNotification(order, status);
 
+        await cache.RemoveByTagAsync(MemoryCacheKeys.OrdersKey);
+
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
     }
 
+  
     public async Task<IActionResult> DeleteOrder(Guid id, Guid userId)
     {
         var order = await unitOfWork.OrderRepository.GetOrder(id, userId);
@@ -252,10 +272,12 @@ public class OrderServices(
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
+        await cache.RemoveByTagAsync(MemoryCacheKeys.OrdersKey);
 
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
     }
+
 
 
     // for delivery 
@@ -270,15 +292,22 @@ public class OrderServices(
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        var orders = (await unitOfWork.OrderRepository
-                .GetOrderBelongToDelivery(deliveryId, pageNum, pageSize))
-            .Select(o => o.ToDto(config["url_file"] ?? ""))
-            .ToList();
+        var orders = await cache.GetOrCreateAsync(MemoryCacheKeys.OrdersKey + "/my" + delivery + "/" + pageNum,
+            async ct =>
+            {
+                var orders = (await unitOfWork.OrderRepository
+                        .GetOrderBelongToDelivery(deliveryId, pageNum, pageSize))
+                    .Select(o => o.ToDto(config["url_file"] ?? ""))
+                    .ToList();
+                return orders;
+            },
+            tags: [MemoryCacheKeys.OrdersKey]);
 
 
         return new ObjectResult(orders) { StatusCode = StatusCodes.Status200OK };
     }
 
+  
     public async Task<IActionResult> GetOrdersNotBelongToDeliveries(Guid deliveryId, int pageNum, int pageSize)
     {
         var delivery = await unitOfWork.DeliveryRepository.GetDelivery(deliveryId);
@@ -289,10 +318,17 @@ public class OrderServices(
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        var orders = (await unitOfWork.OrderRepository
-                .GetOrderNoBelongToAnyDelivery(pageNum, pageSize))
-            .Select(o => o.ToDto(config["url_file"] ?? ""))
-            .ToList();
+        var orders = await cache.GetOrCreateAsync(
+            MemoryCacheKeys.OrdersKey + "/not-belong-to" + delivery + "/" + pageNum,
+            async ct =>
+            {
+                var orders = (await unitOfWork.OrderRepository
+                        .GetOrderNoBelongToAnyDelivery(pageNum, pageSize))
+                    .Select(o => o.ToDto(config["url_file"] ?? ""))
+                    .ToList();
+                return orders;
+            },
+            tags: [MemoryCacheKeys.OrdersKey]);
 
 
         return new ObjectResult(orders)
@@ -355,9 +391,12 @@ public class OrderServices(
 
         await SendNotification(order, status: 2);
 
+        await cache.RemoveByTagAsync(MemoryCacheKeys.OrdersKey);
+
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
     }
+
 
     public async Task<IActionResult> CancelOrderFromDelivery(Guid id, Guid deliveryId)
     {
@@ -395,6 +434,7 @@ public class OrderServices(
 
         await hubContext.Clients.All.SendAsync("createdOrder", order.ToDto(config["url_file"] ?? ""));
 
+        await cache.RemoveByTagAsync(MemoryCacheKeys.OrdersKey);
 
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };

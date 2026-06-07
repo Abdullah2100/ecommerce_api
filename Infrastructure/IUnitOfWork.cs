@@ -27,5 +27,4 @@ public interface IUnitOfWork : IDisposable
 
 
     public Task<int> SaveChanges();
-    public Task DeleteFromCache(string key);
 }

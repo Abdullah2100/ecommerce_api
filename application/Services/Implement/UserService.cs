@@ -6,6 +6,7 @@ using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.util;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace api.application.Services.Implement;
 
@@ -14,7 +15,8 @@ public class UserService(
     IFileServices fileServices,
     IUnitOfWork unitOfWork,
     IAuthenticationService authenticationService,
-    IServiceProvider sp
+    IServiceProvider sp,
+    HybridCache cache
 )
     : IUserServices
 {
@@ -164,13 +166,19 @@ public class UserService(
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        var usersToDto = (await unitOfWork.UserRepository
-                .GetUsers(page, 25))
-            .Select(u => u.ToUserInfoDto(config["url_file"] ?? ""))
-            .ToList();
+        var users = await cache.GetOrCreateAsync(MemoryCacheKeys.UsersKey + "/" + id + "/" + page,
+            async ct =>
+            {
+                var users = (await unitOfWork.UserRepository
+                        .GetUsers(page, 25))
+                    .Select(u => u.ToUserInfoDto(config["url_file"] ?? ""))
+                    .ToList();
+                return users;
+            },
+            tags: [MemoryCacheKeys.UsersKey]);
 
 
-        return new ObjectResult(usersToDto)
+        return new ObjectResult(users)
             { StatusCode = StatusCodes.Status200OK };
     }
 
@@ -230,6 +238,8 @@ public class UserService(
             return new ObjectResult("error while change user Blocking status")
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
+
+        await cache.RemoveByTagAsync(MemoryCacheKeys.UsersKey);
 
 
         return new ObjectResult(null)
@@ -317,6 +327,9 @@ public class UserService(
 
         //var userToDto = user?.ToUserInfoDto(config["url_file"]??"");
 
+        await cache.RemoveByTagAsync(MemoryCacheKeys.UsersKey);
+
+        
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
     }
@@ -364,6 +377,7 @@ public class UserService(
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
+        await cache.RemoveByTagAsync(MemoryCacheKeys.UsersKey);
 
         return new ObjectResult(address.ToDto()) { StatusCode = StatusCodes.Status201Created };
     }
@@ -427,6 +441,9 @@ public class UserService(
             return new ObjectResult("error while updating address")
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
+        
+        await cache.RemoveByTagAsync(MemoryCacheKeys.UsersKey);
+
 
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
@@ -474,6 +491,8 @@ public class UserService(
             return new ObjectResult("error while delete address")
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
+
+        await cache.RemoveByTagAsync(MemoryCacheKeys.UsersKey);
 
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
@@ -524,7 +543,8 @@ public class UserService(
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-
+        await cache.RemoveByTagAsync(MemoryCacheKeys.UsersKey);
+        
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
     }

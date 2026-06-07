@@ -10,6 +10,6 @@ public interface ISubCategoryServices
 
     Task<IActionResult> DeleteSubCategory(Guid id, Guid storeId);
 
-    Task<IActionResult> GetSubCategories(Guid id, int page, int length);
+    Task<IActionResult> GetSubCategories(Guid storeId, int page, int length);
     Task<IActionResult> GetSubCategoryAll(Guid adminId, int page, int length);
 }

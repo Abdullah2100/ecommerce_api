@@ -6,6 +6,7 @@ using api.Presentation.dto.Response;
 using api.shared.mapper;
 using api.util;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace api.application.Services.Implement;
 
@@ -20,7 +21,8 @@ public class DeliveryServices(
     IUnitOfWork unitOfWork,
     IFileServices fileServices,
     IUserServices userServices,
-    IAuthenticationService authenticationService
+    IAuthenticationService authenticationService,
+    HybridCache cache
 )
     : IDeliveryServices
 {
@@ -83,7 +85,7 @@ public class DeliveryServices(
         CreateDeliveryDto deliveryDto
     )
     {
-        User? user = await unitOfWork.UserRepository
+        var user = await unitOfWork.UserRepository
             .GetUser(userId);
 
 
@@ -149,6 +151,8 @@ public class DeliveryServices(
 
         var deliveryToDot = delivery?.ToDto(config["url_file"] ?? "");
 
+        await cache.RemoveByTagAsync(MemoryCacheKeys.DeliveriesKey);
+       
         return new ObjectResult(deliveryToDot)
             { StatusCode = StatusCodes.Status201Created };
     }
@@ -179,6 +183,8 @@ public class DeliveryServices(
             return new ObjectResult("error while update delivery")
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
+
+        await cache.RemoveByTagAsync(MemoryCacheKeys.DeliveriesKey);
 
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
@@ -249,21 +255,27 @@ public class DeliveryServices(
                 break;
         }
 
+        var deliveriesDto = await cache.GetOrCreateAsync(
+            MemoryCacheKeys.DeliveriesKey + "/belong_to" + belongToId + '/' + pageNumber,
+            async ct =>
+            {
+                var deliveriesDto = (await unitOfWork.DeliveryRepository
+                        .GetDeliveriesByBelongTo(id, pageNumber, pageSize))
+                    ?.Select((de) => de.ToDto(config["url_file"] ?? ""))
+                    .ToList();
 
-        var deliveryDto = (await unitOfWork.DeliveryRepository
-                .GetDeliveriesByBelongTo(id, pageNumber, pageSize))
-            ?.Select((de) => de.ToDto(config["url_file"] ?? ""))
-            .ToList();
+                if (deliveriesDto == null) return null;
+                foreach (var delivery in deliveriesDto)
+                {
+                    delivery.Analyse = await unitOfWork.DeliveryRepository.GetDeliveryAnalys(delivery.Id);
+                }
 
-        if (deliveryDto is null) return new ObjectResult(deliveryDto) { StatusCode = StatusCodes.Status200OK };
-
-        foreach (var delivery in deliveryDto)
-        {
-            delivery.Analyse = await unitOfWork.DeliveryRepository.GetDeliveryAnalys(delivery.Id);
-        }
+                return new List<DeliveryDto>();
+            },
+            tags: [MemoryCacheKeys.DeliveriesKey]);
 
 
-        return new ObjectResult(deliveryDto) { StatusCode = StatusCodes.Status200OK };
+        return new ObjectResult(deliveriesDto) { StatusCode = StatusCodes.Status200OK };
     }
 
 
@@ -330,7 +342,8 @@ public class DeliveryServices(
 
         var result = await unitOfWork.SaveChanges();
 
-
+        await cache.RemoveByTagAsync(MemoryCacheKeys.DeliveriesKey);
+        
         return result < 1
             ? new ObjectResult("Something went wrong") { StatusCode = StatusCodes.Status500InternalServerError }
             : new ObjectResult(null) { StatusCode = StatusCodes.Status204NoContent };

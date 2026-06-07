@@ -5,11 +5,14 @@ using api.Presentation.dto.Request;
 using api.shared.mapper;
 using api.util;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace api.application.Services.Implement;
 
-public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
+public class CurrencyServices(
+    IUnitOfWork unitOfWork,
+    HybridCache cache) : ICurrencyServices
 {
     public async Task<IActionResult> CreateCurrency(Guid adminId, CreateCurrencyDto currencyDto)
     {
@@ -42,6 +45,7 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
         }
 
 
+        await cache.RemoveByTagAsync(MemoryCacheKeys.CurrenciesKey);
         var currencyToDto = currency.ToPaymentDto();
         return new ObjectResult(currencyToDto) { StatusCode = StatusCodes.Status201Created };
     }
@@ -78,6 +82,8 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
+        await cache.RemoveByTagAsync(MemoryCacheKeys.CurrenciesKey);
+
         return new ObjectResult(null) { StatusCode = StatusCodes.Status204NoContent };
     }
 
@@ -108,18 +114,26 @@ public class CurrencyServices(IUnitOfWork unitOfWork) : ICurrencyServices
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
+        await cache.RemoveByTagAsync(MemoryCacheKeys.CurrenciesKey);
 
         return new ObjectResult(null) { StatusCode = StatusCodes.Status204NoContent };
     }
 
     public async Task<IActionResult> GetCurrency(int pageNum, int pageSize)
     {
-        var paymentsDto = (await unitOfWork.CurrencyRepository
-                .GetAll(pageNum, pageSize))
-            .Select(payment => payment.ToPaymentDto()).ToList();
+        var currencies = await cache.GetOrCreateAsync(MemoryCacheKeys.CurrenciesKey + pageNum, async ct =>
+            {
+                var currencies = (await unitOfWork.CurrencyRepository
+                        .GetAll(pageNum, pageSize))
+                    .Select(payment => payment.ToPaymentDto()).ToList();
+                ;
+                return currencies;
+                ;
+            },
+            tags: [MemoryCacheKeys.CurrenciesKey]);
 
 
-        return new ObjectResult(paymentsDto)
+        return new ObjectResult(currencies)
             { StatusCode = StatusCodes.Status200OK };
     }
 }

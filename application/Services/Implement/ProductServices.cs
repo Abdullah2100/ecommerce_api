@@ -5,6 +5,7 @@ using api.Presentation.dto.Request;
 using api.shared.mapper;
 using api.util;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace api.application.Services.Implement;
@@ -12,7 +13,8 @@ namespace api.application.Services.Implement;
 public class ProductServices(
     IConfiguration config,
     IUnitOfWork unitOfWork,
-    IFileServices fileServices
+    IFileServices fileServices,
+    HybridCache cache
 )
     : IProductServices
 {
@@ -30,10 +32,16 @@ public class ProductServices(
         int pageSize
     )
     {
-        var productsDto = (await unitOfWork.ProductRepository
-                .GetProducts(storeId, pageNum, pageSize))
-            .Select((de) => de.ToDto(config["url_file"] ?? ""))
-            .ToList();
+        var productsDto = await cache.GetOrCreateAsync(MemoryCacheKeys.ProductsKey + "/store" + storeId + '/' + pageNum,
+            async ct =>
+            {
+                var products = (await unitOfWork.ProductRepository
+                        .GetProducts(storeId, pageNum, pageSize))
+                    .Select((de) => de.ToDto(config["url_file"] ?? ""))
+                    .ToList();
+                return products;
+            },
+            tags: [MemoryCacheKeys.ProductsKey]);
 
 
         return new ObjectResult(productsDto)
@@ -48,10 +56,16 @@ public class ProductServices(
         int pageSize
     )
     {
-        var productsDto = (await unitOfWork.ProductRepository
-                .GetProductsByCategory(categryId, pageNum, pageSize))
-            .Select((de) => de.ToDto(config["url_file"] ?? ""))
-            .ToList();
+        var productsDto = await cache.GetOrCreateAsync(MemoryCacheKeys.ProductsKey + "/category" + categryId + '/' + pageNum,
+            async ct =>
+            {
+                var products = (await unitOfWork.ProductRepository
+                        .GetProductsByCategory(categryId, pageNum, pageSize))
+                    .Select((de) => de.ToDto(config["url_file"] ?? ""))
+                    .ToList();
+                return products;
+            },
+            tags: [MemoryCacheKeys.ProductsKey]);
 
 
         return new ObjectResult(productsDto)
@@ -67,10 +81,17 @@ public class ProductServices(
         int pageSize
     )
     {
-        var productsDto = (await unitOfWork.ProductRepository
-                .GetProducts(storeId, subCategoryId, pageNum, pageSize))
-            .Select((de) => de.ToDto(config["url_file"] ?? ""))
-            .ToList();
+        var productsDto = await cache.GetOrCreateAsync(
+            MemoryCacheKeys.ProductsKey + '/' + storeId + '/' + subCategoryId + '/' + pageNum,
+            async ct =>
+            {
+                var products = (await unitOfWork.ProductRepository
+                        .GetProducts(storeId, subCategoryId, pageNum, pageSize))
+                    .Select((de) => de.ToDto(config["url_file"] ?? ""))
+                    .ToList();
+                return products;
+            },
+            tags: [MemoryCacheKeys.ProductsKey]);
 
 
         return new ObjectResult(productsDto)
@@ -84,10 +105,17 @@ public class ProductServices(
         int pageSize
     )
     {
-        var productsDto = (await unitOfWork.ProductRepository
-                .GetProducts(pageNum, pageSize))
-            .Select((de) => de.ToDto(config["url_file"] ?? ""))
-            .ToList();
+        var productsDto = await cache.GetOrCreateAsync(
+            MemoryCacheKeys.ProductsKey + '/' + pageNum,
+            async ct =>
+            {
+                var products = (await unitOfWork.ProductRepository
+                        .GetProducts(pageNum, pageSize))
+                    .Select((de) => de.ToDto(config["url_file"] ?? ""))
+                    .ToList();
+                return products;
+            },
+            tags: [MemoryCacheKeys.ProductsKey]);
 
 
         return new ObjectResult(productsDto)
@@ -96,7 +124,8 @@ public class ProductServices(
         };
     }
 
-    public async Task<IActionResult> GetProductsForAdmin(Guid adminId,
+    public async Task<IActionResult> GetProductsForAdmin(
+        Guid adminId,
         int pageNum,
         int pageSize)
     {
@@ -110,20 +139,26 @@ public class ProductServices(
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
+        var productsDto = await cache.GetOrCreateAsync(
+            MemoryCacheKeys.ProductsKey + '/' + adminId + '/' + pageNum,
+            async ct =>
+            {
+                var products = (await unitOfWork.ProductRepository
+                        .GetProducts(pageNum, pageSize))
+                    .Select((de) => de.ToAdminDto(config["url_file"] ?? ""))
+                    .ToList();
+                return products;
+            },
+            tags: [MemoryCacheKeys.ProductsKey]);
 
-        var productsToDto = (await unitOfWork.ProductRepository
-                .GetProducts(pageNum, pageSize))
-            .Select((de) => de.ToAdminDto(config["url_file"] ?? ""))
-            .ToList();
 
-
-        return new ObjectResult(productsToDto)
+        return new ObjectResult(productsDto)
             { StatusCode = StatusCodes.Status200OK };
     }
 
     public async Task<IActionResult> GetProductsPagesForAdmin(Guid adminId, int length = 25)
     {
-        User? admin = await unitOfWork.UserRepository.GetUser(adminId);
+        var admin = await unitOfWork.UserRepository.GetUser(adminId);
 
         var validationResult = admin.IsValidateFunc(false);
 
@@ -259,6 +294,8 @@ public class ProductServices(
         product = await unitOfWork.ProductRepository.GetProduct(product.Id);
 
         var productToDto = product?.ToDto(config["url_file"] ?? "");
+
+        await cache.RemoveByTagAsync(MemoryCacheKeys.ProductsKey);
 
         return new ObjectResult(productToDto)
             { StatusCode = StatusCodes.Status201Created };
@@ -422,6 +459,8 @@ public class ProductServices(
 
         var productToDto = product?.ToDto(config["url_file"] ?? "");
 
+        await cache.RemoveByTagAsync(MemoryCacheKeys.ProductsKey);
+
         return new ObjectResult(productToDto)
             { StatusCode = StatusCodes.Status200OK };
     }
@@ -466,6 +505,8 @@ public class ProductServices(
 
         if (product?.Thumbnail is not null)
             fileServices.DeleteFile(product.Thumbnail);
+
+        await cache.RemoveByTagAsync(MemoryCacheKeys.ProductsKey);
 
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };

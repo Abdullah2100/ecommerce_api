@@ -5,13 +5,15 @@ using api.Presentation.dto.Request;
 using api.shared.mapper;
 using api.util;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace api.application.Services.Implement;
 
 public class PaymentTypeServices(
     IUnitOfWork unitOfWork,
     IFileServices fileServices,
-    IConfiguration config
+    IConfiguration config ,
+    HybridCache cache
 ) : IPaymentTypeServices
 {
     public async Task<IActionResult> Create(CreatePaymentTypeDto paymentTypeDto, Guid adminId)
@@ -50,6 +52,8 @@ public class PaymentTypeServices(
         }
 
         var paymentDto = paymentType.ToDto(config["url_file"] ?? "");
+
+        await cache.RemoveByTagAsync(MemoryCacheKeys.PaymentTypesKey);
 
         return new ObjectResult(paymentDto)
             { StatusCode = StatusCodes.Status201Created };
@@ -103,6 +107,8 @@ public class PaymentTypeServices(
         }
 
         var paymentDto = paymentType.ToDto(config["url_file"] ?? "");
+        
+        await cache.RemoveByTagAsync(MemoryCacheKeys.PaymentTypesKey);
 
         return new ObjectResult(paymentDto)
             { StatusCode = StatusCodes.Status200OK };
@@ -110,10 +116,17 @@ public class PaymentTypeServices(
 
     public async Task<IActionResult> GetPaymentTypes(int pageNum, int pageSie = 25)
     {
-        var paymentTypes = await unitOfWork.PaymentTypeRepository.GetPaymentTypes(pageNum, pageSie);
+        var paymentTypes = await cache.GetOrCreateAsync(
+            MemoryCacheKeys.PaymentTypesKey + '/' + pageNum,
+            async ct =>
+            {
+                var paymentTypes =  (await unitOfWork.PaymentTypeRepository.GetPaymentTypes(pageNum, pageSie))
+                    .Select(s => s.ToDto(config["url_file"] ?? ""));
+                return paymentTypes;
+            },
+            tags: [MemoryCacheKeys.PaymentTypesKey]);
 
-        var paymentTypesToDto = paymentTypes.Select(s => s.ToDto(config["url_file"] ?? "")).ToList();
-        return new ObjectResult(paymentTypesToDto)
+        return new ObjectResult(paymentTypes)
             { StatusCode = StatusCodes.Status200OK };
     }
 }

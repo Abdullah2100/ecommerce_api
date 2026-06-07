@@ -1,6 +1,5 @@
 using System.Text;
 using api.application;
-using api.application.Services;
 using api.application.Services.Implement;
 using api.application.Services.Interface;
 using api.application.UnitOfWork;
@@ -11,9 +10,9 @@ using api.Settings;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Sats.PostgreSqlDistributedCache;
 
 namespace api;
 
@@ -166,14 +165,20 @@ public static class DependencyInjection
             return services;
         }
 
-        public IServiceCollection AddPostgresCaching(IConfiguration config)
+        public IServiceCollection AddCaching(IConfiguration config)
         {
-            services.AddPostgresDistributedCache(options =>
+            services.AddStackExchangeRedisCache(options =>
             {
-                options.ConnectionString = config?.GetConnectionString("Postgres") ?? "";
-                options.SchemaName = "public"; // Optional: defaults to "public"
-                options.TableName = "Cache";
-                options.ExpiredItemsDeletionInterval = TimeSpan.FromMinutes(5);
+                options.Configuration = config.GetConnectionString("redis");
+                options.InstanceName = "s1";
+            });
+            services.AddHybridCache(options =>
+            {
+                options.DefaultEntryOptions = new HybridCacheEntryOptions
+                {
+                    Expiration = TimeSpan.FromMinutes(10),
+                    LocalCacheExpiration = TimeSpan.FromMinutes(30),
+                };
             });
             return services;
         }

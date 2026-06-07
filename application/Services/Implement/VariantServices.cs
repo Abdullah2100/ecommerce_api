@@ -7,13 +7,14 @@ using api.Presentation.dto.Request;
 using api.shared.mapper;
 using api.util;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Hybrid;
 using Sats.PostgresDistributedCache;
 
 namespace api.application.Services.Implement;
 
 public class VariantServices(
     IUnitOfWork unitOfWork,
-    IPostgreSqlDistributedCache memoryCache)
+    HybridCache memoryCache)
     : IVariantServices
 {
     public async Task<IActionResult> CreateVariant(
@@ -55,7 +56,7 @@ public class VariantServices(
 
         var variantToDto = variant?.ToDto();
 
-        await unitOfWork.DeleteFromCache(MemoryCachKeys.VariantsKey);
+        await memoryCache.RemoveByTagAsync(MemoryCacheKeys.VariantsKey);
 
         return new ObjectResult(variantToDto)
             { StatusCode = StatusCodes.Status201Created };
@@ -108,7 +109,7 @@ public class VariantServices(
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        await unitOfWork.DeleteFromCache(MemoryCachKeys.VariantsKey);
+        await memoryCache.RemoveByTagAsync(MemoryCacheKeys.VariantsKey);
 
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
@@ -146,7 +147,7 @@ public class VariantServices(
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        await unitOfWork.DeleteFromCache(MemoryCachKeys.VariantsKey);
+        await memoryCache.RemoveByTagAsync(MemoryCacheKeys.VariantsKey);
 
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
@@ -175,27 +176,19 @@ public class VariantServices(
 
     public async Task<IActionResult> GetVariants(int page, int pageSize)
     {
-        var variantsJson = await memoryCache.GetStringAsync(MemoryCachKeys.VariantsKey + pageSize);
+        var variants = await memoryCache.GetOrCreateAsync(MemoryCacheKeys.VariantsKey + page,
+            async dt =>
+            {
+                var variants = (await unitOfWork.VariantRepository
+                        .GetVarients(page, pageSize))
+                    .Select(va => va.ToDto()).ToList();
 
-        if (variantsJson == null)
-        {
-            var variants = (await unitOfWork.VariantRepository
-                    .GetVarients(page, pageSize))
-                .Select(va => va.ToDto()).ToList();
-            
+                return variants;
+            },
+            tags: [MemoryCacheKeys.VariantsKey]);
 
-            var resultJson = JsonSerializer.Serialize(variants);
-            
-            await memoryCache.SetStringAsync(MemoryCachKeys.VariantsKey, resultJson,
-                expiration: TimeSpan.FromMinutes(5));
-            
-            return new ObjectResult(variants)
-                { StatusCode = StatusCodes.Status200OK };
-        }
 
-        var variantsCache = JsonSerializer.Deserialize<List<VariantDto>>(variantsJson);
-
-        return new ObjectResult(variantsCache)
+        return new ObjectResult(variants)
             { StatusCode = StatusCodes.Status200OK };
     }
 }
