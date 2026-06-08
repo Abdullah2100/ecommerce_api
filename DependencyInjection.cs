@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using api.application;
 using api.application.Services.Implement;
 using api.application.Services.Interface;
@@ -9,6 +10,7 @@ using api.OpenApi.Transformers;
 using api.Settings;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Options;
@@ -182,5 +184,33 @@ public static class DependencyInjection
             });
             return services;
         }
+        public IServiceCollection AddRateLimit()
+        {
+            services.AddRateLimiter(option =>
+            {
+            
+                option.AddPolicy("userAccessLimit", httpContext =>
+                    RateLimitPartition.GetSlidingWindowLimiter(
+                        partitionKey:httpContext.User.Identity?.Name??"anonymous",
+                        factory:_=> new SlidingWindowRateLimiterOptions()
+                        {
+                            Window = TimeSpan.FromSeconds(5),
+                            PermitLimit = 20,
+                            AutoReplenishment = true,
+                        }
+                        )
+                    );
+                option.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 50,
+                            Window = TimeSpan.FromMinutes(1)
+                        }));
+                
+            });
+            return services;
+        } 
     }
 }

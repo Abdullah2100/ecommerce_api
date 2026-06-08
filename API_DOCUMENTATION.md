@@ -1,5 +1,10 @@
 # E-Commerce API Documentation
 
+````markdown
+# E-Commerce API Documentation
+
+> Note: This file contains a static summary of key endpoints. The live Swagger UI (available at `/swagger` when the app is running) is the authoritative, up-to-date source for request/response schemas and examples.
+
 ## Table of Contents
 1. [Authentication](#authentication)
 2. [Users](#users)
