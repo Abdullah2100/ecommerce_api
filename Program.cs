@@ -96,11 +96,11 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseHttpsRedirection();
-
+var imagePath = Path.Combine(builder.Environment.ContentRootPath,"images");
+Directory.CreateDirectory(imagePath);
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(builder.Environment.ContentRootPath, "images")),
+    FileProvider = new PhysicalFileProvider(imagePath),
     RequestPath = "/StaticFiles"
 });
 app.UseRouting();
@@ -108,7 +108,8 @@ app.UseCors(corsName);
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
-app.MapControllers().RequireRateLimiting("userAccessLimit");
+app.MapControllers()
+.RequireRateLimiting("userAccessLimit");
 app.MapHub<BannerHub>("/bannerHub");
 app.MapHub<OrderHub>("/orderHub");
 app.MapHub<OrderItemHub>("/orderItemHub");

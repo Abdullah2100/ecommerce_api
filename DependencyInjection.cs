@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using api.application;
 using api.application.Services.Implement;
@@ -136,7 +137,11 @@ public static class DependencyInjection
         {
             services.AddControllers(option =>
                 option.Filters.Add(new CustomResultFilter())
-            );
+            ).AddJsonOptions(option=>
+            {
+                option.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
+                option.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
             return services;
         }
 

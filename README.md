@@ -60,6 +60,24 @@ dotnet restore
 dotnet build
 ```
 
+## Dockerization
+
+- **Build image:** `docker build -t ecommerce_api -f Dockerfile .`
+- **Run with Docker Compose:** `docker compose up --build`
+
+Troubleshooting:
+- If you see an error like:
+
+  "Install the [10.0.0] .NET SDK or update [/src/global.json] to match an installed SDK"
+
+  it means the SDK version requested by `global.json` (here: .NET 10) does not match the SDK available inside the build image (for example `9.0.315`). You can fix this by:
+  - Using a base image that contains the required SDK (example: `mcr.microsoft.com/dotnet/sdk:10.0`), or
+  - Updating `global.json` to match the SDK available in the image, or
+  - Installing the required SDK in your Dockerfile image before `dotnet restore`.
+
+Notes:
+- This repository targets .NET 10 per `global.json`. Make sure the Docker build's SDK stage uses a .NET 10 SDK image so `dotnet restore` and `dotnet publish` succeed.
+
 2. Configure settings
 
 Copy and edit `appsettings.Development.json` (or set environment variables) to configure:
