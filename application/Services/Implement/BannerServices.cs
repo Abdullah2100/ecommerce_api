@@ -16,7 +16,8 @@ public class BannerServices(
     IHubContext<BannerHub> hubContext,
     IUnitOfWork unitOfWork,
     IFileServices fileServices,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<BannerServices> logger)
     : IBannerServices
 {
     public async Task<IActionResult> CreateBanner(
@@ -24,6 +25,7 @@ public class BannerServices(
         CreateBannerDto bannerDto
     )
     {
+        logger.LogInformation("Start calling create banner function");
         var user = await unitOfWork.UserRepository
             .GetUser(userId);
 
@@ -31,6 +33,8 @@ public class BannerServices(
 
         if (validation is not null)
         {
+            logger.LogInformation("validation error at  create banner function by userId {userId}", userId);
+
             return new ObjectResult(validation.Item1) { StatusCode = validation.Item2 };
         }
 
@@ -40,6 +44,9 @@ public class BannerServices(
 
         if (storeBannerCount >= 20 && user?.IsUser == true)
         {
+            logger.LogError(
+                "error at create banner function from {userId} and his store already had active {bannerNumber}", userId,
+                storeBannerCount);
             return new ObjectResult("store can only have 20") { StatusCode = 404 };
         }
 
@@ -50,6 +57,8 @@ public class BannerServices(
 
         if (image is null)
         {
+            logger.LogError("error at create banner function from saved image to local and getting the url of it");
+
             return new ObjectResult("error while saving banner  image") { StatusCode = 500 };
         }
 
@@ -67,6 +76,8 @@ public class BannerServices(
 
         if (result == 0)
         {
+            logger.LogError("could not  create banner function  error from saved ef function");
+
             fileServices.DeleteFile(image);
 
             return new ObjectResult("error while adding new banner") { StatusCode = 500 };
@@ -78,11 +89,18 @@ public class BannerServices(
         await cache.RemoveByTagAsync(MemoryCacheKeys.BannersKey);
 
         var bannerToDto = banner.ToDto(config["url_file"] ?? "");
+
+
+        logger.LogInformation("end calling create banner function");
+
+
         return new ObjectResult(bannerToDto) { StatusCode = 201 };
     }
 
     public async Task<IActionResult> DeleteBanner(Guid id, Guid userId)
     {
+        logger.LogInformation("start calling delete banner function");
+
         var user = await unitOfWork.UserRepository
             .GetUser(userId);
 
@@ -99,11 +117,16 @@ public class BannerServices(
 
         if (banner is null)
         {
+            logger.LogError("bannerId {bannerId} is not exists from delete banner function", id);
+
             return new ObjectResult("banner  not found") { StatusCode = 404 };
         }
 
         if (banner.StoreId != user!.Store!.Id)
         {
+            logger.LogError("some one try to delete banner not belong to him with {userId} from delete banner function",
+                user.Id);
+
             return new ObjectResult("only store owner can delete banner") { StatusCode = 403 };
         }
 
@@ -112,6 +135,8 @@ public class BannerServices(
 
         if (result == 0)
         {
+            logger.LogError("could not delete banner from ef at from delete banner function");
+
             return new ObjectResult("error while deleting banner") { StatusCode = 500 };
         }
 
@@ -121,6 +146,7 @@ public class BannerServices(
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.BannersKey);
 
+        logger.LogInformation("end calling delete banner function");
 
         return new ObjectResult(null) { StatusCode = 204 };
     }
@@ -130,11 +156,13 @@ public class BannerServices(
         int pageNumber,
         int pageSize)
     {
+        logger.LogInformation("start calling get banners by adminId function");
+
         var user = await unitOfWork.UserRepository
             .GetUser(adminId);
 
         var validation = user.IsValidateFunc();
-        
+
         if (validation is not null)
         {
             return new ObjectResult(validation.Item1) { StatusCode = validation.Item2 };
@@ -152,6 +180,8 @@ public class BannerServices(
             },
             tags: [MemoryCacheKeys.BannersKey]);
 
+        logger.LogInformation("end calling get banners by adminId function");
+
         return new ObjectResult(banners) { StatusCode = 200 };
     }
 
@@ -161,10 +191,14 @@ public class BannerServices(
         int pageSize
     )
     {
+        logger.LogInformation("start calling get banners by userId function");
+
         var store = await unitOfWork.StoreRepository.GetStoreByUserId(userId);
 
         if (store is null)
         {
+            logger.LogError("not store found for {userId} banners by userId function", userId);
+
             return new ObjectResult("store  not found") { StatusCode = 404 };
         }
 
@@ -180,13 +214,17 @@ public class BannerServices(
             tags: [MemoryCacheKeys.BannersKey]);
 
 
+        logger.LogInformation("end calling get banners by userId function");
+
         return new ObjectResult(banners) { StatusCode = 200 };
     }
 
     public async Task<IActionResult> GetBanners(
         int randomLenght
     )
-    { 
+    {
+        logger.LogInformation("start calling get banners random function");
+
         var banners = await cache.GetOrCreateAsync(MemoryCacheKeys.BannersKey + "/" + randomLenght,
             async ct =>
             {
@@ -198,8 +236,8 @@ public class BannerServices(
             },
             tags: [MemoryCacheKeys.BannersKey]);
 
+        logger.LogInformation("end calling get banners random function");
 
         return new ObjectResult(banners) { StatusCode = 200 };
     }
-
 }

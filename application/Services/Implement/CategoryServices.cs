@@ -18,22 +18,31 @@ public class CategoryServices(
     IConfiguration config,
     IUnitOfWork unitOfWork,
     IFileServices fileService,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<CategoryServices> logger)
     : ICategoryServices
 {
     public async Task<IActionResult> CreateCategory(CreateCategoryDto categoryDto, Guid adminId)
     {
+        logger.LogInformation("start calling create category");
+
         var user = await unitOfWork.UserRepository
             .GetUser(adminId);
 
         var validationResult = user.IsValidateFunc();
         if (validationResult is not null)
         {
+            logger.LogInformation(
+                "not valid user {userId} trying to crate  {categoryName} with validation error {error} from  create category",
+                adminId,
+                categoryDto.Name ?? "", validationResult.Item1 ?? "");
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
         if (await unitOfWork.CategoryRepository.IsExist(categoryDto.Name))
         {
+            logger.LogInformation("category is exist {categoryName} from  create category", categoryDto.Name);
+
             return new ObjectResult("there are category with the same name")
                 { StatusCode = StatusCodes.Status409Conflict };
         }
@@ -43,9 +52,12 @@ public class CategoryServices(
                 EnImageType.Category);
 
         if (imagePath is null)
+        {
+            logger.LogInformation("could not save category image to local api from  create category");
 
             return new ObjectResult("there error while saving image to server")
                 { StatusCode = StatusCodes.Status500InternalServerError };
+        }
 
         var categoryId = ClsUtil.GenerateGuid();
 
@@ -62,6 +74,9 @@ public class CategoryServices(
 
         if (result == 0)
         {
+            logger.LogInformation("could not saved category {categoryName} to db for sto from  create category",
+                categoryDto.Name);
+
             fileService.DeleteFile(imagePath);
 
             return new ObjectResult("error while adding category")
@@ -71,12 +86,17 @@ public class CategoryServices(
         await cache.RemoveByTagAsync(MemoryCacheKeys.CategoriesKey);
 
         var categoryToDto = category?.ToDto(config["url_file"] ?? "");
+
+        logger.LogInformation("end calling create category");
+
         return new ObjectResult(categoryToDto)
             { StatusCode = StatusCodes.Status201Created };
     }
 
     public async Task<IActionResult> UpdateCategory(UpdateCategoryDto categoryDto, Guid adminId)
     {
+        logger.LogInformation("start calling update category");
+
         if (categoryDto.IsEmpty())
             return new ObjectResult("no change found")
                 { StatusCode = StatusCodes.Status200OK };
@@ -88,12 +108,19 @@ public class CategoryServices(
         var validationResult = user.IsValidateFunc();
         if (validationResult is not null)
         {
+            logger.LogInformation(
+                "not valid user {userId} trying to update category {categoryName} with validation error {error} from  update category",
+                adminId,
+                categoryDto.Name ?? "", validationResult.Item1 ?? "");
+
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
         if (categoryDto.Name is not null)
             if (await unitOfWork.CategoryRepository.IsExist(categoryDto.Name, categoryDto.Id))
             {
+                logger.LogInformation("category {categoryName} is already exists  from  update category",
+                    categoryDto.Name);
                 return new ObjectResult("there are category with the same name")
                     { StatusCode = StatusCodes.Status409Conflict };
             }
@@ -104,6 +131,7 @@ public class CategoryServices(
 
         if (category is null)
         {
+            logger.LogInformation("not exist category  from  update category");
             return new ObjectResult("category not found") { StatusCode = StatusCodes.Status404NotFound };
         }
 
@@ -128,13 +156,19 @@ public class CategoryServices(
         var result = await unitOfWork.SaveChanges();
 
         if (result != 0)
+        {
+            logger.LogInformation("could not update the category from ef in   update category");
+
             return new ObjectResult(null)
                 { StatusCode = StatusCodes.Status204NoContent };
+        }
 
         if (image != null)
             fileService.DeleteFile(image);
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.CategoriesKey);
+
+        logger.LogInformation("end calling update category");
 
         return new ObjectResult("error while update category")
             { StatusCode = StatusCodes.Status500InternalServerError };
@@ -142,17 +176,24 @@ public class CategoryServices(
 
     public async Task<IActionResult> DeleteCategory(Guid categoryId, Guid adminId)
     {
+        logger.LogInformation("start calling delete category");
+
         var user = await unitOfWork.UserRepository
             .GetUser(adminId);
         var validationResult = user.IsValidateFunc(true);
         if (validationResult is not null)
         {
+            logger.LogInformation(
+                "not valid user {userId} trying to delete category {categoryId} with validation error {error} from  delete category",
+                adminId,
+                categoryId, validationResult.Item1 ?? "");
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
         var category = await unitOfWork.CategoryRepository.GetCategory(categoryId);
         if (category is null)
         {
+            logger.LogInformation("category {categoryId} is not exist at   delete category", categoryId);
             return new ObjectResult("category not found") { StatusCode = StatusCodes.Status404NotFound };
         }
 
@@ -164,11 +205,14 @@ public class CategoryServices(
 
         if (result == 0)
         {
+            logger.LogInformation("could not delete category in ef from delete category");
+
             return new ObjectResult("error while delete category")
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.CategoriesKey);
+        logger.LogInformation("end calling delete category");
 
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
@@ -176,7 +220,9 @@ public class CategoryServices(
 
     public async Task<IActionResult> GetCategories(int pageNumber, int pageSize)
     {
-        var categories = await cache.GetOrCreateAsync(MemoryCacheKeys.CategoriesKey+pageNumber, async ct =>
+        logger.LogInformation("start calling getting  categories");
+
+        var categories = await cache.GetOrCreateAsync(MemoryCacheKeys.CategoriesKey + pageNumber, async ct =>
             {
                 var categories = (await unitOfWork
                         .CategoryRepository
@@ -186,9 +232,9 @@ public class CategoryServices(
                 return categories;
             },
             tags: [MemoryCacheKeys.CategoriesKey]);
-        
+        logger.LogInformation("end calling getting  categories");
+
         return new ObjectResult(categories)
             { StatusCode = StatusCodes.Status200OK };
     }
-    
 }

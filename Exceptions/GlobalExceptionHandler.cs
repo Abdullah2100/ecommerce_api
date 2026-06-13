@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace api.Exceptions;
 
-public class GlobalExceptionHandler(IProblemDetailsService ps) : IExceptionHandler
+public class GlobalExceptionHandler(IProblemDetailsService ps,ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
     public ValueTask<bool> TryHandleAsync(HttpContext httpContext,
         System.Exception exception,
@@ -16,6 +16,9 @@ public class GlobalExceptionHandler(IProblemDetailsService ps) : IExceptionHandl
             _ => StatusCodes.Status500InternalServerError
         };
 
+        var endpoint = httpContext.GetEndpoint().DisplayName;
+        logger.LogCritical("system is not catching this error {errorMessage} from {endPoint}", exception.Message, endpoint);
+         
         return ps.TryWriteAsync(
             new ProblemDetailsContext
             {
