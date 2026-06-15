@@ -14,14 +14,14 @@ public class AnalyseServices(
 {
     public async Task<IActionResult> GetMonthAnalysis(Guid userId)
     {
-        logger.LogInformation("Start calling getMonthAnalysis from dashboard by {userId}", userId);
+        logger.LogInformation("Start calling getMonthAnalysis ");
         var user = await unitOfWork.UserRepository.GetUser(userId);
 
         var validationResult = user.IsValidateFunc();
 
         if (validationResult is not null)
         {
-            logger.LogWarning("validation error at  getMonthAnalysis from userId  {userId}",userId);
+            logger.LogInformation("user not valid {userId} validationError {message}", userId, validationResult.Item2);
 
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
@@ -35,13 +35,13 @@ public class AnalyseServices(
 
         if (result is null)
         {
-            logger.LogError("there is no result from  getMonthAnalysis from dashboard by {userId}",userId);
+            logger.LogError("there is no data to calculate month analyse");
 
             return new ObjectResult("Could not calculate analyzes")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
-        logger.LogInformation("end calling getMonthAnalysis from dashboard by {userId}", userId);
+        logger.LogInformation("end calling getMonthAnalysis");
 
 
         return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
