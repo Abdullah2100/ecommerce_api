@@ -22,15 +22,20 @@ public class DeliveryServices(
     IFileServices fileServices,
     IUserServices userServices,
     IAuthenticationService authenticationService,
-    HybridCache cache
-)
+    HybridCache cache,
+    ILogger<DeliveryServices> logger)
     : IDeliveryServices
 {
     public async Task<IActionResult> Login(LoginDto loginDto)
     {
-        if (string.IsNullOrWhiteSpace(loginDto.DeviceToken))
-            return new ObjectResult("you should login from phone") { StatusCode = StatusCodes.Status403Forbidden };
+        logger.LogInformation("start login delivery");
 
+        if (string.IsNullOrWhiteSpace(loginDto.DeviceToken))
+        {
+            logger.LogWarning("delivery login without device token");
+
+            return new ObjectResult("you should login from phone") { StatusCode = StatusCodes.Status403Forbidden };
+        }
 
         var user = await unitOfWork.UserRepository
             .GetUser(
@@ -42,6 +47,8 @@ public class DeliveryServices(
 
         if (validationResult is not null)
         {
+            logger.LogError("user not valid {userId} validationError {message}", user?.Id, validationResult.Item2);
+
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
@@ -49,12 +56,18 @@ public class DeliveryServices(
 
         if (delivery is null)
         {
+            logger.LogError("user {userId} is not linked to delivery", user.Id);
+
             return new ObjectResult("delivery not found") { StatusCode = StatusCodes.Status404NotFound };
         }
 
 
         if (delivery.IsBlocked)
+        {
+            logger.LogError("delivery {deliveryId} is blocked", delivery.Id);
+
             return new ObjectResult("delivery is blocked") { StatusCode = StatusCodes.Status403Forbidden };
+        }
 
         delivery.DeviceToken = loginDto.DeviceToken;
 
@@ -63,6 +76,8 @@ public class DeliveryServices(
 
         if (result == 0)
         {
+            logger.LogError("error from updating deviceToken for {deliveryId} in db", delivery.Id);
+
             return new ObjectResult("error while adding delivery")
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
@@ -74,6 +89,7 @@ public class DeliveryServices(
             [EnUserType.Delivery]
         );
 
+        logger.LogInformation("end login delivery");
 
         return new ObjectResult(tokenData)
             { StatusCode = StatusCodes.Status200OK };
@@ -85,6 +101,8 @@ public class DeliveryServices(
         CreateDeliveryDto deliveryDto
     )
     {
+        logger.LogInformation("start creating delivery");
+
         var user = await unitOfWork.UserRepository
             .GetUser(userId);
 
@@ -95,12 +113,16 @@ public class DeliveryServices(
 
         if ((admin is not null && user?.IsUser == false) || store != null)
         {
+            logger.LogError("user not valid {userId} validationError {message}", userId, admin?.Item2 ?? store?.Item2);
+
             return new ObjectResult(admin?.Item1 ?? store?.Item1) { StatusCode = admin?.Item2 ?? store?.Item2 };
         }
 
 
         if (await unitOfWork.DeliveryRepository.IsExistByUserId(deliveryDto.UserId))
         {
+            logger.LogError("user {userId} already linked to delivery", userId);
+
             return new ObjectResult("delivery already exists") { StatusCode = StatusCodes.Status409Conflict };
         }
 
@@ -142,6 +164,8 @@ public class DeliveryServices(
         {
             if (thumbnail != null)
                 fileServices.DeleteFile(thumbnail);
+            logger.LogError("error from create delivery in db");
+
             return new ObjectResult("error while adding delivery")
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
@@ -152,23 +176,32 @@ public class DeliveryServices(
         var deliveryToDot = delivery?.ToDto(config["url_file"] ?? "");
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.DeliveriesKey);
-       
+
+        logger.LogInformation("end  create delivery function");
+
         return new ObjectResult(deliveryToDot)
             { StatusCode = StatusCodes.Status201Created };
     }
 
     public async Task<IActionResult> UpdateDeliveryStatus(Guid id, bool status)
     {
+        logger.LogInformation("start update delivery status  function");
+
         var delivery = await unitOfWork.DeliveryRepository
             .GetDelivery(id);
+
         if (delivery is null)
         {
+            logger.LogError("delivery not exist by {userId}", id);
+
             return new ObjectResult("delivery not found")
                 { StatusCode = StatusCodes.Status404NotFound };
         }
 
         if (delivery.IsBlocked)
         {
+            logger.LogError("delivery {deliveryId} is blocked", delivery.Id);
+
             return new ObjectResult("delivery is blocked")
                 { StatusCode = StatusCodes.Status403Forbidden };
         }
@@ -180,11 +213,15 @@ public class DeliveryServices(
 
         if (result == 0)
         {
+            logger.LogError("could not update delivery info in db");
+
             return new ObjectResult("error while update delivery")
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.DeliveriesKey);
+
+        logger.LogInformation("end update delivery status  function");
 
         return new ObjectResult(null)
             { StatusCode = StatusCodes.Status204NoContent };
@@ -193,6 +230,8 @@ public class DeliveryServices(
 
     public async Task<IActionResult> GetDelivery(Guid id)
     {
+        logger.LogInformation("start get delivery by id");
+
         var delivery = await unitOfWork.DeliveryRepository
             .GetDelivery(id);
 
@@ -200,11 +239,14 @@ public class DeliveryServices(
 
         if (validationResult is not null)
         {
+            logger.LogError("user not valid {userId} validationError {message}", id, validationResult.Item2);
+
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
         var deliveryDto = delivery?.ToDto(config["url_file"] ?? "");
         deliveryDto?.Analyse = await unitOfWork.DeliveryRepository.GetDeliveryAnalys(delivery!.Id!);
+        logger.LogInformation("end get delivery by id");
 
         return new ObjectResult(deliveryDto)
         {
@@ -219,6 +261,8 @@ public class DeliveryServices(
         int pageSize
     )
     {
+        logger.LogInformation("start get deliveries by storeId per page");
+
         var user = await unitOfWork.UserRepository
             .GetUser(belongToId);
 
@@ -233,9 +277,11 @@ public class DeliveryServices(
         {
             case EnBelongToType.Store:
             {
-                var validationResult = user.IsValidateFunc(isStore: true);
+                var validationResult = user.IsValidateFunc();
                 if (validationResult is not null)
                 {
+                    logger.LogError("storeId {storeId} {ValidationResult}, ", belongToId, validationResult.Item2);
+
                     return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
                 }
 
@@ -247,6 +293,8 @@ public class DeliveryServices(
                 var validationResult = user.IsValidateFunc();
                 if (validationResult is not null)
                 {
+                    logger.LogError("storeId {storeId} {ValidationResult}, ", belongToId, validationResult.Item2);
+
                     return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
                 }
 
@@ -274,6 +322,7 @@ public class DeliveryServices(
             },
             tags: [MemoryCacheKeys.DeliveriesKey]);
 
+        logger.LogInformation("end get deliveries by storeId per page");
 
         return new ObjectResult(deliveriesDto) { StatusCode = StatusCodes.Status200OK };
     }
@@ -281,6 +330,8 @@ public class DeliveryServices(
 
     public async Task<IActionResult> UpdateDelivery(UpdateDeliveryDto deliveryDto, Guid id)
     {
+        logger.LogInformation("start update delivery info  function");
+
         var delivery = await unitOfWork.DeliveryRepository
             .GetDelivery(id);
 
@@ -288,6 +339,8 @@ public class DeliveryServices(
 
         if (validationResult is not null)
         {
+            logger.LogError("delivery not valid {deliveryId} validationError {message}", id, validationResult.Item2);
+
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
@@ -335,6 +388,7 @@ public class DeliveryServices(
             unitOfWork.DeliveryRepository.Update(delivery!);
         }
 
+        //this shuld be fix by creating override function rather than using the funciton that it used to another case 
         if (userUpdateData.IsUpdateAnyFeild() is true)
         {
             await userServices.UpdateUser(userUpdateData, delivery!.UserId, true);
@@ -343,7 +397,9 @@ public class DeliveryServices(
         var result = await unitOfWork.SaveChanges();
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.DeliveriesKey);
-        
+
+        logger.LogInformation("end update delivery status  function");
+
         return result < 1
             ? new ObjectResult("Something went wrong") { StatusCode = StatusCodes.Status500InternalServerError }
             : new ObjectResult(null) { StatusCode = StatusCodes.Status204NoContent };

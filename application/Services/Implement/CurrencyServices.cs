@@ -106,7 +106,8 @@ public class CurrencyServices(
 
     public async Task<IActionResult> DeleteCurrency(Guid adminId, Guid id)
     {
-        
+        logger.LogInformation("start delete currency");
+
         var admin = await unitOfWork.UserRepository.GetUser(adminId);
 
         var validationResult = admin.IsValidateFunc(true);
@@ -122,6 +123,8 @@ public class CurrencyServices(
 
         if (currency is null)
         {
+            logger.LogError("currency not found with {currencyId}", id);
+
             return new ObjectResult("currency not found") { StatusCode = StatusCodes.Status404NotFound };
         }
 
@@ -130,17 +133,23 @@ public class CurrencyServices(
         var result = await unitOfWork.SaveChanges();
         if (result == 0)
         {
+            logger.LogError("not able to delete {currencyId} from db",id);
+
             return new ObjectResult("Could not Delete Currency")
                 { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.CurrenciesKey);
 
+        logger.LogInformation("delete currency {currencyId}",id);
+
         return new ObjectResult(null) { StatusCode = StatusCodes.Status204NoContent };
     }
 
     public async Task<IActionResult> GetCurrency(int pageNum, int pageSize)
     {
+        logger.LogInformation("start get currency by page ");
+
         var currencies = await cache.GetOrCreateAsync(MemoryCacheKeys.CurrenciesKey + pageNum, async ct =>
             {
                 var currencies = (await unitOfWork.CurrencyRepository
@@ -151,6 +160,8 @@ public class CurrencyServices(
                 ;
             },
             tags: [MemoryCacheKeys.CurrenciesKey]);
+        
+        logger.LogInformation("end get currency by page");
 
 
         return new ObjectResult(currencies)
