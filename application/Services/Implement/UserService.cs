@@ -16,12 +16,15 @@ public class UserService(
     IUnitOfWork unitOfWork,
     IAuthenticationService authenticationService,
     IServiceProvider sp,
-    HybridCache cache
+    HybridCache cache,
+    ILogger<UserService> logger
 )
     : IUserServices
 {
     public async Task<IActionResult> Signup(SignupDto signupDto)
     {
+        logger.LogInformation("start user signup");
+
         var validationResult = ClsValidation
             .ValidateInput(
                 signupDto.Email,
@@ -31,30 +34,38 @@ public class UserService(
 
         if (validationResult != null)
         {
+            logger.LogError("signup validation input error with {errorMesage}", validationResult);
+
             return new ObjectResult(validationResult)
-                { StatusCode = StatusCodes.Status400BadRequest };
+            { StatusCode = StatusCodes.Status400BadRequest };
         }
 
         var isExistByEmail = await unitOfWork.UserRepository.IsExistByEmail(signupDto.Email);
 
         if (isExistByEmail)
         {
+            logger.LogError("email already exist");
+
             return new ObjectResult("email already exist")
-                { StatusCode = StatusCodes.Status409Conflict };
+            { StatusCode = StatusCodes.Status409Conflict };
         }
 
         var isExistByPhone = (await unitOfWork.UserRepository.IsExistByPhone(signupDto.Phone));
 
         if (isExistByPhone)
         {
+            logger.LogError("phone already exist");
+
             return new ObjectResult("phone already exist")
-                { StatusCode = StatusCodes.Status409Conflict };
+            { StatusCode = StatusCodes.Status409Conflict };
         }
 
         if (signupDto.Role == 0 && await unitOfWork.UserRepository.IsExist(false))
         {
+            logger.LogError("you cannot create a user with exist role");
+
             return new ObjectResult("you cannot create a user with exist role")
-                { StatusCode = StatusCodes.Status403Forbidden };
+            { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         var userId = ClsUtil.GenerateGuid();
@@ -77,8 +88,10 @@ public class UserService(
 
         if (result == 0)
         {
+            logger.LogError("there are error in create new user");
+
             return new ObjectResult("there are error in create new user")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
 
@@ -87,13 +100,16 @@ public class UserService(
             email: signupDto.Email,
             [EnUserType.User]);
 
+        logger.LogInformation("end user signup");
 
         return new ObjectResult(tokenData)
-            { StatusCode = StatusCodes.Status200OK };
+        { StatusCode = StatusCodes.Status200OK };
     }
 
     public async Task<IActionResult> Login(LoginDto loginDto)
     {
+        logger.LogInformation("start user login");
+
         var user = await unitOfWork.UserRepository
             .GetUser(loginDto.Username,
                 ClsUtil.HashingText(loginDto.Password)
@@ -102,6 +118,8 @@ public class UserService(
         var validationResult = user.IsValidateFunc(false);
         if (validationResult is not null)
         {
+            logger.LogError("user not valid {userId} validationError {message}", user?.Id, validationResult.Item2);
+
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
@@ -111,9 +129,12 @@ public class UserService(
         var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
-            return new ObjectResult("Error While Login User")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+        {
+            logger.LogError("Error While Login Use");
 
+            return new ObjectResult("Error While Login User")
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
 
         var userRefreshTokenHolder = await unitOfWork.UserRefreshTokenRepository.GetByUserId(user!.Id);
 
@@ -131,24 +152,33 @@ public class UserService(
             [role]
         );
 
+        logger.LogInformation("end user login");
 
         return new ObjectResult(tokenData)
-            { StatusCode = StatusCodes.Status200OK };
+        { StatusCode = StatusCodes.Status200OK };
     }
 
 
     public async Task<IActionResult> GetMe(Guid id)
     {
+        logger.LogInformation("start get user info");
+
         var user = await unitOfWork.UserRepository
             .GetUser(id);
 
         var validationResult = user.IsValidateFunc(false);
         if (validationResult is not null)
         {
+            logger.LogError("user not valid {userId} validationError {message}", user?.Id, validationResult.Item2);
+
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
+
         var userToDto = user!.ToUserInfoDto(config["url_file"] ?? "");
+
+        logger.LogInformation("end get user info");
+
         return new ObjectResult(userToDto) { StatusCode = StatusCodes.Status200OK };
     }
 
@@ -157,12 +187,16 @@ public class UserService(
         int page,
         Guid id)
     {
+        logger.LogInformation("start getting users by page");
+
         var user = await unitOfWork.UserRepository
             .GetUser(id);
 
         var validationResult = user.IsValidateFunc();
         if (validationResult is not null)
         {
+            logger.LogError("user not valid {userId} validationError {message}", user?.Id, validationResult.Item2);
+
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
@@ -177,37 +211,47 @@ public class UserService(
             },
             tags: [MemoryCacheKeys.UsersKey]);
 
+        logger.LogInformation("end getting users by page");
 
         return new ObjectResult(users)
-            { StatusCode = StatusCodes.Status200OK };
+        { StatusCode = StatusCodes.Status200OK };
     }
 
     public async Task<IActionResult> GetUsersPages(Guid id, int pageLenght)
     {
+        logger.LogInformation("start getting users page");
+
         var user = await unitOfWork.UserRepository
             .GetUser(id);
 
         var validationResult = user.IsValidateFunc();
         if (validationResult is not null)
         {
+            logger.LogError("user not valid {userId} validationError {message}", user?.Id, validationResult.Item2);
+
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
         var userPages = await unitOfWork.UserRepository.GetUserCount();
         var pageUserCount = userPages > 0 ? (int)Math.Ceiling((double)userPages / pageLenght) : 0;
 
+        logger.LogInformation("end getting users page");
         return new ObjectResult(pageUserCount)
-            { StatusCode = StatusCodes.Status200OK };
+        { StatusCode = StatusCodes.Status200OK };
     }
 
     public async Task<IActionResult> BlockOrUnBlockUser(Guid id, Guid userId)
     {
+        logger.LogInformation("start chanage user Status ById");
+
         var admin = await unitOfWork.UserRepository
             .GetUser(id);
 
         var validationResult = admin.IsValidateFunc();
         if (validationResult is not null)
         {
+            logger.LogError("user not valid {userId} validationError {message}", userId, validationResult.Item2);
+
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
@@ -218,16 +262,20 @@ public class UserService(
         //this to handle if user that admin want to block is not admin
         if (validationResult is not null)
         {
+            logger.LogError("could not change {userId} status to {statns}", userId, (user?.IsBlocked == true ? "block" : "unblock"));
+
             return new ObjectResult($"unable to {(user?.IsBlocked == true ? "block" : "unblock")}  user")
-                { StatusCode = StatusCodes.Status403Forbidden };
+            { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         user!.IsBlocked = !user.IsBlocked;
 
         if (user is { IsBlocked: true, IsUser: false })
         {
+            logger.LogError("could not blockk admin user");
+
             return new ObjectResult("you could not block admin user ")
-                { StatusCode = StatusCodes.Status403Forbidden };
+            { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         unitOfWork.UserRepository.Update(user);
@@ -235,15 +283,18 @@ public class UserService(
 
         if (result == 0)
         {
+            logger.LogError("error whiel change {userId} status to {statns}", userId, (user?.IsBlocked == true ? "block" : "unblock"));
+
             return new ObjectResult("error while change user Blocking status")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.UsersKey);
 
+        logger.LogInformation("end chanage user Status ById");
 
         return new ObjectResult(null)
-            { StatusCode = StatusCodes.Status204NoContent };
+        { StatusCode = StatusCodes.Status204NoContent };
     }
 
 
@@ -252,10 +303,15 @@ public class UserService(
         Guid id,
         bool isUpdateWillBeTop = false)
     {
-        if (userDto.IsEmpty())
-            return new ObjectResult("no data changes")
-                { StatusCode = StatusCodes.Status400BadRequest };
+        logger.LogInformation("start update user info");
 
+        if (userDto.IsEmpty())
+        {
+            logger.LogError("no user change found");
+
+            return new ObjectResult("no data changes")
+            { StatusCode = StatusCodes.Status400BadRequest };
+        }
 
         var user = await unitOfWork.UserRepository.GetUser(id);
 
@@ -263,6 +319,8 @@ public class UserService(
 
         if (validationResult is not null)
         {
+            logger.LogError("user not valid {userId} validationError {message}", user?.Id, validationResult.Item2);
+
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
@@ -273,6 +331,8 @@ public class UserService(
 
             if (isExistPhone)
             {
+                logger.LogError("phone already exist");
+
                 return new ObjectResult("phone already exist")
                 {
                     StatusCode = StatusCodes.Status409Conflict
@@ -290,6 +350,8 @@ public class UserService(
         {
             if (user?.Password != ClsUtil.HashingText(userDto.Password))
             {
+                logger.LogError("envalid previuse password for {userId}", user?.Id);
+
                 return new ObjectResult("Enter Valid Previous Password")
                 {
                     StatusCode = StatusCodes.Status409Conflict
@@ -314,24 +376,27 @@ public class UserService(
         if (isUpdateWillBeTop)
         {
             return new ObjectResult(null)
-                { StatusCode = StatusCodes.Status204NoContent };
+            { StatusCode = StatusCodes.Status204NoContent };
         }
 
         var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
+            logger.LogError("error while updating user");
+
             return new ObjectResult("error while updating user")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         //var userToDto = user?.ToUserInfoDto(config["url_file"]??"");
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.UsersKey);
 
-        
+        logger.LogInformation("end update user info");
+
         return new ObjectResult(null)
-            { StatusCode = StatusCodes.Status204NoContent };
+        { StatusCode = StatusCodes.Status204NoContent };
     }
 
     public async Task<IActionResult> AddAddressToUser(
@@ -339,6 +404,8 @@ public class UserService(
         Guid id
     )
     {
+        logger.LogInformation("start add new Address To User");
+
         var user = await unitOfWork.UserRepository
             .GetUser(id);
 
@@ -346,6 +413,8 @@ public class UserService(
 
         if (validationResult is not null)
         {
+            logger.LogError("user not valid {userId} validationError {message}", user?.Id, validationResult.Item2);
+
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
@@ -353,6 +422,8 @@ public class UserService(
 
         if (addressCount == 20)
         {
+            logger.LogError("user {userId} hit the limit of 20 address can saved", user?.Id);
+
             return new ObjectResult("maximum 20 addresses reached") { StatusCode = StatusCodes.Status403Forbidden };
         }
 
@@ -373,11 +444,15 @@ public class UserService(
 
         if (result == 0)
         {
+            logger.LogError("error while adding address");
+
             return new ObjectResult("error while adding address")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.UsersKey);
+
+        logger.LogInformation("end add new Address To User");
 
         return new ObjectResult(address.ToDto()) { StatusCode = StatusCodes.Status201Created };
     }
@@ -387,10 +462,14 @@ public class UserService(
         UpdateAddressDto addressDto,
         Guid id)
     {
-        if (addressDto.IsEmpty())
-            return new ObjectResult("nothing to be updated")
-                { StatusCode = StatusCodes.Status400BadRequest };
+        logger.LogInformation("start update user Address");
 
+        if (addressDto.IsEmpty())
+        {
+
+            return new ObjectResult("nothing to be updated")
+            { StatusCode = StatusCodes.Status400BadRequest };
+        }
 
         var user = await unitOfWork.UserRepository
             .GetUser(id);
@@ -410,7 +489,7 @@ public class UserService(
         {
             return new ObjectResult(
                     "when update address you must change both longitude and latitude not one of them only ")
-                { StatusCode = StatusCodes.Status400BadRequest };
+            { StatusCode = StatusCodes.Status400BadRequest };
         }
 
 
@@ -419,13 +498,13 @@ public class UserService(
         if (address is null)
         {
             return new ObjectResult("address not found")
-                { StatusCode = StatusCodes.Status404NotFound };
+            { StatusCode = StatusCodes.Status404NotFound };
         }
 
         if (address.OwnerId != id)
         {
             return new ObjectResult("address not belong to you")
-                { StatusCode = StatusCodes.Status404NotFound };
+            { StatusCode = StatusCodes.Status404NotFound };
         }
 
 
@@ -439,19 +518,20 @@ public class UserService(
         if (result == 0)
         {
             return new ObjectResult("error while updating address")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
-        
+
         await cache.RemoveByTagAsync(MemoryCacheKeys.UsersKey);
 
 
         return new ObjectResult(null)
-            { StatusCode = StatusCodes.Status204NoContent };
+        { StatusCode = StatusCodes.Status204NoContent };
     }
 
 
     public async Task<IActionResult> DeleteUserAddress(Guid addressId, Guid id)
     {
+        logger.LogInformation("start deleting user address");
         var user = await unitOfWork.UserRepository
             .GetUser(id);
 
@@ -468,19 +548,19 @@ public class UserService(
         if (address is null)
         {
             return new ObjectResult("address not found")
-                { StatusCode = StatusCodes.Status404NotFound };
+            { StatusCode = StatusCodes.Status404NotFound };
         }
 
         if (address.OwnerId != id)
         {
             return new ObjectResult("address not belong to you")
-                { StatusCode = StatusCodes.Status404NotFound };
+            { StatusCode = StatusCodes.Status404NotFound };
         }
 
         if (address.IsCurrent)
         {
             return new ObjectResult("could not delete current address")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         unitOfWork.AddressRepository.Delete(addressId);
@@ -489,13 +569,15 @@ public class UserService(
         if (result == 0)
         {
             return new ObjectResult("error while delete address")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.UsersKey);
 
+        logger.LogInformation("end deleting user address");
+
         return new ObjectResult(null)
-            { StatusCode = StatusCodes.Status204NoContent };
+        { StatusCode = StatusCodes.Status204NoContent };
     }
 
 
@@ -516,19 +598,19 @@ public class UserService(
         if (address is null)
         {
             return new ObjectResult("address not found")
-                { StatusCode = StatusCodes.Status404NotFound };
+            { StatusCode = StatusCodes.Status404NotFound };
         }
 
         if (address.OwnerId != id)
         {
             return new ObjectResult("address not belong to you")
-                { StatusCode = StatusCodes.Status404NotFound };
+            { StatusCode = StatusCodes.Status404NotFound };
         }
 
         if (address.IsCurrent)
         {
             return new ObjectResult("address is already current address")
-                { StatusCode = StatusCodes.Status409Conflict };
+            { StatusCode = StatusCodes.Status409Conflict };
         }
 
         unitOfWork.AddressRepository.MakeAddressNotCurrentToId(user!.Id);
@@ -540,13 +622,13 @@ public class UserService(
         if (result == 0)
         {
             return new ObjectResult("error while update current address")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.UsersKey);
-        
+
         return new ObjectResult(null)
-            { StatusCode = StatusCodes.Status204NoContent };
+        { StatusCode = StatusCodes.Status204NoContent };
     }
 
 
@@ -590,7 +672,7 @@ public class UserService(
         if (result == 0)
         {
             return new ObjectResult("error while generate otp")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
 
@@ -600,11 +682,11 @@ public class UserService(
         if (!emailSendResult)
         {
             return new ObjectResult("error while send  otp email")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         return new ObjectResult(null)
-            { StatusCode = StatusCodes.Status204NoContent };
+        { StatusCode = StatusCodes.Status204NoContent };
     }
 
     public async Task<IActionResult> OtpVerification(CreateVerificationDto otp)
@@ -614,7 +696,7 @@ public class UserService(
         if (!isExistUser)
         {
             return new ObjectResult("user not found")
-                { StatusCode = StatusCodes.Status404NotFound };
+            { StatusCode = StatusCodes.Status404NotFound };
         }
 
         var otpResult = await unitOfWork.PasswordRepository.GetOtp(otp.Otp, otp.Email);
@@ -623,7 +705,7 @@ public class UserService(
         if (otpResult is null)
         {
             return new ObjectResult("otp not found")
-                { StatusCode = StatusCodes.Status404NotFound };
+            { StatusCode = StatusCodes.Status404NotFound };
         }
 
         otpResult.IsValidated = true;
@@ -634,12 +716,12 @@ public class UserService(
         if (result == 0)
         {
             return new ObjectResult("error while update otp")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
 
         return new ObjectResult(null)
-            { StatusCode = StatusCodes.Status204NoContent };
+        { StatusCode = StatusCodes.Status204NoContent };
     }
 
     public async Task<IActionResult> RecreatePassword(CreateRecreatePasswordDto otp)
@@ -650,7 +732,7 @@ public class UserService(
         if (!isExistUser)
         {
             return new ObjectResult("user not found")
-                { StatusCode = StatusCodes.Status404NotFound };
+            { StatusCode = StatusCodes.Status404NotFound };
         }
 
         var otpResult = await unitOfWork.PasswordRepository.GetOtp(otp.Otp, otp.Email, true);
@@ -659,7 +741,7 @@ public class UserService(
         if (otpResult is null)
         {
             return new ObjectResult("otp not found")
-                { StatusCode = StatusCodes.Status404NotFound };
+            { StatusCode = StatusCodes.Status404NotFound };
         }
 
         var user = await unitOfWork.UserRepository.GetUser(otp.Email);
@@ -679,7 +761,7 @@ public class UserService(
         if (result == 0)
         {
             return new ObjectResult("error while update user password")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         var userRefreshTokenHolder = await unitOfWork.UserRefreshTokenRepository.GetByUserId(user!.Id);
@@ -700,6 +782,6 @@ public class UserService(
 
 
         return new ObjectResult(tokenData)
-            { StatusCode = StatusCodes.Status200OK };
+        { StatusCode = StatusCodes.Status200OK };
     }
 }

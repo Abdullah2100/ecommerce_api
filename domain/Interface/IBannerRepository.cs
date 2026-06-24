@@ -10,6 +10,7 @@ public interface IBannerRepository : IRepository<Banner>
     Task<List<Banner>> GetBanners(Guid id, int pageNumber, int pageSize);
     Task<List<Banner>> GetBanners(int pageNumber, int pageSize);
     Task<List<Banner>> GetBanners(int randomLenght);
+    Task<List<Banner>> GetNotActiveBanners(int randomLenght);
     Task<int> GetBannerCount();
     Task<int> GetBannerCount(Guid storeId);
 

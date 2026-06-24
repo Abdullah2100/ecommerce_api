@@ -16,7 +16,8 @@ public class OrderItemServices(
     IConfiguration config,
     IHubContext<OrderItemHub> hubContext,
     IUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<OrderItemServices> logger)
     : IOrderItemServices
 {
     public async Task<IActionResult> GetOrderItems(
@@ -24,11 +25,13 @@ public class OrderItemServices(
         int pageNum,
         int pageSize)
     {
+        logger.LogInformation("start getting orderItems page by page by storeId");
         var user = await unitOfWork.UserRepository.GetUser(storeId);
 
         var validationResult = user.IsValidateFunc(isAdmin: false, isStore: true);
         if (validationResult is not null)
         {
+            logger.LogError("user not valid {userId} validationError {message}", user?.Id, validationResult.Item2);
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
@@ -44,7 +47,7 @@ public class OrderItemServices(
             },
             tags: [MemoryCacheKeys.OrderItemsKey]);
 
-
+        logger.LogInformation("end getting orderItems page by page by storeId");
         return new ObjectResult(orderItems)
         { StatusCode = StatusCodes.Status200OK };
     }
@@ -53,13 +56,16 @@ public class OrderItemServices(
         Guid userId,
         UpdateOrderItemStatusDto orderItemsStatusDto)
     {
+        logger.LogInformation("start updating orderItem Status");
         var orderItem = await unitOfWork.OrderItemRepository.GetOrderItem(orderItemsStatusDto.Id);
 
         if (orderItem is null)
         {
+            logger.LogError("orderItem {orderId} not found ", orderItemsStatusDto.Id);
             return new ObjectResult("OrderItem not Found")
             { StatusCode = StatusCodes.Status404NotFound };
-        } ;
+        }
+        ;
 
         orderItem.Status = orderItemsStatusDto.Status == EnOrderItemStatusDto.Excepted
             ? EnOrderItemStatus.Excepted
@@ -73,6 +79,7 @@ public class OrderItemServices(
 
         if (result == 0)
         {
+            logger.LogError("start updating orderItem Status");
             return new ObjectResult("error while update orderItem status")
             { StatusCode = StatusCodes.Status500InternalServerError };
         }
@@ -83,11 +90,13 @@ public class OrderItemServices(
             OrderItemId = orderItem.Id,
             Status = orderItem.Status.ToString()
         };
-        
+        logger.LogInformation(" updating orderItem seccessfuly for {orderItmeId}", orderItem.Id);
+
         await hubContext.Clients.All.SendAsync("orderItemsStatusChange", statusEvent);
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.OrderItemsKey);
 
+        logger.LogInformation("end updating orderItem Status");
         return new ObjectResult(null)
         { StatusCode = StatusCodes.Status204NoContent };
     }

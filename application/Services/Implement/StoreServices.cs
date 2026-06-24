@@ -18,7 +18,7 @@ public class StoreServices(
     IFileServices fileServices,
     IUnitOfWork unitOfWork,
     IHubContext<StoreHub> hubContext,
-    HybridCache cache
+    HybridCache cache 
 )
     : IStoreServices
 {

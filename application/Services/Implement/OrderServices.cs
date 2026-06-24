@@ -17,7 +17,8 @@ public class OrderServices(
     IUnitOfWork unitOfWork,
     IHubContext<OrderHub> hubContext,
     IServiceProvider sp,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<OrderServices> logger)
     : IOrderServices
 {
     private static readonly List<string> OrderStatus = new List<string>
@@ -33,19 +34,25 @@ public class OrderServices(
 
     public async Task<IActionResult> CreateOrder(Guid userId, CreateOrderDto orderDto)
     {
+        logger.LogInformation("start create order");
+
         var user = await unitOfWork.UserRepository.GetUser(userId);
 
         var validationResult = user.IsValidateFunc(isAdmin: false);
 
         if (validationResult is not null)
         {
+            logger.LogError("user not valid {userId} validationError {message}", user?.Id, validationResult.Item2);
+
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
-        if (!(await unitOfWork.OrderRepository.IsValidTotalPrice(orderDto.TotalPrice, orderDto.Items, orderDto.Symbol)))
+        if (!await unitOfWork.OrderRepository.IsValidTotalPrice(orderDto.TotalPrice, orderDto.Items, orderDto.Symbol))
         {
+            logger.LogError("not valid total price  totalPrice {totalPrice } for order   from user {userId}", orderDto.TotalPrice, user?.Id);
+
             return new ObjectResult("order totalPrice is not valid")
-                { StatusCode = StatusCodes.Status409Conflict };
+            { StatusCode = StatusCodes.Status409Conflict };
         }
 
         var paymentType = (await unitOfWork
@@ -55,8 +62,10 @@ public class OrderServices(
 
         if (paymentType is null)
         {
+            logger.LogError("not found paymentType {paymentTypeId}", orderDto.paymentId);
+
             return new ObjectResult("payment type is not exist ")
-                { StatusCode = StatusCodes.Status404NotFound };
+            { StatusCode = StatusCodes.Status404NotFound };
         }
 
 
@@ -67,20 +76,15 @@ public class OrderServices(
             var stripPayment = new PaymentServices(new StripPaymentServices());
             var isPassed = await stripPayment.IsValidatePayment(orderDto.PaymentId ?? "");
             if (!isPassed)
+            {
+                logger.LogError("payment for order was feild from {paymentTypeName}", paymentType?.Name);
+
                 return new ObjectResult("payment  is not successfully")
-                    { StatusCode = StatusCodes.Status404NotFound };
+                { StatusCode = StatusCodes.Status404NotFound };
+            }
         }
 
 
-        //  this for production is used to keep order under 40 order on vps
-        var ordersCount = await unitOfWork.OrderRepository.GetOrders();
-
-        if (ordersCount > 40)
-        {
-            var orders = await unitOfWork.OrderRepository.GetOrders(40);
-            unitOfWork.OrderRepository.Delete(orders.ToList());
-        }
-        //end
 
 
         var id = ClsUtil.GenerateGuid();
@@ -136,8 +140,10 @@ public class OrderServices(
 
         if (result == 0)
         {
+            logger.LogError("could not submit order to db");
+
             return new ObjectResult("error while create order")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         var isSavedDistance = await unitOfWork.OrderRepository.IsSavedDistanceToOrder(order.Id);
@@ -145,15 +151,19 @@ public class OrderServices(
 
         if (!isSavedDistance)
         {
+            logger.LogError("could not submit distanc calculation to order {orderId}", order.Id);
+
             return new ObjectResult("could not calculate  distance distance to user ")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         order = await unitOfWork.OrderRepository.GetOrder(order.Id);
         if (order is null)
         {
+            logger.LogError("could not order by {Id}", order?.Id);
+
             return new ObjectResult("error while create order")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         var dtoOrder = order.ToDto(config["url_file"] ?? "");
@@ -161,13 +171,18 @@ public class OrderServices(
         await SendNotification(order, 1);
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.OrdersKey);
+
+        logger.LogInformation("end create order");
+
         return new ObjectResult(dtoOrder)
-            { StatusCode = StatusCodes.Status201Created };
+        { StatusCode = StatusCodes.Status201Created };
     }
 
 
     public async Task<IActionResult> GetMyOrders(Guid userId, int pageNum, int pageSize)
     {
+        logger.LogInformation("start getting order page by page by userId");
+
         var orders = await cache.GetOrCreateAsync(MemoryCacheKeys.OrdersKey + "/" + userId + "/" + pageNum, async ct =>
             {
                 var orders = (await unitOfWork.OrderRepository
@@ -178,20 +193,25 @@ public class OrderServices(
             },
             tags: [MemoryCacheKeys.OrdersKey]);
 
+        logger.LogInformation("end getting order page by page by userId");
 
         return new ObjectResult(orders)
-            { StatusCode = StatusCodes.Status200OK };
+        { StatusCode = StatusCodes.Status200OK };
     }
 
     //for admin dashboard
     public async Task<IActionResult> GetOrders(Guid userId, int pageNum, int pageSize)
     {
+        logger.LogInformation("start getting order page by page for dashboard");
+
         var delivery = await unitOfWork.UserRepository.GetUser(userId);
 
         var validationResult = delivery.IsValidateFunc();
 
         if (validationResult is not null)
         {
+            logger.LogError("user not valid {userId} validationError {message}", userId, validationResult.Item2);
+
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
@@ -210,21 +230,26 @@ public class OrderServices(
             },
             tags: [MemoryCacheKeys.OrdersKey]);
 
+        logger.LogInformation("end getting order page by page for dashboard");
 
         return new ObjectResult(orders)
-            { StatusCode = StatusCodes.Status200OK };
+        { StatusCode = StatusCodes.Status200OK };
     }
 
-   
+
     public async Task<IActionResult> UpdateOrderStatus(Guid id, int status)
     {
+        logger.LogInformation("start updating order status");
+
         var order = await unitOfWork.OrderRepository
             .GetOrder(id);
 
         if (order is null)
         {
+            logger.LogError("not found order by {orderId}", id);
+
             return new ObjectResult("order not found")
-                { StatusCode = StatusCodes.Status404NotFound };
+            { StatusCode = StatusCodes.Status404NotFound };
         }
 
         order.Status = status;
@@ -234,8 +259,10 @@ public class OrderServices(
 
         if (result == 0)
         {
+            logger.LogError("error while updating  order status  by {orderId} to {status}", id, OrderStatus[status]);
+
             return new ObjectResult("error while update order status")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         await hubContext.Clients.All.SendAsync("orderStatus", new UpdateOrderStatusEventDto
@@ -249,18 +276,24 @@ public class OrderServices(
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.OrdersKey);
 
+        logger.LogInformation("end updating order status");
+
         return new ObjectResult(null)
-            { StatusCode = StatusCodes.Status204NoContent };
+        { StatusCode = StatusCodes.Status204NoContent };
     }
 
-  
+
     public async Task<IActionResult> DeleteOrder(Guid id, Guid userId)
     {
+        logger.LogInformation("start deleting order");
+
         var order = await unitOfWork.OrderRepository.GetOrder(id, userId);
         if (order is null)
         {
+            logger.LogError("not found order by {orderId}", id);
+
             return new ObjectResult("order not found")
-                { StatusCode = StatusCodes.Status404NotFound };
+            { StatusCode = StatusCodes.Status404NotFound };
         }
 
         unitOfWork.OrderRepository.Delete(id);
@@ -268,14 +301,18 @@ public class OrderServices(
 
         if (result == 0)
         {
+            logger.LogError("could not delete order {orderId}", id);
+
             return new ObjectResult("error while delete order")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.OrdersKey);
 
+        logger.LogInformation("end deleting order");
+
         return new ObjectResult(null)
-            { StatusCode = StatusCodes.Status204NoContent };
+        { StatusCode = StatusCodes.Status204NoContent };
     }
 
 
@@ -283,12 +320,16 @@ public class OrderServices(
     // for delivery 
     public async Task<IActionResult> GetOrdersByDeliveryId(Guid deliveryId, int pageNum, int pageSize)
     {
+        logger.LogInformation("start getting orders page by page by deliveryI");
+
         var delivery = await unitOfWork.DeliveryRepository.GetDelivery(deliveryId);
 
         var validationResult = delivery.IsValidated();
 
         if (validationResult is not null)
         {
+            logger.LogError("delivery not valid {deliveryId} validationError {message}", delivery?.Id, validationResult.Item2);
+
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
@@ -303,18 +344,22 @@ public class OrderServices(
             },
             tags: [MemoryCacheKeys.OrdersKey]);
 
+        logger.LogInformation("end getting orders page by page by deliveryI");
 
         return new ObjectResult(orders) { StatusCode = StatusCodes.Status200OK };
     }
 
-  
+
     public async Task<IActionResult> GetOrdersNotBelongToDeliveries(Guid deliveryId, int pageNum, int pageSize)
     {
+        logger.LogInformation("start getting order not belong todeliveryId page by page");
         var delivery = await unitOfWork.DeliveryRepository.GetDelivery(deliveryId);
 
         var validationResult = delivery.IsValidated();
         if (validationResult is not null)
         {
+            logger.LogError("delivery not valid {deliveryId} validationError {message}", deliveryId, validationResult.Item2);
+
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
@@ -330,20 +375,25 @@ public class OrderServices(
             },
             tags: [MemoryCacheKeys.OrdersKey]);
 
+        logger.LogInformation("end getting order not belong todeliveryId page by page");
 
         return new ObjectResult(orders)
-            { StatusCode = StatusCodes.Status200OK };
+        { StatusCode = StatusCodes.Status200OK };
     }
 
 
     public async Task<IActionResult> SubmitOrderToDelivery(Guid id, Guid deliveryId)
     {
+        logger.LogInformation("start submit order to delivery");
+
         var delivery = await unitOfWork.DeliveryRepository.GetDelivery(deliveryId);
 
         var validationResult = delivery.IsValidated();
 
         if (validationResult is not null)
         {
+            logger.LogError("delivery not valid {deliveryId} validationError {message}", deliveryId, validationResult.Item2);
+
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
@@ -352,13 +402,19 @@ public class OrderServices(
 
         if (order == null)
         {
+            logger.LogError("not found order by  {orderId}", id);
+
             return new ObjectResult("Order not Found")
-                { StatusCode = StatusCodes.Status409Conflict };
+            { StatusCode = StatusCodes.Status409Conflict };
         }
 
         if (order.DeliveryId != null)
+        {
+            logger.LogError("order  {orderId} alredy linked to {deliveryId}", id, order.DeliveryId);
+
             return new ObjectResult("Order Delivered By another Delivery")
-                { StatusCode = StatusCodes.Status409Conflict };
+            { StatusCode = StatusCodes.Status409Conflict };
+        }
 
 
         order.DeliveryId = deliveryId;
@@ -371,8 +427,10 @@ public class OrderServices(
 
         if (result < 1)
         {
+            logger.LogError("error while submit order {orderId} to deliveryId {devlieryId}", id, order.DeliveryId);
+
             return new ObjectResult("error while update order")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         var eventHolder = new OrderTookByEvent
@@ -393,18 +451,24 @@ public class OrderServices(
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.OrdersKey);
 
+        logger.LogInformation("end submit order to delivery");
+
         return new ObjectResult(null)
-            { StatusCode = StatusCodes.Status204NoContent };
+        { StatusCode = StatusCodes.Status204NoContent };
     }
 
 
     public async Task<IActionResult> CancelOrderFromDelivery(Guid id, Guid deliveryId)
     {
+        logger.LogInformation("start make order not belong to delivery status");
+
         var delivery = await unitOfWork.DeliveryRepository.GetDelivery(deliveryId);
 
         var validationResult = delivery.IsValidated();
         if (validationResult is not null)
         {
+            logger.LogError("delivery not valid {deliveryId} validationError {message}", deliveryId, validationResult.Item2);
+
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
@@ -412,14 +476,18 @@ public class OrderServices(
 
         if (order is null)
         {
+            logger.LogError("not found order by  {orderId}", id);
+
             return new ObjectResult("order not found ")
-                { StatusCode = StatusCodes.Status404NotFound };
+            { StatusCode = StatusCodes.Status404NotFound };
         }
 
-        if (!(await unitOfWork.OrderRepository.IsCanCancelOrder(id)))
+        if (!await unitOfWork.OrderRepository.IsCanCancelOrder(id))
         {
+            logger.LogError("could not cancel the order {orderId} delivery {deliveryId} already catch some orderItem from Stores ", id, deliveryId);
+
             return new ObjectResult("order can not cancel some order items received from stores by delivery ")
-                { StatusCode = StatusCodes.Status403Forbidden };
+            { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         unitOfWork.OrderRepository.RemoveOrderFromDelivery(id, deliveryId);
@@ -428,20 +496,26 @@ public class OrderServices(
 
         if (result == 0)
         {
+            logger.LogError("error while cancel order {orderId} from deliveryId {devlieryId}", id, order.DeliveryId);
+
             return new ObjectResult("error while remove order from delivery")
-                { StatusCode = StatusCodes.Status500InternalServerError };
+            { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         await hubContext.Clients.All.SendAsync("createdOrder", order.ToDto(config["url_file"] ?? ""));
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.OrdersKey);
 
+        logger.LogInformation("end make order not belong to delivery status");
+
         return new ObjectResult(null)
-            { StatusCode = StatusCodes.Status204NoContent };
+        { StatusCode = StatusCodes.Status204NoContent };
     }
 
     public async Task<IActionResult> GetOrdersStatus(Guid adminId)
     {
+                logger.LogInformation("end make order not belong to delivery status");
+
         var user = await unitOfWork.UserRepository.GetUser(adminId);
         var validationResult = user.IsValidateFunc();
 
@@ -452,7 +526,7 @@ public class OrderServices(
 
 
         return new ObjectResult(OrderStatus)
-            { StatusCode = StatusCodes.Status200OK };
+        { StatusCode = StatusCodes.Status200OK };
     }
 
     private async Task SendNotification(Order order, int status)
@@ -521,21 +595,21 @@ public class OrderServices(
             switch (status)
             {
                 case 0:
-                {
-                    await messageServe.SendingMessage(deliveryMessage, delivery?.DeviceToken ?? "");
-                }
+                    {
+                        await messageServe.SendingMessage(deliveryMessage, delivery?.DeviceToken ?? "");
+                    }
                     break;
 
                 case 1:
-                {
-                    await SendNotificationToDeliveries(deliveryMessage, messageServe);
-                }
+                    {
+                        await SendNotificationToDeliveries(deliveryMessage, messageServe);
+                    }
                     break;
 
                 case 5:
-                {
-                    await messageServe.SendingMessage(deliveryMessage, delivery?.DeviceToken ?? "");
-                }
+                    {
+                        await messageServe.SendingMessage(deliveryMessage, delivery?.DeviceToken ?? "");
+                    }
                     break;
             }
         }

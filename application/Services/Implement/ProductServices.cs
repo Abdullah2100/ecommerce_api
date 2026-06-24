@@ -5,10 +5,11 @@ using api.Presentation.dto.Request;
 using api.shared.mapper;
 using api.util;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Hybrid;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Hybrid; 
 
 namespace api.application.Services.Implement;
+
+
 
 public class ProductServices(
     IConfiguration config,

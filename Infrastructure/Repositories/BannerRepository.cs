@@ -93,4 +93,14 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
             .Take(randomLenght)
             .ToListAsync();
     }
+
+    public async Task<List<Banner>> GetNotActiveBanners(int randomLenght)
+    {
+          return await context.Banner
+            .OrderBy(ba => ba.Id)
+            .Where(ba=>(ba.CreatedAt.Subtract(DateTime.Now).Days)>2)
+            .AsNoTracking()
+            .Take(randomLenght)
+            .ToListAsync();
+    }
 }
