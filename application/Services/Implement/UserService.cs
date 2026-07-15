@@ -583,6 +583,8 @@ public class UserService(
 
     public async Task<IActionResult> UpdateUserCurrentAddress(Guid addressId, Guid id)
     {
+        logger.LogInformation("start update user current address");
+
         var user = await unitOfWork.UserRepository
             .GetUser(id);
 
@@ -590,6 +592,7 @@ public class UserService(
 
         if (validationResult is not null)
         {
+            logger.LogError("user not valid {userId} validationError {status}", user?.Id, validationResult.Item2);
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
@@ -597,18 +600,21 @@ public class UserService(
 
         if (address is null)
         {
+            logger.LogError("address not found for {addressId}", addressId);
             return new ObjectResult("address not found")
             { StatusCode = StatusCodes.Status404NotFound };
         }
 
         if (address.OwnerId != id)
         {
+            logger.LogError("address {addressId} does not belong to user {userId}", addressId, id);
             return new ObjectResult("address not belong to you")
             { StatusCode = StatusCodes.Status404NotFound };
         }
 
         if (address.IsCurrent)
         {
+            logger.LogError("address {addressId} is already current for user {userId}", addressId, id);
             return new ObjectResult("address is already current address")
             { StatusCode = StatusCodes.Status409Conflict };
         }
@@ -621,11 +627,14 @@ public class UserService(
 
         if (result == 0)
         {
+            logger.LogError("error while update current address for {addressId} and user {userId}", addressId, user.Id);
             return new ObjectResult("error while update current address")
             { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.UsersKey);
+
+        logger.LogInformation("end update user current address");
 
         return new ObjectResult(null)
         { StatusCode = StatusCodes.Status204NoContent };
@@ -634,6 +643,8 @@ public class UserService(
 
     public async Task<IActionResult> GenerateOtp(ForgetPasswordDto forgetPasswordDto)
     {
+        logger.LogInformation("start generate otp for {email}", forgetPasswordDto.Email);
+
         var user = await unitOfWork.UserRepository
             .GetUser(forgetPasswordDto.Email);
 
@@ -641,6 +652,7 @@ public class UserService(
 
         if (validationResult is not null)
         {
+            logger.LogError("user not valid for forget password {email} validationError {status}", forgetPasswordDto.Email, validationResult.Item2);
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
@@ -671,6 +683,7 @@ public class UserService(
 
         if (result == 0)
         {
+            logger.LogError("error while generate otp for {email}", forgetPasswordDto.Email);
             return new ObjectResult("error while generate otp")
             { StatusCode = StatusCodes.Status500InternalServerError };
         }
@@ -681,9 +694,12 @@ public class UserService(
 
         if (!emailSendResult)
         {
+            logger.LogError("error while sending otp email for {email}", forgetPasswordDto.Email);
             return new ObjectResult("error while send  otp email")
             { StatusCode = StatusCodes.Status500InternalServerError };
         }
+
+        logger.LogInformation("end generate otp for {email}", forgetPasswordDto.Email);
 
         return new ObjectResult(null)
         { StatusCode = StatusCodes.Status204NoContent };
@@ -691,10 +707,13 @@ public class UserService(
 
     public async Task<IActionResult> OtpVerification(CreateVerificationDto otp)
     {
+        logger.LogInformation("start otp verification for {email}", otp.Email);
+
         var isExistUser = await unitOfWork.UserRepository
             .IsExistByEmail(otp.Email);
         if (!isExistUser)
         {
+            logger.LogError("otp verification failed: user not found {email}", otp.Email);
             return new ObjectResult("user not found")
             { StatusCode = StatusCodes.Status404NotFound };
         }
@@ -704,6 +723,7 @@ public class UserService(
 
         if (otpResult is null)
         {
+            logger.LogError("otp not found for {email}", otp.Email);
             return new ObjectResult("otp not found")
             { StatusCode = StatusCodes.Status404NotFound };
         }
@@ -715,10 +735,12 @@ public class UserService(
 
         if (result == 0)
         {
+            logger.LogError("error while update otp for {email}", otp.Email);
             return new ObjectResult("error while update otp")
             { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
+        logger.LogInformation("end otp verification for {email}", otp.Email);
 
         return new ObjectResult(null)
         { StatusCode = StatusCodes.Status204NoContent };
@@ -726,11 +748,14 @@ public class UserService(
 
     public async Task<IActionResult> RecreatePassword(CreateRecreatePasswordDto otp)
     {
+        logger.LogInformation("start recreate password for {email}", otp.Email);
+
         var isExistUser = await unitOfWork.UserRepository
             .IsExistByEmail(otp.Email);
 
         if (!isExistUser)
         {
+            logger.LogError("recreate password failed: user not found {email}", otp.Email);
             return new ObjectResult("user not found")
             { StatusCode = StatusCodes.Status404NotFound };
         }
@@ -740,6 +765,7 @@ public class UserService(
 
         if (otpResult is null)
         {
+            logger.LogError("recreate password failed: otp not found for {email}", otp.Email);
             return new ObjectResult("otp not found")
             { StatusCode = StatusCodes.Status404NotFound };
         }
@@ -750,6 +776,7 @@ public class UserService(
 
         if (validationResult is not null)
         {
+            logger.LogError("recreate password failed for {email} validationError {status}", otp.Email, validationResult.Item2);
             return new ObjectResult(validationResult.Item1) { StatusCode = validationResult.Item2 };
         }
 
@@ -760,6 +787,7 @@ public class UserService(
 
         if (result == 0)
         {
+            logger.LogError("error while update user password for {email}", otp.Email);
             return new ObjectResult("error while update user password")
             { StatusCode = StatusCodes.Status500InternalServerError };
         }
@@ -780,6 +808,7 @@ public class UserService(
             [role]
         );
 
+        logger.LogInformation("end recreate password for {email}", otp.Email);
 
         return new ObjectResult(tokenData)
         { StatusCode = StatusCodes.Status200OK };
