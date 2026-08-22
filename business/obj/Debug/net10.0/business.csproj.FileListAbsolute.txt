@@ -1,0 +1,15 @@
+/home/abdullah/Desktop/ecommerce_api/business/obj/Debug/net10.0/business.csproj.AssemblyReference.cache
+/home/abdullah/Desktop/ecommerce_api/business/obj/Debug/net10.0/business.GeneratedMSBuildEditorConfig.editorconfig
+/home/abdullah/Desktop/ecommerce_api/business/obj/Debug/net10.0/business.AssemblyInfoInputs.cache
+/home/abdullah/Desktop/ecommerce_api/business/obj/Debug/net10.0/business.AssemblyInfo.cs
+/home/abdullah/Desktop/ecommerce_api/business/obj/Debug/net10.0/business.csproj.CoreCompileInputs.cache
+/home/abdullah/Desktop/ecommerce_api/business/bin/Debug/net10.0/business.deps.json
+/home/abdullah/Desktop/ecommerce_api/business/bin/Debug/net10.0/business.dll
+/home/abdullah/Desktop/ecommerce_api/business/bin/Debug/net10.0/business.pdb
+/home/abdullah/Desktop/ecommerce_api/business/bin/Debug/net10.0/data.dll
+/home/abdullah/Desktop/ecommerce_api/business/bin/Debug/net10.0/data.pdb
+/home/abdullah/Desktop/ecommerce_api/business/obj/Debug/net10.0/business.csproj.Up2Date
+/home/abdullah/Desktop/ecommerce_api/business/obj/Debug/net10.0/business.dll
+/home/abdullah/Desktop/ecommerce_api/business/obj/Debug/net10.0/refint/business.dll
+/home/abdullah/Desktop/ecommerce_api/business/obj/Debug/net10.0/business.pdb
+/home/abdullah/Desktop/ecommerce_api/business/obj/Debug/net10.0/ref/business.dll

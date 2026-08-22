@@ -1,0 +1,14 @@
+/home/abdullah/Desktop/ecommerce_api/data/bin/Debug/net10.0/data.deps.json
+/home/abdullah/Desktop/ecommerce_api/data/bin/Debug/net10.0/data.runtimeconfig.json
+/home/abdullah/Desktop/ecommerce_api/data/bin/Debug/net10.0/data.dll
+/home/abdullah/Desktop/ecommerce_api/data/bin/Debug/net10.0/data.pdb
+/home/abdullah/Desktop/ecommerce_api/data/obj/Debug/net10.0/data.csproj.AssemblyReference.cache
+/home/abdullah/Desktop/ecommerce_api/data/obj/Debug/net10.0/data.GeneratedMSBuildEditorConfig.editorconfig
+/home/abdullah/Desktop/ecommerce_api/data/obj/Debug/net10.0/data.AssemblyInfoInputs.cache
+/home/abdullah/Desktop/ecommerce_api/data/obj/Debug/net10.0/data.AssemblyInfo.cs
+/home/abdullah/Desktop/ecommerce_api/data/obj/Debug/net10.0/data.csproj.CoreCompileInputs.cache
+/home/abdullah/Desktop/ecommerce_api/data/obj/Debug/net10.0/data.dll
+/home/abdullah/Desktop/ecommerce_api/data/obj/Debug/net10.0/refint/data.dll
+/home/abdullah/Desktop/ecommerce_api/data/obj/Debug/net10.0/data.pdb
+/home/abdullah/Desktop/ecommerce_api/data/obj/Debug/net10.0/data.genruntimeconfig.cache
+/home/abdullah/Desktop/ecommerce_api/data/obj/Debug/net10.0/ref/data.dll
