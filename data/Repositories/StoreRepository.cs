@@ -50,7 +50,7 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
             .Address
             .AsNoTracking()
             .Where(ad => ad.OwnerId == store.Id)
-            .ToListAsync();
+            .ToICollectionAsync();
         return store;
     }
 
@@ -70,11 +70,11 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
             .Address
             .AsNoTracking()
             .Where(ad => ad.OwnerId == store.Id)
-            .ToListAsync();
+            .ToICollectionAsync();
         return store;
     }
 
-    public async Task<List<Store>> GetStores(string prefix, int length)
+    public async Task<ICollection<Store>> GetStores(string prefix, int length)
     {
         var stores = await context
             .Stores
@@ -83,7 +83,7 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
             .AsNoTracking()
             .Where(x => x.Name.StartsWith(prefix))
             .Take(length)
-            .ToListAsync();
+            .ToICollectionAsync();
 
         foreach (var store in stores)
         {
@@ -91,16 +91,16 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
                 .Address
                 .AsNoTracking()
                 .Where(ad => ad.OwnerId == store.Id)
-                .ToListAsync();
+                .ToICollectionAsync();
         }
 
         return stores;
     }
 
 
-    public async Task<List<Store>> GetStores(int page, int length)
+    public async Task<ICollection<Store>> GetStores(int page, int length)
     {
-        List<Store> stores = await context
+        ICollection<Store> stores = await context
             .Stores
             .Include(st => st.user)
             .Include(st => st.SubCategories)
@@ -108,9 +108,9 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
             .AsNoTracking()
             .Skip((page - 1) * length)
             .Take(length)
-            .ToListAsync();
+            .ToICollectionAsync();
 
-        if (stores.Count <= 0) return new List<Store>();
+        if (stores.Count <= 0) return new ICollection<Store>();
 
 
         foreach (var store in stores)
@@ -119,7 +119,7 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
                 .Address
                 .AsNoTracking()
                 .Where(ad => ad.OwnerId == store.Id)
-                .ToListAsync();
+                .ToICollectionAsync();
         }
 
         return stores;

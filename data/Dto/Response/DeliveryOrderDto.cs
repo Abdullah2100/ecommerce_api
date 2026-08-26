@@ -15,5 +15,5 @@ public class DeliveryOrderDto
     public String Name { get; set; }
     public String UserPhone { get; set; }
     public int Status { get; set; }
-    public List<DeliveryOrderItemDto> OrderItems { get; set; }
+    public ICollection<DeliveryOrderItemDto> OrderItems { get; set; }
 }

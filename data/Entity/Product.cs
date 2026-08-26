@@ -12,8 +12,8 @@ public class Product : GeneralShredInfo
     public int Price { get; set; }
     public int? Quantity { get; set; } = null;
     public String Symbol { get; set; }
-    public ICollection<ProductVariant>? ProductVariants { get; set; } = null;
-    public ICollection<ProductImage>? ProductImages { get; set; } = null;
-    public SubCategory SubCategory { get; set; }
-    public Store Store { get; set; }
+    public virtual ICollection<ProductVariant> ProductVariants { get; set; } = new List<ProductVariant>();
+    public virtual ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>;
+    public virtual SubCategory SubCategory { get; set; } = null!;
+    public virtual Store Store { get; set; } = null!;
 }

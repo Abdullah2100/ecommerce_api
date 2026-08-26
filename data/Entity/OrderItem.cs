@@ -17,9 +17,9 @@ public class OrderItem : GeneralShredInfo
     public decimal Price { get; set; }
     public int Quantity { get; set; }
     public Guid StoreId { get; set; }
-    public Order Order { get; set; }
-    public Store Store { get; set; }
-    public Product Product { get; set; }
-    public ICollection<OrderProductsVariant>? OrderProductsVariants { get; set; } = null;
-    public EnOrderItemStatus Status { get; set; } = EnOrderItemStatus.InProgress;
+    public virtual Order Order { get; set; } = null!;
+    public virtual Store Store { get; set; }= null!;
+    public virtual Product Product { get; set; }= null!;
+    public virtual ICollection<OrderProductsVariant> OrderProductsVariants { get; set; } = new List<OrderProductsVariant>();
+    public  virtual EnOrderItemStatus Status { get; set; } = EnOrderItemStatus.InProgress;
 }

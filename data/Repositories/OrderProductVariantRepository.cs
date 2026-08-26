@@ -7,7 +7,7 @@ namespace data.Repositories;
 
 public class OrderProductVariantRepository(AppDbContext context) : IOrderProductVariant
 {
-    public void Add(List<OrderProductsVariant> entities)
+    public void Add(ICollection<OrderProductsVariant> entities)
     {
         foreach (var entity in entities)
         {

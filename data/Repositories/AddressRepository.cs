@@ -39,12 +39,12 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
             .FirstOrDefaultAsync(x => x.OwnerId == id);
     }
 
-    public async Task<List<Address>> GetAllAddressByOwnerId(Guid id)
+    public async Task<ICollection<Address>> GetAllAddressByOwnerId(Guid id)
     {
         return await context
             .Address
             .Where(x => x.OwnerId == id)
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
     public void UpdateCurrentLocation(Guid id, Guid ownerId)

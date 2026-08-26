@@ -11,5 +11,5 @@ public class CreateOrderDto
     public required string Symbol { get; set; }
     public Guid PaymentTypeId { get; set; }
     public String? PaymentId { get; set; } = null;
-    [Required] public List<CreateOrderItemDto> Items { get; set; }
+    [Required] public ICollection<CreateOrderItemDto> Items { get; set; }
 }

@@ -15,7 +15,7 @@ public class ProductImageRepository(AppDbContext context) : IProductImageReposit
         if (result != null) context.ProductImages.Remove(result);
     }
 
-    public void DeleteProductImages(List<string> images, Guid id)
+    public void DeleteProductImages(ICollection<string> images, Guid id)
     {
         foreach (var t in images)
         {
@@ -35,13 +35,13 @@ public class ProductImageRepository(AppDbContext context) : IProductImageReposit
         }
     }
 
-    public async Task<List<string>> GetProductImages(Guid id)
+    public async Task<ICollection<string>> GetProductImages(Guid id)
     {
         return await context.ProductImages
             .AsNoTracking()
             .Where(pi => pi.ProductId == id)
             .Select(pi => pi.Path)
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
 

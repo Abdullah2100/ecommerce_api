@@ -10,13 +10,13 @@ public interface IProductRepository : IRepository<Product>
     Task<int?> GetProductPages();
     Task<Product?> GetProductByUser(Guid id, Guid userId);
 
-    Task<IEnumerable<Product>> GetProducts(Guid storeId, Guid subCategoryId, int pageNum, int pageSize);
-    Task<IEnumerable<Product>> GetProducts(Guid storeId, int pageNum, int pageSize);
-    Task<IEnumerable<Product>> GetProducts(int page, int length);
-    Task<IEnumerable<Product>> GetProducts(int randomNumber);
-    Task<IEnumerable<Product>> GetProductsByCategory(Guid categoryId, int pageNum, int pageSize);
+    Task<ICollection<Product>> GetProducts(Guid storeId, Guid subCategoryId, int pageNum, int pageSize);
+    Task<ICollection<Product>> GetProducts(Guid storeId, int pageNum, int pageSize);
+    Task<ICollection<Product>> GetProducts(int page, int length);
+    Task<ICollection<Product>> GetProducts(int randomNumber);
+    Task<ICollection<Product>> GetProductsByCategory(Guid categoryId, int pageNum, int pageSize);
 
     Task<bool> IsExist(Guid id);
     void Delete(Guid id);
-    void Delete(List<Product> products);
+    void Delete(ICollection<Product> products);
 }

@@ -12,7 +12,7 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
         return await context.SubCategories.FindAsync(id);
     }
 
-    public async Task<List<SubCategory>> GetSubCategories(
+    public async Task<ICollection<SubCategory>> GetSubCategories(
         Guid storeId,
         int pageNumber,
         int pageSize
@@ -25,10 +25,10 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
             .Skip((pageNumber - 1) * pageSize)
             .OrderDescending()
             .Take(pageSize)
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
-    public async Task<List<SubCategory>> GetSubCategories(
+    public async Task<ICollection<SubCategory>> GetSubCategories(
         int pageNumber,
         int pageSize
     )
@@ -39,7 +39,7 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
             .Skip((pageNumber - 1) * pageSize)
             .OrderDescending()
             .Take(pageSize)
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
     public async Task<int> GetSubCategoriesCount(Guid storeId)
@@ -70,7 +70,7 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
             .AnyAsync(su => su.StoreId == storeId && su.Id == id);
     }
 
-    public async Task<IEnumerable<SubCategory>> getAllAsync(int page, int length)
+    public async Task<ICollection<SubCategory>> getAllAsync(int page, int length)
     {
         return await context
             .SubCategories
@@ -78,7 +78,7 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
             .Skip((page - 1) * length)
             .OrderDescending()
             .Take(length)
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
     public void Add(SubCategory entity)
@@ -94,7 +94,7 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
     public void Delete(Guid id)
     {
         var subcategories = context.SubCategories.Where(su => su.Id == id)
-            .ToList();
+            .ToICollection();
         context.SubCategories.RemoveRange(subcategories);
     }
 }

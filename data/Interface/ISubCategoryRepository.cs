@@ -5,8 +5,8 @@ namespace data.Interface;
 public interface ISubCategoryRepository : IRepository<SubCategory>
 {
     Task<SubCategory?> GetSubCategory(Guid id);
-    Task<List<SubCategory>> GetSubCategories(Guid storeId, int pageNumber, int pageSize);
-    Task<List<SubCategory>> GetSubCategories(int pageNumber, int pageSize);
+    Task<ICollection<SubCategory>> GetSubCategories(Guid storeId, int pageNumber, int pageSize);
+    Task<ICollection<SubCategory>> GetSubCategories(int pageNumber, int pageSize);
     Task<int> GetSubCategoriesCount(Guid storeId);
 
     Task<bool> IsExist(Guid id);

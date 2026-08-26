@@ -6,5 +6,5 @@ public class PaymentType : GeneralShredInfo
     public bool IsHashCheckOperation { get; set; }
     public string Thumbnail { get; set; }
     public Guid UserId { get; set; }
-    public User? User { get; set; } = null;
+    public virtual User? User { get; set; } = null;
 }

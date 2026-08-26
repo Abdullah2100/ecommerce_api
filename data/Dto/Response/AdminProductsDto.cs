@@ -16,6 +16,6 @@ public class AdminProductsDto
     public int Price { get; set; }
     public String Symbol { get; set; }
 
-    public List<List<AdminProductVariantDto>>? ProductVariants { get; set; }
-    public List<string> ProductImages { get; set; }
+    public ICollection<ICollection<AdminProductVariantDto>>? ProductVariants { get; set; }
+    public ICollection<string> ProductImages { get; set; }
 }

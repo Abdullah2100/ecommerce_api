@@ -10,7 +10,7 @@ namespace data.dto.Response
         public string StoreName { get; set; } = "";
         public bool IsActive { get; set; } = true;
         public string Thumbnail { get; set; }
-        public List<AddressDto>? Address { get; set; }
+        public ICollection<AddressDto>? Address { get; set; }
         public Guid? StoreId { get; set; }
     }
 }

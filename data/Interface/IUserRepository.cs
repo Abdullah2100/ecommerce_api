@@ -8,7 +8,7 @@ public interface IUserRepository : IRepository<User>
     Task<User?> GetUser(string email);
     Task<int> GetUserCount();
     Task<User?> GetUserByStoreId(Guid id);
-    Task<List<User>> GetUsers(int page, int length);
+    Task<ICollection<User>> GetUsers(int page, int length);
     Task<User?> GetUser(string username, string password);
 
     Task<bool> IsExist(Guid id);

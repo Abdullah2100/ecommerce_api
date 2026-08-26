@@ -11,7 +11,7 @@ public class Delivery : GeneralShredInfo
     public bool IsBlocked { get; set; } = false;
     public string? Thumbnail { get; set; }
     public Guid? BelongTo { get; set; } = null;
-    public Address? Address { get; set; }
-    public User User { get; set; }
-    public ICollection<Order>? Orders { get; set; }
+    public virtual Address? Address { get; set; } = null;
+    public virtual User User { get; set; } = null!;
+    public virtual ICollection<Order>? Orders { get; set; } = new List<Order>();
 }

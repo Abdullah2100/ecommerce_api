@@ -22,12 +22,12 @@ public class PaymentTypeRepository(AppDbContext context) : IPaymentTypeRepositor
         return await context.PaymentTypes.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    public async Task<List<PaymentType>> GetPaymentTypes(int pageNum, int pageSie)
+    public async Task<ICollection<PaymentType>> GetPaymentTypes(int pageNum, int pageSie)
     {
         return await context.PaymentTypes.AsNoTracking()
             .Take(pageSie)
             .Skip((pageNum - 1) * pageSie)
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
     public async Task<bool> IsExistPaymentType(string name, Guid id)

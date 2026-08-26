@@ -5,7 +5,7 @@ namespace data.Interface;
 public interface IVarientRepository : IRepository<Variant>
 {
     Task<Variant?> GetVarient(Guid id);
-    Task<List<Variant>> GetVarients(int page, int lenght);
+    Task<ICollection<Variant>> GetVarients(int page, int lenght);
     Task<int> GetVarientCount(int variantPerPage);
     Task<bool> IsExist(Guid id);
     Task<bool> IsExist(string name);

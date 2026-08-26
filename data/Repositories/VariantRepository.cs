@@ -7,14 +7,14 @@ namespace api.Infrastructure.Repositories;
 
 public class VariantRepository(AppDbContext context) : IVarientRepository
 {
-    public async Task<IEnumerable<Variant>> GetAllAsync(int page, int length)
+    public async Task<ICollection<Variant>> GetAllAsync(int page, int length)
     {
         return await context
             .Variants
             .AsNoTracking()
             .Skip((page - 1) * length)
             .Take(length)
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
     public void Add(Variant entity)
@@ -32,7 +32,7 @@ public class VariantRepository(AppDbContext context) : IVarientRepository
         var variants = context
             .Variants
             .Where(i => i.Id == id)
-            .ToList();
+            .ToICollection();
         context.Variants.RemoveRange(variants);
     }
 
@@ -43,14 +43,14 @@ public class VariantRepository(AppDbContext context) : IVarientRepository
             .FindAsync(id);
     }
 
-    public async Task<List<Variant>> GetVarients(int page, int length)
+    public async Task<ICollection<Variant>> GetVarients(int page, int length)
     {
         var variants = await context
             .Variants
             .AsNoTracking()
             .Skip((page - 1) * length)
             .Take(length)
-            .ToListAsync();
+            .ToICollectionAsync();
         return variants;
     }
 

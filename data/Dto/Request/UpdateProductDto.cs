@@ -17,8 +17,8 @@ public class UpdateProductDto
     public int? Price { get; set; } = null;
     public String? Symbol { get; set; } = null;
 
-    public List<CreateProductVariantDto>? ProductVariants { get; set; } = null;
-    public List<CreateProductVariantDto>? DeletedProductVariants { get; set; } = null;
-    public List<byte[]>? Images { get; set; } = null;
-    public List<string>? Deletedimages { get; set; } = null;
+    public ICollection<CreateProductVariantDto>? ProductVariants { get; set; } = null;
+    public ICollection<CreateProductVariantDto>? DeletedProductVariants { get; set; } = null;
+    public ICollection<byte[]>? Images { get; set; } = null;
+    public ICollection<string>? Deletedimages { get; set; } = null;
 }

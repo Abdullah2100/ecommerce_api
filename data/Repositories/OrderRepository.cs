@@ -10,7 +10,7 @@ namespace api.Infrastructure.Repositories;
 public class OrderRepository(AppDbContext context)
     : IOrderRepository
 {
-    public async Task<IEnumerable<Order>> GetOrders(
+    public async Task<ICollection<Order>> GetOrders(
         Guid userId,
         int pageNum,
         int pageSize
@@ -26,7 +26,7 @@ public class OrderRepository(AppDbContext context)
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
             .OrderDescending()
-            .ToListAsync();
+            .ToICollectionAsync();
         foreach (var order in orders)
         {
             order.Items = await context.OrderItems
@@ -35,13 +35,13 @@ public class OrderRepository(AppDbContext context)
                 .Include(oi => oi.Store)
                 .AsSplitQuery()
                 .Where(oi => oi.OrderId == order.Id)
-                .ToListAsync();
+                .ToICollectionAsync();
         }
 
         return orders;
     }
 
-    public async Task<IEnumerable<Order>> GetOrders(int page, int length)
+    public async Task<ICollection<Order>> GetOrders(int page, int length)
     {
         var orders = await context.Orders
             .Include(o => o.PaymentType)
@@ -52,7 +52,7 @@ public class OrderRepository(AppDbContext context)
             .Skip((page - 1) * length)
             .Take(length)
             .OrderDescending()
-            .ToListAsync();
+            .ToICollectionAsync();
         foreach (var order in orders)
         {
             order.Items = await context.OrderItems
@@ -82,26 +82,26 @@ public class OrderRepository(AppDbContext context)
                             .Address
                             .AsNoTracking()
                             .Where(ad => ad.OwnerId == it.Store.Id)
-                            .ToList()
+                            .ToICollection()
                     },
                     Product = it.Product,
                     OrderProductsVariants = it.OrderProductsVariants,
                     Status = it.Status
                 })
-                .ToListAsync();
+                .ToICollectionAsync();
         }
 
         return orders;
     }
 
-    public async Task<IEnumerable<Order>> GetOrders(int randomNumber)
+    public async Task<ICollection<Order>> GetOrders(int randomNumber)
     {
         return await context
             .Orders
             .Include(o => o.PaymentType)
             .OrderBy(x => Guid.NewGuid())
             .Take(randomNumber)
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
     public async Task<Order?> GetOrder(Guid id)
@@ -121,7 +121,7 @@ public class OrderRepository(AppDbContext context)
             .AsSplitQuery()
             .AsNoTracking()
             .Where(oi => oi.OrderId == order.Id)
-            .ToListAsync();
+            .ToICollectionAsync();
         return order;
     }
 
@@ -142,7 +142,7 @@ public class OrderRepository(AppDbContext context)
             .Include(oi => oi.Store)
             .AsSplitQuery()
             .Where(oi => oi.OrderId == order.Id)
-            .ToListAsync();
+            .ToICollectionAsync();
 
         return order;
     }
@@ -168,7 +168,7 @@ public class OrderRepository(AppDbContext context)
             );
     }
 
-    public async Task<bool> IsValidTotalPrice(decimal totalPrice, List<CreateOrderItemDto> items, string symbol)
+    public async Task<bool> IsValidTotalPrice(decimal totalPrice, ICollection<CreateOrderItemDto> items, string symbol)
     {
         bool isAmbiguous = false;
         decimal realPrice = 0;
@@ -176,7 +176,7 @@ public class OrderRepository(AppDbContext context)
         foreach (var item in items)
         {
             var product = await context.Products.FindAsync(item.ProductId);
-            var currencies = await context.Currencies.ToListAsync();
+            var currencies = await context.Currencies.ToICollectionAsync();
             int variantPrice = 0;
             //itrate throw every productvarientid
             for (var i = 0; i < item.ProductVariant?.Count; i++)
@@ -222,7 +222,7 @@ public class OrderRepository(AppDbContext context)
         return realPrice == totalPrice;
     }
 
-    public async Task<IEnumerable<Order>> GetOrderNoBelongToAnyDelivery(int pageNum, int pageSize)
+    public async Task<ICollection<Order>> GetOrderNoBelongToAnyDelivery(int pageNum, int pageSize)
     {
         var orders =
             await context.Orders
@@ -235,7 +235,7 @@ public class OrderRepository(AppDbContext context)
                 .Skip((pageNum - 1) * pageSize)
                 .Take(pageSize)
                 .OrderDescending()
-                .ToListAsync();
+                .ToICollectionAsync();
         foreach (var order in orders)
         {
             order.Items = await context.OrderItems
@@ -266,20 +266,20 @@ public class OrderRepository(AppDbContext context)
                             .Address
                             .AsNoTracking()
                             .Where(ad => ad.OwnerId == it.Store.Id)
-                            .ToList()
+                            .ToICollection()
                     },
                     Product = it.Product,
                     OrderProductsVariants = it.OrderProductsVariants,
                     Status = it.Status
                 })
-                .ToListAsync();
+                .ToICollectionAsync();
         }
 
 
         return orders;
     }
 
-    public async Task<IEnumerable<Order>> GetOrderBelongToDelivery(Guid deliveryId, int pageNum, int pageSize)
+    public async Task<ICollection<Order>> GetOrderBelongToDelivery(Guid deliveryId, int pageNum, int pageSize)
     {
         var orders = await context.Orders
             .Include(o => o.PaymentType)
@@ -291,7 +291,7 @@ public class OrderRepository(AppDbContext context)
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
             .OrderDescending()
-            .ToListAsync();
+            .ToICollectionAsync();
         foreach (var order in orders)
         {
             order.Items = await context.OrderItems
@@ -321,13 +321,13 @@ public class OrderRepository(AppDbContext context)
                             .Address
                             .AsNoTracking()
                             .Where(ad => ad.OwnerId == it.Store.Id)
-                            .ToList()
+                            .ToICollection()
                     },
                     Product = it.Product,
                     OrderProductsVariants = it.OrderProductsVariants,
                     Status = it.Status
                 })
-                .ToListAsync();
+                .ToICollectionAsync();
         }
 
         return orders;
@@ -344,7 +344,7 @@ public class OrderRepository(AppDbContext context)
     }
 
     public decimal ConvertPriceFromCurrencyToAnother(decimal price, string productSymbol, string currentSymbol,
-        List<Currency> currencies)
+        ICollection<Currency> currencies)
     {
         var currentCurrency = currencies.First(x => x.Symbol == currentSymbol);
         var productCurrency = currencies.First(x => x.Symbol == productSymbol);
@@ -379,11 +379,11 @@ public class OrderRepository(AppDbContext context)
 
     public void Delete(Guid id)
     {
-        var orders = context.Orders.Where(o => o.Id == id).ToList();
+        var orders = context.Orders.Where(o => o.Id == id).ToICollection();
         context.Orders.RemoveRange(orders);
     }
 
-    public void Delete(List<Order> orders)
+    public void Delete(ICollection<Order> orders)
     {
         context.Orders.RemoveRange(orders);
     }

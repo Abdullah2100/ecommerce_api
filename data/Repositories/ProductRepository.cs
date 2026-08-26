@@ -9,7 +9,7 @@ public class ProductRepository(
     AppDbContext context
 ) : IProductRepository
 {
-    public async Task<IEnumerable<Product>> GetAllAsync(int page, int length)
+    public async Task<ICollection<Product>> GetAllAsync(int page, int length)
     {
         return await context.Products
             .AsNoTracking()
@@ -20,7 +20,7 @@ public class ProductRepository(
             .Skip((page - 1) * length)
             .Take(length)
             .OrderDescending()
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
 
@@ -54,7 +54,7 @@ public class ProductRepository(
         context.Products.Remove(product);
     }
 
-    public void Delete(List<Product> products)
+    public void Delete(ICollection<Product> products)
     {
         context.Products.RemoveRange(products);
     }
@@ -105,7 +105,7 @@ public class ProductRepository(
             .FirstOrDefaultAsync(p => p.Id == id && p.Store.UserId == userId);
     }
 
-    public async Task<IEnumerable<Product>> GetProducts(
+    public async Task<ICollection<Product>> GetProducts(
         Guid storeId,
         Guid subCategoryId,
         int pageNum,
@@ -123,10 +123,10 @@ public class ProductRepository(
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
             .OrderDescending()
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
-    public async Task<IEnumerable<Product>> GetProducts(
+    public async Task<ICollection<Product>> GetProducts(
         Guid storeId,
         int pageNum,
         int pageSize)
@@ -142,10 +142,10 @@ public class ProductRepository(
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
             .OrderDescending()
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
-    public async Task<IEnumerable<Product>> GetProducts(int page, int length)
+    public async Task<ICollection<Product>> GetProducts(int page, int length)
     {
         try
         {
@@ -159,14 +159,14 @@ public class ProductRepository(
                 .Skip((page - 1) * length)
                 .Take(length)
                 .OrderDescending()
-                .ToListAsync();
-            if (products is null) return new List<Product>();
+                .ToICollectionAsync();
+            if (products is null) return new ICollection<Product>();
 
             for (int i = 0; i < products.Count; i++)
             {
                 products[i].ProductVariants = await context.ProductVariants
                     .Include(pr => pr.Variant)
-                    .Where(p => p.ProductId == products[i].Id).ToListAsync();
+                    .Where(p => p.ProductId == products[i].Id).ToICollectionAsync();
             }
 
             return products;
@@ -174,20 +174,20 @@ public class ProductRepository(
         catch (System.Exception ex)
         {
             Console.WriteLine(ex.Message);
-            return new List<Product>();
+            return new ICollection<Product>();
         }
     }
 
-    public async Task<IEnumerable<Product>> GetProducts(int randomNumber)
+    public async Task<ICollection<Product>> GetProducts(int randomNumber)
     {
         return await context
             .Products
             .OrderBy(x => Guid.NewGuid())
             .Take(randomNumber)
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
-    public async Task<IEnumerable<Product>> GetProductsByCategory(
+    public async Task<ICollection<Product>> GetProductsByCategory(
         Guid categoryId,
         int pageNum,
         int pageSize
@@ -204,7 +204,7 @@ public class ProductRepository(
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
             .OrderDescending()
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
 

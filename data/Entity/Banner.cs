@@ -10,5 +10,5 @@ public class Banner : GeneralSharedInfoWithCreatedAt
     [Column(TypeName = "Timestamp")] public DateTime EndAt { get; set; }
 
     public Guid StoreId { get; set; }
-    public Store Store { get; set; }
+    public virtual Store Store { get; set; } = null!;
 }

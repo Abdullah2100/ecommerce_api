@@ -14,6 +14,6 @@ public class CreateProductDto
     public int Price { get; set; }
     public String Symbol { get; set; }
 
-    public List<CreateProductVariantDto>? ProductVariants { get; set; } = null;
-    public List<byte[]> Images { get; set; }
+    public ICollection<CreateProductVariantDto>? ProductVariants { get; set; } = null;
+    public ICollection<byte[]> Images { get; set; }
 }

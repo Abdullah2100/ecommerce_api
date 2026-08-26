@@ -9,5 +9,5 @@ public class CreateOrderItemDto
     [Required] public int Quantity { get; set; } = 1;
     [Required] public Guid ProductId { get; set; }
 
-    public List<Guid>? ProductVariant { get; set; } = null;
+    public ICollection<Guid>? ProductVariant { get; set; } = null;
 }

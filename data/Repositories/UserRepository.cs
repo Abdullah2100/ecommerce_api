@@ -20,7 +20,7 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
             .Address
             .AsNoTracking()
             .Where(u => u.OwnerId == id)
-            .ToListAsync();
+            .ToICollectionAsync();
 
         return user;
     }
@@ -38,7 +38,7 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
             .Address
             .AsNoTracking()
             .Where(u => u.OwnerId == user.Id)
-            .ToListAsync();
+            .ToICollectionAsync();
 
         return user;
     }
@@ -74,14 +74,14 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
             .Address
             .AsNoTracking()
             .Where(u => u.OwnerId == id)
-            .ToListAsync();
+            .ToICollectionAsync();
 
         return user;
     }
 
-    public async Task<List<User>> GetUsers(int page, int length)
+    public async Task<ICollection<User>> GetUsers(int page, int length)
     {
-        List<User>? users = await dbContext
+        ICollection<User>? users = await dbContext
             .Users
             .Include(u => u.Store)
             .AsSplitQuery()
@@ -89,7 +89,7 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
             .Skip((page - 1) * length)
             .OrderDescending()
             .Take(length)
-            .ToListAsync();
+            .ToICollectionAsync();
 
         foreach (var user in users)
         {
@@ -97,7 +97,7 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
                 .Address
                 .AsNoTracking()
                 .Where(u => u.OwnerId == user.Id)
-                .ToListAsync();
+                .ToICollectionAsync();
         }
 
         return users;
@@ -119,7 +119,7 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
                 .Address
                 .AsNoTracking()
                 .Where(u => u.OwnerId == user.Id)
-                .ToListAsync();
+                .ToICollectionAsync();
 
             return user;
         }

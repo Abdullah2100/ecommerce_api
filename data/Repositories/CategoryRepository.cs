@@ -23,7 +23,7 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
         return await context.Categories.FindAsync(id);
     }
 
-    public async Task<List<Category>> GetCategories(int page, int length)
+    public async Task<ICollection<Category>> GetCategories(int page, int length)
     {
         return await context
             .Categories
@@ -31,7 +31,7 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
             .Skip((page - 1) * length)
             .Take(length)
             .OrderDescending()
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
     public async Task<int> GetCategoriesCount()
@@ -39,13 +39,13 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
         return await context.Categories.CountAsync();
     }
 
-    public async Task<List<Category>> GetCategories(int randomNumber)
+    public async Task<ICollection<Category>> GetCategories(int randomNumber)
     {
         return await context
             .Categories
             .OrderBy(x => Guid.NewGuid())
             .Take(randomNumber)
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
     public async Task<bool> IsExist(Guid id)
@@ -79,7 +79,7 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
         context.Categories.Remove(category);
     }
 
-    public void Delete(List<Category> categories)
+    public void Delete(ICollection<Category> categories)
     {
         context.Categories.RemoveRange(categories);
     }

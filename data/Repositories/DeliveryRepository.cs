@@ -75,15 +75,15 @@ public class DeliveryRepository(
         return delivery;
     }
 
-    public async Task<List<Delivery>?> GetDeliveriesByBelongTo(Guid belongToId, int page, int size)
+    public async Task<ICollection<Delivery>?> GetDeliveriesByBelongTo(Guid belongToId, int page, int size)
     {
-        List<Delivery> deliveries = await context
+        ICollection<Delivery> deliveries = await context
             .Deliveries
             .Include(de => de.User)
             .AsNoTracking()
             .Take(page)
             .Skip((page - 1) * size)
-            .ToListAsync();
+            .ToICollectionAsync();
         foreach (var delivery in deliveries)
         {
             delivery.Address = (await context.Address
@@ -94,7 +94,7 @@ public class DeliveryRepository(
         return deliveries;
     }
 
-    public async Task<List<Delivery>?> GetDeliveries(int page, int size)
+    public async Task<ICollection<Delivery>?> GetDeliveries(int page, int size)
     {
         var delivery = (await context
             .Deliveries
@@ -103,7 +103,7 @@ public class DeliveryRepository(
             .AsNoTracking()
             .Take(page)
             .Skip((page - 1) * size)
-            .ToListAsync());
+            .ToICollectionAsync());
 
         return delivery;
     }

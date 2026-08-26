@@ -28,11 +28,11 @@ public class ProductVariantRepository(AppDbContext context) : IProductVariantRep
 
     public void DeleteProductVariantByProductId(Guid productId)
     {
-        var result = context.ProductVariants.Where(p => p.ProductId == productId).ToList();
+        var result = context.ProductVariants.Where(p => p.ProductId == productId).ToICollection();
         context.ProductVariants.RemoveRange(result);
     }
 
-    public void DeleteProductVariant(List<CreateProductVariantDto> productVariants, Guid productId)
+    public void DeleteProductVariant(ICollection<CreateProductVariantDto> productVariants, Guid productId)
     {
         try
         {

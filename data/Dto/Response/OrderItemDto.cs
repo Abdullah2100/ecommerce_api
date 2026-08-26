@@ -7,9 +7,9 @@ namespace data.dto.Response
         public decimal Price { get; set; }
         public int Quantity { get; set; }
         public string OrderStatusName { get; set; } = "";
-        public List<AddressWithTitleDto>? Address { get; set; } = null;
+        public ICollection<AddressWithTitleDto>? Address { get; set; } = null;
         public OrderProductDto? Product { get; set; }
-        public List<OrderVariantDto>? ProductVariant { get; set; } = null;
+        public ICollection<OrderVariantDto>? ProductVariant { get; set; } = null;
         public String OrderItemStatus { get; set; } = "";
     }
 }

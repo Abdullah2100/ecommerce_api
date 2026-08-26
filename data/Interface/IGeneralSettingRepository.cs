@@ -5,7 +5,7 @@ namespace data.Interface;
 public interface IGeneralSettingRepository : IRepository<GeneralSetting>
 {
     Task<GeneralSetting?> GetGeneralSetting(Guid id);
-    Task<IEnumerable<GeneralSetting>> Getgenralsettings(int page, int length);
+    Task<ICollection<GeneralSetting>> Getgenralsettings(int page, int length);
 
     Task<bool> IsExist(Guid id);
     Task<bool> IsExist(string name);

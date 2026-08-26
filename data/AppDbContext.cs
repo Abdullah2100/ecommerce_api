@@ -5,33 +5,33 @@ namespace api.application;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-    public DbSet<User> Users { get; set; }
+    public virtual DbSet<User> Users { get; set; }
 
-    public DbSet<ReseatPasswordOtp> ReseatPasswords { get; set; }
+    public virtual DbSet<ReseatPasswordOtp> ReseatPasswords { get; set; }
 
-    public DbSet<Address> Address { get; set; }
+    public virtual DbSet<Address> Address { get; set; }
 
-    public DbSet<Store> Stores { get; set; }
-    public DbSet<Category> Categories { get; set; }
-    public DbSet<SubCategory> SubCategories { get; set; }
+    public virtual DbSet<Store> Stores { get; set; }
+    public virtual DbSet<Category> Categories { get; set; }
+    public virtual DbSet<SubCategory> SubCategories { get; set; }
 
-    public DbSet<Banner> Banner { get; set; }
+    public virtual DbSet<Banner> Banner { get; set; }
 
-    public DbSet<Variant> Variants { get; set; }
-    public DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
+    public virtual DbSet<Variant> Variants { get; set; }
+    public virtual DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
 
-    public DbSet<Product> Products { get; set; }
-    public DbSet<ProductVariant> ProductVariants { get; set; }
-    public DbSet<ProductImage> ProductImages { get; set; }
-    public DbSet<Order> Orders { get; set; }
-    public DbSet<OrderItem> OrderItems { get; set; }
-    public DbSet<OrderProductsVariant> OrdersProductsVarients { get; set; }
-    public DbSet<GeneralSetting> GeneralSettings { get; set; }
+    public virtual DbSet<Product> Products { get; set; }
+    public virtual DbSet<ProductVariant> ProductVariants { get; set; }
+    public virtual DbSet<ProductImage> ProductImages { get; set; }
+    public virtual DbSet<Order> Orders { get; set; }
+    public virtual DbSet<OrderItem> OrderItems { get; set; }
+    public virtual DbSet<OrderProductsVariant> OrdersProductsVarients { get; set; }
+    public virtual DbSet<GeneralSetting> GeneralSettings { get; set; }
 
-    public DbSet<Delivery> Deliveries { get; set; }
-    public DbSet<Currency> Payments { get; set; }
-    public DbSet<Currency> Currencies { get; set; }
-    public DbSet<PaymentType> PaymentTypes { get; set; }
+    public virtual DbSet<Delivery> Deliveries { get; set; }
+    public virtual DbSet<Currency> Payments { get; set; }
+    public virtual DbSet<Currency> Currencies { get; set; }
+    public virtual DbSet<PaymentType> PaymentTypes { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

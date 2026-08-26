@@ -16,11 +16,11 @@ public class User : GeneralShredInfo
     //1 :normal user ; 0: is admin
     public bool IsUser { get; set; } = true;
     public string? Thumbnail { get; set; }
-    public ICollection<Address>? Addresses { get; set; }
-    public ICollection<Category>? Categories { get; set; }
-    public ICollection<Order>? Orders { get; set; }
-    public ICollection<PaymentType>? PaymentTypes { get; set; } = null; // this for admin adding many payement type
+    public virtual ICollection<Address> Addresses { get; set; } = new List<Address>();
+    public virtual ICollection<Category> Categories { get; set; } = new List<Category>();
+    public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+    public virtual ICollection<PaymentType> PaymentTypes { get; set; } = new List<PaymentType>(0); // this for admin adding many payement type
 
-    public Store? Store { get; set; } = null;
-    public Delivery? Delivery { get; set; } = null;
+    public virtual Store? Store { get; set; } = null;
+    public virtual Delivery? Delivery { get; set; } = null;
 }

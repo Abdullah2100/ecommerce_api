@@ -6,7 +6,7 @@ public class ProductVariant : GeneralSharedInfoWithId
     public Guid VariantId { get; set; }
     public string Name { get; set; }
     public Guid ProductId { get; set; }
-    public Variant? Variant { get; set; } = null;
-    public Product? Product { get; set; } = null;
-    public ICollection<OrderProductsVariant>? OrderProductsVariants { get; set; } = null;
+    public virtual Variant? Variant { get; set; } = null;
+    public virtual Product? Product { get; set; } = null;
+    public virtual ICollection<OrderProductsVariant> OrderProductsVariants { get; set; } = new List<OrderProductsVariant>();
 }

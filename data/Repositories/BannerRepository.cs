@@ -43,7 +43,7 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
         context.Remove(banner);
     }
 
-    public void Delete(List<Banner> banners)
+    public void Delete(ICollection<Banner> banners)
     {
         context.Banner.RemoveRange(banners);
     }
@@ -64,7 +64,7 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
             .FirstOrDefaultAsync(ba => ba.Id == id && ba.StoreId == storeId);
     }
 
-    public async Task<List<Banner>> GetBanners(Guid id, int pageNumber, int pageSize)
+    public async Task<ICollection<Banner>> GetBanners(Guid id, int pageNumber, int pageSize)
     {
         return await context.Banner
             .OrderByDescending(ba => ba.CreatedAt)
@@ -72,35 +72,35 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
             .AsNoTracking()
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
-    public async Task<List<Banner>> GetBanners(int pageNumber, int pageSize)
+    public async Task<ICollection<Banner>> GetBanners(int pageNumber, int pageSize)
     {
         return await context.Banner
             .OrderByDescending(ba => ba.CreatedAt)
             .AsNoTracking()
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
-    public async Task<List<Banner>> GetBanners(int randomLenght)
+    public async Task<ICollection<Banner>> GetBanners(int randomLenght)
     {
         return await context.Banner
             .OrderBy(ba => ba.Id)
             .AsNoTracking()
             .Take(randomLenght)
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
-    public async Task<List<Banner>> GetNotActiveBanners(int randomLenght)
+    public async Task<ICollection<Banner>> GetNotActiveBanners(int randomLenght)
     {
           return await context.Banner
             .OrderBy(ba => ba.Id)
             .Where(ba=>(ba.CreatedAt.Subtract(DateTime.Now).Days)>2)
             .AsNoTracking()
             .Take(randomLenght)
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 }

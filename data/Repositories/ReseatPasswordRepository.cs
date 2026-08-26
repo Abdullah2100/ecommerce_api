@@ -7,14 +7,14 @@ namespace api.Infrastructure.Repositories;
 
 public class ReseatPasswordRepository(AppDbContext context) : IReseatePasswordRepository
 {
-    public async Task<IEnumerable<ReseatPasswordOtp>> GetAllAsync(int page, int length)
+    public async Task<ICollection<ReseatPasswordOtp>> GetAllAsync(int page, int length)
     {
         return await context
             .ReseatPasswords
             .AsNoTracking()
             .Skip((page - 1) * length)
             .Take(length)
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
     public void Add(ReseatPasswordOtp entity)
@@ -33,7 +33,7 @@ public class ReseatPasswordRepository(AppDbContext context) : IReseatePasswordRe
         if (entity == null) throw new ArgumentNullException();
         var previousPassword = context.ReseatPasswords
             .Where(f => f.Email == entity.Email)
-            .ToList();
+            .ToICollection();
         context.ReseatPasswords.RemoveRange(previousPassword!);
     }
 

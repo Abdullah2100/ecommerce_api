@@ -15,6 +15,6 @@ namespace data.dto.Response
         public String Name { get; set; }
         public String UserPhone { get; set; }
         public string Status { get; set; }
-        public List<OrderItemDto>? OrderItems { get; set; } = null;
+        public ICollection<OrderItemDto>? OrderItems { get; set; } = null;
     }
 }

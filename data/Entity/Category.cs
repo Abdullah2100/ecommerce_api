@@ -9,6 +9,6 @@ public class Category : GeneralShredInfo
     public Guid OwnerId { get; set; }
     public bool IsBlocked { get; set; } = false;
     public string Image { get; set; }
-    public User User { get; set; }
-    public ICollection<SubCategory>? SubCategories { get; set; }
+    public virtual User User { get; set; } = null!;
+    public virtual ICollection<SubCategory> SubCategories { get; set; } = new List<SubCategory>();
 }

@@ -7,14 +7,14 @@ namespace api.Infrastructure.Repositories;
 
 public class GeneralSettingRepository(AppDbContext context) : IGeneralSettingRepository
 {
-    public async Task<IEnumerable<GeneralSetting>> Getgenralsettings(int page, int length)
+    public async Task<ICollection<GeneralSetting>> Getgenralsettings(int page, int length)
     {
         return await context
             .GeneralSettings
             .AsNoTracking()
             .Skip((page - 1) * length)
             .Take(length)
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
     public void Add(GeneralSetting entity)

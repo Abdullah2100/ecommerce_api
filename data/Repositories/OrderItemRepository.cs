@@ -10,7 +10,7 @@ public class OrderItemRepository(AppDbContext context) : IOrderItemRepository
     //orderitmes
 
 
-    public async Task<IEnumerable<OrderItem>> GetOrderItems(
+    public async Task<ICollection<OrderItem>> GetOrderItems(
         Guid storeId,
         int pageNum,
         int pageSize
@@ -27,7 +27,7 @@ public class OrderItemRepository(AppDbContext context) : IOrderItemRepository
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
             .OrderDescending()
-            .ToListAsync();
+            .ToICollectionAsync();
     }
 
     public async Task<OrderItem?> GetOrderItem(Guid id, Guid storeId)
