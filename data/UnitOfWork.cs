@@ -19,11 +19,11 @@ public class UnitOfWork(ILogger<UnitOfWork> logger, AppDbContext context) : IUni
     public IProductImageRepository ProductImageRepository  { get; set; }= new ProductImageRepository(context);
     public IProductRepository ProductRepository { get; set; } = new ProductRepository(context);
     public IOrderRepository OrderRepository { get; set; } = new OrderRepository(context);
-    public IReseatePasswordRepository PasswordRepository { get; set; } = new ReseatPasswordRepository(context);
+    public IRecreatePasswordRepository PasswordRepository { get; set; } = new ReseatPasswordRepository(context);
     public IStoreRepository StoreRepository { get; set; } = new StoreRepository(context);
     public ISubCategoryRepository SubCategoryRepository  { get; set; }= new SubCategoryRepository(context);
     public IUserRepository UserRepository { get; set; } = new UserRepository(context);
-    public IVarientRepository VariantRepository { get; set; } = new VariantRepository(context);
+    public IVariantRepository VariantRepository { get; set; } = new VariantRepository(context);
     public IOrderProductVariant OrderProductVariantRepository { get; set; } = new OrderProductVariantRepository(context);
     public IAnalyseRepository AnalyseRepository { get; set; } = new AnalyseRepository(context);
     public ICurrencyRepository CurrencyRepository  { get; set; }= new CurrencyRepository(context);

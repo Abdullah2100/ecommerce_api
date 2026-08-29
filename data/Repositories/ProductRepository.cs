@@ -1,215 +1,99 @@
 using api.application;
 using api.domain.entity;
 using data.Interface;
+using data.dto.Request;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Infrastructure.Repositories;
 
-public class ProductRepository(
-    AppDbContext context
-) : IProductRepository
+/// <summary>
+/// Repository implementation for managing <see cref="ProductVariant"/> entities.
+/// Handles the mapping of variants (like size or color) to specific products.
+/// </summary>
+/// <param name="context">The database context used for data access.</param>
+public class ProductVariantRepository(AppDbContext context) : IProductVariantRepository
 {
-    public async Task<ICollection<Product>> GetAllAsync(int page, int length)
+    /// <summary>
+    /// Retrieves a specific product variant by its unique identifier and associated product identifier.
+    /// </summary>
+    /// <param name="productId">The unique identifier of the product.</param>
+    /// <param name="id">The unique identifier of the product variant.</param>
+    /// <returns>A task representing the asynchronous operation, returning the product variant if found; otherwise, <c>null</c>.</returns>
+    public async Task<ProductVariant?> GetProductVariant(Guid productId, Guid id)
     {
-        return await context.Products
-            .AsNoTracking()
-            .Include(pro => pro.SubCategory)
-            .Include(pro => pro.ProductImages)
-            .Include(pro => pro.ProductVariants)
-            .AsSplitQuery()
-            .Skip((page - 1) * length)
-            .Take(length)
-            .OrderDescending()
-            .ToICollectionAsync();
+        return await context.ProductVariants
+            .FirstOrDefaultAsync(or => or.ProductId == productId && or.Id == id);
     }
 
-
-    public void Add(Product entity)
+    /// <summary>
+    /// Saves a collection of product variants by either adding new ones or updating existing ones.
+    /// Variants with a non-null <c>Id</c> are updated, while those with a null <c>Id</c> are added.
+    /// </summary>
+    /// <param name="productVariants">The collection of product variants to save.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    public async Task SaveProductVariants(ICollection<ProductVariant> productVariants)
     {
-        context.Products.Add(entity);
-    }
-
-    public void Update(Product entity)
-    {
-        var product = new Product()
+        for (var i = 0; i < productVariants.Count; i++)
         {
-            Id = entity.Id,
-            Name = entity.Name,
-            Description = entity.Description,
-            SubcategoryId = entity.SubcategoryId,
-            Price = entity.Price,
-            UpdatedAt = entity.UpdatedAt,
-            Thumbnail = entity.Thumbnail,
-            Symbol = entity.Symbol,
-            StoreId = entity.StoreId
-        };
-        context.Products.Update(product);
+            if (productVariants.ElementAt(i)?.Id is not null)
+                await Task.Run(() => Update(productVariants.ElementAt(i)));
+            else
+                await Task.Run(() => Add(productVariants.ElementAt(i)));
+        }
     }
 
-    public void Delete(Guid id)
-
+    /// <summary>
+    /// Deletes all variants associated with a specific product ID.
+    /// </summary>
+    /// <param name="productId">The unique identifier of the product whose variants should be removed.</param>
+    public void DeleteProductVariantByProductId(Guid productId)
     {
-        var product = context.Products.Find(id);
-        if (product == null) throw new ArgumentNullException();
-        context.Products.Remove(product);
+        var result = context.ProductVariants.Where(p => p.ProductId == productId).ToICollection();
+        context.ProductVariants.RemoveRange(result);
     }
 
-    public void Delete(ICollection<Product> products)
-    {
-        context.Products.RemoveRange(products);
-    }
-
-    public async Task<Product?> GetProduct(Guid id)
-    {
-        return await context.Products
-            .AsNoTracking()
-            .Include(pro => pro.Store)
-            .Include(pro => pro.SubCategory)
-            .Include(pro => pro.ProductImages)
-            .Include(pro => pro.ProductVariants)
-            .AsSplitQuery()
-            .FirstOrDefaultAsync(p => p.Id == id);
-    }
-
-    public async Task<Product?> GetProduct(Guid id, Guid storeId)
-    {
-        return await context.Products
-            .AsNoTracking()
-            .Include(pro => pro.Store)
-            .Include(pro => pro.SubCategory)
-            .Include(pro => pro.ProductImages)
-            .Include(pro => pro.ProductVariants)
-            .AsSplitQuery()
-            .FirstOrDefaultAsync(p => p.Id == id && p.StoreId == storeId);
-    }
-
-    public Task<int> GetProduct()
-    {
-        return context.Products.CountAsync();
-    }
-
-    public async Task<int?> GetProductPages()
-    {
-        return await context.Products.CountAsync();
-    }
-
-    public async Task<Product?> GetProductByUser(Guid id, Guid userId)
-    {
-        return await context.Products
-            .AsNoTracking()
-            .Include(pro => pro.Store)
-            .Include(pro => pro.SubCategory)
-            .Include(pro => pro.ProductImages)
-            .Include(pro => pro.ProductVariants)
-            .AsSplitQuery()
-            .FirstOrDefaultAsync(p => p.Id == id && p.Store.UserId == userId);
-    }
-
-    public async Task<ICollection<Product>> GetProducts(
-        Guid storeId,
-        Guid subCategoryId,
-        int pageNum,
-        int pageSize
-    )
-    {
-        return await context.Products
-            .AsNoTracking()
-            .Include(pro => pro.Store)
-            .Include(pro => pro.SubCategory)
-            .Include(pro => pro.ProductImages)
-            .Include(pro => pro.ProductVariants)
-            .AsSplitQuery()
-            .Where(p => p.StoreId == storeId && p.SubcategoryId == subCategoryId)
-            .Skip((pageNum - 1) * pageSize)
-            .Take(pageSize)
-            .OrderDescending()
-            .ToICollectionAsync();
-    }
-
-    public async Task<ICollection<Product>> GetProducts(
-        Guid storeId,
-        int pageNum,
-        int pageSize)
-    {
-        return await context.Products
-            .AsNoTracking()
-            .Include(pro => pro.Store)
-            .Include(pro => pro.SubCategory)
-            .Include(pro => pro.ProductImages)
-            .Include(pro => pro.ProductVariants)
-            .AsSplitQuery()
-            .Where(p => p.StoreId == storeId)
-            .Skip((pageNum - 1) * pageSize)
-            .Take(pageSize)
-            .OrderDescending()
-            .ToICollectionAsync();
-    }
-
-    public async Task<ICollection<Product>> GetProducts(int page, int length)
+    /// <summary>
+    /// Deletes a specific set of variants for a product based on a collection of DTOs.
+    /// Matches variants by <c>ProductId</c>, <c>VariantId</c>, and <c>Name</c>.
+    /// </summary>
+    /// <param name="productVariants">The collection of variant data identifying which records to delete.</param>
+    /// <param name="productId">The unique identifier of the product.</param>
+    public void DeleteProductVariant(ICollection<CreateProductVariantDto> productVariants, Guid productId)
     {
         try
         {
-            var products = await context.Products
-                .AsNoTracking()
-                .Include(pro => pro.Store)
-                .Include(pro => pro.SubCategory)
-                .Include(pro => pro.ProductImages)
-                .Include(pro => pro.ProductVariants)
-                .AsSplitQuery()
-                .Skip((page - 1) * length)
-                .Take(length)
-                .OrderDescending()
-                .ToICollectionAsync();
-            if (products is null) return new ICollection<Product>();
-
-            for (int i = 0; i < products.Count; i++)
+            for (var i = 0; i < productVariants.Count; i++)
             {
-                products[i].ProductVariants = await context.ProductVariants
-                    .Include(pr => pr.Variant)
-                    .Where(p => p.ProductId == products[i].Id).ToICollectionAsync();
+                var result = context.ProductVariants
+                    .FirstOrDefault(pv =>
+                        pv.ProductId == productId && pv.VariantId == productVariants[i].VariantId &&
+                        pv.Name == productVariants[i].Name
+                    );
+                if (result is not null)
+                    context.ProductVariants.Remove(result);
             }
-
-            return products;
         }
         catch (System.Exception ex)
         {
-            Console.WriteLine(ex.Message);
-            return new ICollection<Product>();
+            Console.WriteLine($"{ex.Message}");
         }
     }
 
-    public async Task<ICollection<Product>> GetProducts(int randomNumber)
+    /// <summary>
+    /// Tracks a new product variant entity to be added to the database.
+    /// </summary>
+    /// <param name="entity">The product variant entity to add.</param>
+    public void Add(ProductVariant entity)
     {
-        return await context
-            .Products
-            .OrderBy(x => Guid.NewGuid())
-            .Take(randomNumber)
-            .ToICollectionAsync();
+        context.ProductVariants.Add(entity);
     }
 
-    public async Task<ICollection<Product>> GetProductsByCategory(
-        Guid categoryId,
-        int pageNum,
-        int pageSize
-    )
+    /// <summary>
+    /// Updates an existing product variant entity in the database context.
+    /// </summary>
+    /// <param name="entity">The product variant entity with updated values.</param>
+    public void Update(ProductVariant entity)
     {
-        return await context.Products
-            .AsNoTracking()
-            .Include(pro => pro.Store)
-            .Include(pro => pro.SubCategory)
-            .Include(pro => pro.ProductImages)
-            .Include(pro => pro.ProductVariants)
-            .AsSplitQuery()
-            .Where(p => p.SubCategory.CategoryId == categoryId)
-            .Skip((pageNum - 1) * pageSize)
-            .Take(pageSize)
-            .OrderDescending()
-            .ToICollectionAsync();
-    }
-
-
-    public async Task<bool> IsExist(Guid id)
-    {
-        return await context.Products.FindAsync(id) != null;
+        context.ProductVariants.Update(entity);
     }
 }

@@ -25,7 +25,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public virtual DbSet<ProductImage> ProductImages { get; set; }
     public virtual DbSet<Order> Orders { get; set; }
     public virtual DbSet<OrderItem> OrderItems { get; set; }
-    public virtual DbSet<OrderProductsVariant> OrdersProductsVarients { get; set; }
+    public virtual DbSet<OrderProductsVariant> OrdersProductsVariant { get; set; }
     public virtual DbSet<GeneralSetting> GeneralSettings { get; set; }
 
     public virtual DbSet<Delivery> Deliveries { get; set; }

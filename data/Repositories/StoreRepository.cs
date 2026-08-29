@@ -5,170 +5,79 @@ using Microsoft.EntityFrameworkCore;
 
 namespace api.Infrastructure.Repositories;
 
-public class StoreRepository(AppDbContext context) : IStoreRepository
+/// <summary>
+/// Repository implementation for managing <see cref="UserRefreshToken"/> entities.
+/// Handles the persistence and lifecycle of refresh tokens for user authentication.
+/// </summary>
+/// <param name="context">The database context used for data access.</param>
+public class UserRefreshTokenRepository(AppDbContext context) : IUserRefreshTokenRepository
 {
-    public void Add(Store entity)
+    /// <summary>
+    /// Checks if a refresh token already exists for a specific user ID.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <returns>A task representing the asynchronous operation, returning <c>true</c> if the token exists; otherwise, <c>false</c>.</returns>
+    private async Task<bool> IsExistByUserId(Guid userId)
     {
-        context.Stores.Add(entity);
+        return await context
+            .UserRefreshTokens
+            .AsNoTracking()
+            .AnyAsync(value => value.UserId == userId);
     }
 
-    public void Update(Store entity)
+    /// <summary>
+    /// Updates the refresh token value and expiration date for an existing user record.
+    /// </summary>
+    /// <param name="data">The refresh token entity containing updated values.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    private async Task UpdateUserRefreshToken(UserRefreshToken data)
     {
-        var storeData = new Store()
+        await context.UserRefreshTokens
+            .Where(user => user.UserId == data.UserId)
+            .ExecuteUpdateAsync(value => value.SetProperty(value => value.ExpireAt, data.ExpireAt)
+                .SetProperty(value => value.Refresh, data.Refresh));
+    }
+
+    /// <summary>
+    /// Adds a new refresh token entity to the database context for tracking.
+    /// </summary>
+    /// <param name="data">The refresh token entity to create.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    private async Task CreateUserRefreshToken(UserRefreshToken data)
+    {
+        await context.UserRefreshTokens.AddAsync(data);
+    }
+
+    /// <summary>
+    /// Saves a refresh token by either updating the existing one or creating a new record if it doesn't exist for the user.
+    /// </summary>
+    /// <param name="data">The refresh token data to save.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    public async Task Save(UserRefreshToken data)
+    {
+        var isExist = await IsExistByUserId(data.UserId);
+        switch (isExist)
         {
-            Id = entity.Id,
-            Name = entity.Name,
-            WallpaperImage = entity.WallpaperImage,
-            SmallImage = entity.SmallImage,
-            IsBlock = entity.IsBlock,
-            UserId = entity.UserId,
-            UpdatedAt = entity.UpdatedAt
-        };
-        context.Stores.Update(storeData);
-    }
-
-    public void Delete(Guid id)
-    {
-        Store? store = context.Stores.Find(id);
-        if (store == null) throw new ArgumentNullException();
-        store.IsBlock = !store.IsBlock;
-    }
-
-    public async Task<Store?> GetStore(Guid id)
-    {
-        Store? store = await context
-            .Stores
-            .Include(st => st.user)
-            .AsSplitQuery()
-            .AsNoTracking()
-            .FirstOrDefaultAsync(st => st.Id == id);
-
-        if (store is null) return null;
-
-
-        store.Addresses = await context
-            .Address
-            .AsNoTracking()
-            .Where(ad => ad.OwnerId == store.Id)
-            .ToICollectionAsync();
-        return store;
-    }
-
-    public async Task<Store?> GetStoreByUserId(Guid id)
-    {
-        Store? store = await context
-            .Stores
-            .Include(st => st.user)
-            .AsSplitQuery()
-            .AsNoTracking()
-            .FirstOrDefaultAsync(st => st.UserId == id);
-
-        if (store is null) return null;
-
-
-        store.Addresses = await context
-            .Address
-            .AsNoTracking()
-            .Where(ad => ad.OwnerId == store.Id)
-            .ToICollectionAsync();
-        return store;
-    }
-
-    public async Task<ICollection<Store>> GetStores(string prefix, int length)
-    {
-        var stores = await context
-            .Stores
-            .Include(st => st.user)
-            .AsSplitQuery()
-            .AsNoTracking()
-            .Where(x => x.Name.StartsWith(prefix))
-            .Take(length)
-            .ToICollectionAsync();
-
-        foreach (var store in stores)
-        {
-            store.Addresses = await context
-                .Address
-                .AsNoTracking()
-                .Where(ad => ad.OwnerId == store.Id)
-                .ToICollectionAsync();
+            case true:
+            {
+                await UpdateUserRefreshToken(data);
+            }
+                break;
+            default:
+            {
+                await CreateUserRefreshToken(data);
+            }
+                break;
         }
-
-        return stores;
     }
 
-
-    public async Task<ICollection<Store>> GetStores(int page, int length)
+    /// <summary>
+    /// Retrieves the refresh token associated with a specific user ID.
+    /// </summary>
+    /// <param name="id">The unique identifier of the user.</param>
+    /// <returns>A task representing the asynchronous operation, returning the token if found; otherwise, <c>null</c>.</returns>
+    public async Task<UserRefreshToken?> GetByUserId(Guid id)
     {
-        ICollection<Store> stores = await context
-            .Stores
-            .Include(st => st.user)
-            .Include(st => st.SubCategories)
-            .AsSplitQuery()
-            .AsNoTracking()
-            .Skip((page - 1) * length)
-            .Take(length)
-            .ToICollectionAsync();
-
-        if (stores.Count <= 0) return new ICollection<Store>();
-
-
-        foreach (var store in stores)
-        {
-            store.Addresses = await context
-                .Address
-                .AsNoTracking()
-                .Where(ad => ad.OwnerId == store.Id)
-                .ToICollectionAsync();
-        }
-
-        return stores;
-    }
-
-    public async Task<int> GetStoresCount(int storePerPage)
-    {
-        int count = await context
-            .Stores
-            .AsNoTracking()
-            .CountAsync();
-        if (count == 0) return 0;
-        count = (int)Math.Ceiling((double)count / storePerPage);
-        return count;
-    }
-
-    public async Task<bool> IsExist(string name)
-    {
-        return await context
-            .Stores
-            .AsNoTracking()
-            .AnyAsync(st => st.Name == name);
-    }
-
-    public async Task<bool> IsExist(string name, Guid id)
-    {
-        return await context
-            .Stores
-            .AsNoTracking()
-            .AnyAsync(st => st.Name == name && st.Id != id);
-    }
-
-    public async Task<bool> IsExist(Guid id)
-    {
-        return await context
-            .Stores
-            .AsNoTracking()
-            .AnyAsync(st => st.Id == id);
-    }
-
-    public async Task<bool> IsExist(Guid id, Guid subCategoryId)
-    {
-        return await context
-            .Stores
-            .Include(st => st.SubCategories)
-            .AsNoTracking()
-            .AnyAsync(st =>
-                st.SubCategories != null &&
-                st.Id == id &
-                st.SubCategories.FirstOrDefault(sc => sc.Id == subCategoryId) != null);
+        return await context.UserRefreshTokens.AsNoTracking().FirstOrDefaultAsync(value => value.UserId == id);
     }
 }

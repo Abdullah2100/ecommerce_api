@@ -2,7 +2,7 @@ using api.domain.entity;
 
 namespace data.Interface;
 
-public interface IVarientRepository : IRepository<Variant>
+public interface IVariantRepository : IRepository<Variant>
 {
     Task<Variant?> GetVarient(Guid id);
     Task<ICollection<Variant>> GetVarients(int page, int lenght);

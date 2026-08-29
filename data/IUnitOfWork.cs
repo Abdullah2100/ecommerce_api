@@ -15,11 +15,11 @@ public interface IUnitOfWork : IDisposable
     public IProductRepository ProductRepository { get; }
     public IProductImageRepository ProductImageRepository { get; }
     public IProductVariantRepository ProductVariantRepository { get; }
-    public IReseatePasswordRepository PasswordRepository { get; }
+    public IRecreatePasswordRepository PasswordRepository { get; }
     public IStoreRepository StoreRepository { get; }
     public ISubCategoryRepository SubCategoryRepository { get; }
     public IUserRepository UserRepository { get; }
-    public IVarientRepository VariantRepository { get; }
+    public IVariantRepository VariantRepository { get; }
     public IOrderProductVariant OrderProductVariantRepository { get; }
     public IAnalyseRepository AnalyseRepository { get; }
     public ICurrencyRepository CurrencyRepository { get; }
