@@ -12,5 +12,5 @@ public interface ISubCategoryRepository : IRepository<SubCategory>
     Task<bool> IsExist(Guid id);
     Task<bool> IsExist(Guid storeId, string name);
     Task<bool> IsExist(Guid storeId, Guid id);
-    void Delete(Guid id);
+    Task Delete(Guid id);
 }

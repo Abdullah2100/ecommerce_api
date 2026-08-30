@@ -3,7 +3,7 @@ using api.domain.entity;
 using data.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace api.Infrastructure.Repositories;
+namespace data.Repositories;
 
 /// <summary>
 /// Repository implementation for managing <see cref="GeneralSetting"/> entities.
@@ -24,7 +24,7 @@ public class GeneralSettingRepository(AppDbContext context) : IGeneralSettingRep
             .AsNoTracking()
             .Skip((page - 1) * length)
             .Take(length)
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 
     /// <summary>
@@ -53,6 +53,7 @@ public class GeneralSettingRepository(AppDbContext context) : IGeneralSettingRep
     public void Delete(Guid id)
     {
         var generalSetting = context.GeneralSettings
+            .AsNoTracking()
             .FirstOrDefault(gs => gs.Id == id);
         if (generalSetting == null) throw new ArgumentNullException();
 

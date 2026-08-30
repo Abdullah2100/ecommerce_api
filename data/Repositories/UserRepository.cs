@@ -3,7 +3,7 @@ using api.domain.entity;
 using data.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace api.Infrastructure.Repositories;
+namespace data.Repositories;
 /// <summary>
 /// Provides data access operations for <see cref="User"/> entities.
 /// Supports retrieving users by identifier, email, store, or credentials,
@@ -36,7 +36,7 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
             .Address
             .AsNoTracking()
             .Where(u => u.OwnerId == id)
-            .ToICollectionAsync();
+            .ToListAsync();
 
         return user;
     }
@@ -64,7 +64,7 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
             .Address
             .AsNoTracking()
             .Where(u => u.OwnerId == user.Id)
-            .ToICollectionAsync();
+            .ToListAsync();
 
         return user;
     }
@@ -125,7 +125,7 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
             .Address
             .AsNoTracking()
             .Where(u => u.OwnerId == id)
-            .ToICollectionAsync();
+            .ToListAsync();
 
         return user;
     }
@@ -150,7 +150,7 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
             .Skip((page - 1) * length)
             .OrderDescending()
             .Take(length)
-            .ToICollectionAsync();
+            .ToListAsync();
 
         foreach (var user in users)
         {
@@ -158,7 +158,7 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
                 .Address
                 .AsNoTracking()
                 .Where(u => u.OwnerId == user.Id)
-                .ToICollectionAsync();
+                .ToListAsync();
         }
 
         return users;
@@ -196,7 +196,7 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
                 .Address
                 .AsNoTracking()
                 .Where(u => u.OwnerId == user.Id)
-                .ToICollectionAsync();
+                .ToListAsync();
 
             return user;
         }

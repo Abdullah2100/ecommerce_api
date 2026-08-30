@@ -3,7 +3,7 @@ using api.domain.entity;
 using data.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace api.Infrastructure.Repositories;
+namespace data.Repositories;
 
 /// <summary>
 /// Repository implementation for managing <see cref="SubCategory"/> entities.
@@ -42,7 +42,7 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
             .Skip((pageNumber - 1) * pageSize)
             .OrderDescending()
             .Take(pageSize)
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 
     /// <summary>
@@ -62,7 +62,7 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
             .Skip((pageNumber - 1) * pageSize)
             .OrderDescending()
             .Take(pageSize)
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 
     /// <summary>
@@ -130,7 +130,7 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
             .Skip((page - 1) * length)
             .OrderDescending()
             .Take(length)
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 
     /// <summary>
@@ -155,10 +155,11 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
     /// Deletes a subcategory by its unique identifier.
     /// </summary>
     /// <param name="id">The unique identifier of the subcategory to delete.</param>
-    public void Delete(Guid id)
+    public async Task Delete(Guid id)
     {
-        var subcategories = context.SubCategories.Where(su => su.Id == id)
-            .ToICollection();
+        var subcategories = await context.SubCategories.Where(su => su.Id == id)
+            .ToListAsync();
+        if (subcategories.Count == 0) return;
         context.SubCategories.RemoveRange(subcategories);
     }
 }

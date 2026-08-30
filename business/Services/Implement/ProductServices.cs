@@ -2,10 +2,10 @@ using api.application;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
-using api.Presentation.dto.Request;
 using business.mapper;
 using api.util;
 using business.Services.Interface;
+using data.Dto.Request;
 using data.util;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -264,7 +264,7 @@ public class ProductServices(
 
         if (productDto.DeletedProductVariants is not null)
         {
-            await Task.Run(() => unitOfWork.ProductVariantRepository.DeleteProductVariant(productDto.DeletedProductVariants, productDto.Id));
+            await  unitOfWork.ProductVariantRepository.DeleteProductVariant(productDto.DeletedProductVariants, productDto.Id);
         }
 
         string? savedThumbnail = null;

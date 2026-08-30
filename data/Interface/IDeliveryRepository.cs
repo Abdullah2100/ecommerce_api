@@ -12,7 +12,7 @@ public interface IDeliveryRepository : IRepository<Delivery>
     Task<int> GetDeliveriesPage(int deliveryPerSize);
 
 
-    Task<DeliveryAnalyseDto> GetDeliveryAnalys(Guid id);
+    Task<DeliveryAnalyseDto?> GetDeliveryAnalys(Guid id);
 
     Task<bool> IsExistByUserId(Guid userId);
 

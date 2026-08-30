@@ -3,7 +3,7 @@ using api.domain.entity;
 using data.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace api.Infrastructure.Repositories;
+namespace data.Repositories;
 
 /// <summary>
 /// Repository implementation for managing <see cref="Currency"/> entities.
@@ -36,7 +36,7 @@ public class CurrencyRepository(AppDbContext context) : ICurrencyRepository
     /// <returns>A task representing the asynchronous operation, returning the currency or null if not found.</returns>
     public async Task<Currency?> GetCurrencies(Guid id)
     {
-        Currency? element = await context.Payments
+        var element = await context.Payments
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id);
         return element;
@@ -47,12 +47,14 @@ public class CurrencyRepository(AppDbContext context) : ICurrencyRepository
     /// </summary>
     /// <param name="randomNumber">The number of currencies to retrieve.</param>
     /// <returns>A task representing the asynchronous operation, returning a collection of random currencies.</returns>
-    public Task<ICollection<Currency>> GetCurrencies(int randomNumber)
+    public async Task<ICollection<Currency>> GetCurrencies(int randomNumber)
     {
-        return context.Currencies
+        return await context
+            .Currencies
+            .AsNoTracking()
             .OrderBy(x => Guid.NewGuid())
             .Take(randomNumber)
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 
     /// <summary>
@@ -61,7 +63,10 @@ public class CurrencyRepository(AppDbContext context) : ICurrencyRepository
     /// <returns>A task representing the asynchronous operation, returning the total count.</returns>
     public Task<int> GetCurrenciesCount()
     {
-        return context.Currencies.CountAsync();
+        return context
+            .Currencies
+            .AsNoTracking()
+            .CountAsync();
     }
 
     /// <summary>
@@ -76,7 +81,7 @@ public class CurrencyRepository(AppDbContext context) : ICurrencyRepository
             .AsNoTracking()
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 
     /// <summary>
@@ -86,7 +91,10 @@ public class CurrencyRepository(AppDbContext context) : ICurrencyRepository
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task Delete(Guid id)
     {
-        Currency? element = await context.Payments.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+        var element = await context
+            .Payments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id);
 
         if (element is null) return;
         context.Payments.Remove(element);

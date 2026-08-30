@@ -3,7 +3,7 @@ using api.domain.entity;
 using data.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace api.Infrastructure.Repositories;
+namespace data.Repositories;
 
 /// <summary>
 /// Repository implementation for managing <see cref="Category"/> entities.
@@ -53,7 +53,7 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
             .Skip((page - 1) * length)
             .Take(length)
             .OrderDescending()
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 
     /// <summary>
@@ -62,7 +62,10 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
     /// <returns>A task representing the asynchronous operation, returning the total count.</returns>
     public async Task<int> GetCategoriesCount()
     {
-        return await context.Categories.CountAsync();
+        return await context
+            .Categories
+            .AsNoTracking()
+            .CountAsync();
     }
 
     /// <summary>
@@ -74,9 +77,10 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
     {
         return await context
             .Categories
+            .AsNoTracking()
             .OrderBy(x => Guid.NewGuid())
             .Take(randomNumber)
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 
     /// <summary>
@@ -127,7 +131,10 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
     /// <exception cref="ArgumentNullException">Thrown when the category is not found.</exception>
     public void Delete(Guid id)
     {
-        var category = context.Categories.FirstOrDefault(ca => ca.Id == id);
+        var category = context
+            .Categories
+            .AsNoTracking()
+            .FirstOrDefault(ca => ca.Id == id);
         if (category is null) throw new ArgumentNullException();
         context.Categories.Remove(category);
     }

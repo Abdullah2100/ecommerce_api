@@ -3,7 +3,7 @@ using api.domain.entity;
 using data.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace api.Infrastructure.Repositories;
+namespace data.Repositories;
 
 /// <summary>
 /// Repository implementation for managing <see cref="Banner"/> entities.
@@ -39,7 +39,10 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
     /// <returns>A task representing the asynchronous operation, returning the total count.</returns>
     public Task<int> GetBannerCount()
     {
-        return context.Banner.CountAsync();
+        return context
+            .Banner
+            .AsNoTracking()
+            .CountAsync();
     }
 
     /// <summary>
@@ -51,6 +54,7 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
     public Task<int> GetBannerCount(Guid storeId)
     {
         return context.Banner
+            .AsNoTracking()
             .Where(ba => ba.StoreId == storeId && ba.CreatedAt.AddHours(1) >= DateTime.Now)
             .CountAsync();
     }
@@ -115,12 +119,12 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
     public async Task<ICollection<Banner>> GetBanners(Guid id, int pageNumber, int pageSize)
     {
         return await context.Banner
-            .OrderByDescending(ba => ba.CreatedAt)
-            .Where(ba => ba.StoreId == id)
             .AsNoTracking()
+            .Where(ba => ba.StoreId == id)
+            .OrderByDescending(ba => ba.CreatedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 
     /// <summary>
@@ -132,11 +136,11 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
     public async Task<ICollection<Banner>> GetBanners(int pageNumber, int pageSize)
     {
         return await context.Banner
-            .OrderByDescending(ba => ba.CreatedAt)
             .AsNoTracking()
+            .OrderByDescending(ba => ba.CreatedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 
     /// <summary>
@@ -147,10 +151,10 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
     public async Task<ICollection<Banner>> GetBanners(int randomLength)
     {
         return await context.Banner
-            .OrderBy(ba => ba.Id)
             .AsNoTracking()
+            .OrderBy(ba => ba.Id)
             .Take(randomLength)
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 
     /// <summary>
@@ -161,10 +165,10 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
     public async Task<ICollection<Banner>> GetNotActiveBanners(int randomLength)
     {
           return await context.Banner
-            .OrderBy(ba => ba.Id)
-            .Where(ba=>(ba.CreatedAt.Subtract(DateTime.Now).Days)>2)
             .AsNoTracking()
+            .Where(ba=>(ba.CreatedAt.Subtract(DateTime.Now).Days)>2)
+            .OrderBy(ba => ba.Id)
             .Take(randomLength)
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 }

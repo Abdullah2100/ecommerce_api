@@ -12,7 +12,7 @@ namespace data.dto.Response
         public Guid StoreId { get; set; }
         public string StoreName { get; set; }
         public int Price { get; set; }
-        public ICollection<ICollection<ProductVariantDto>>? ProductVariants { get; set; }
+        public List<List<ProductVariantDto>>? ProductVariants { get; set; }
         public ICollection<string> ProductImages { get; set; }
     }
 }

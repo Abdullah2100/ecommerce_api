@@ -3,7 +3,7 @@ using api.domain.entity;
 using data.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace api.Infrastructure.Repositories;
+namespace data.Repositories;
 /// <summary>
 /// Provides data access operations for <see cref="Variant"/> entities.
 /// Supports retrieving variants with pagination, checking for existing variants,
@@ -28,7 +28,7 @@ public class VariantRepository(AppDbContext context) : IVariantRepository
             .AsNoTracking()
             .Skip((page - 1) * length)
             .Take(length)
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 
     /// <summary>
@@ -56,12 +56,13 @@ public class VariantRepository(AppDbContext context) : IVariantRepository
     /// The changes are not persisted until the context is saved.
     /// </summary>
     /// <param name="id">The unique identifier of the variant to delete.</param>
-    public void Delete(Guid id)
+    public async Task Delete(Guid id)
     {
-        var variants = context
+        var variants = await context
             .Variants
             .Where(i => i.Id == id)
-            .ToICollection();
+            .ToListAsync();
+        if(variants.Count==0)return;
 
         context.Variants.RemoveRange(variants);
     }
@@ -74,7 +75,7 @@ public class VariantRepository(AppDbContext context) : IVariantRepository
     /// A task representing the asynchronous operation. The task result
     /// contains the variant if found; otherwise, <c>null</c>.
     /// </returns>
-    public async Task<Variant?> GetVarient(Guid id)
+    public async Task<Variant?> GetVariant(Guid id)
     {
         return await context
             .Variants
@@ -90,14 +91,14 @@ public class VariantRepository(AppDbContext context) : IVariantRepository
     /// A task representing the asynchronous operation. The task result
     /// contains the requested page of variants.
     /// </returns>
-    public async Task<ICollection<Variant>> GetVarients(int page, int length)
+    public async Task<ICollection<Variant>> GetVariants(int page, int length)
     {
         var variants = await context
             .Variants
             .AsNoTracking()
             .Skip((page - 1) * length)
             .Take(length)
-            .ToICollectionAsync();
+            .ToListAsync();
 
         return variants;
     }
@@ -113,7 +114,7 @@ public class VariantRepository(AppDbContext context) : IVariantRepository
     /// A task representing the asynchronous operation. The task result
     /// contains the calculated number of pages.
     /// </returns>
-    public async Task<int> GetVarientCount(int variantPerPage)
+    public async Task<int> GetVariantCount(int variantPerPage)
     {
         int count = await context
             .Stores

@@ -1,6 +1,6 @@
 using api.application;
 using api.Infrastructure;
-using api.Infrastructure.Repositories;
+using data.Repositories;
 using data.Interface;
 using data.Repositories;
 using Microsoft.Extensions.Logging;

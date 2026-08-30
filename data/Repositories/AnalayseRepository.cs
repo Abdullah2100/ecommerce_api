@@ -4,7 +4,7 @@ using data.dto.Response;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
-namespace api.Infrastructure.Repositories;
+namespace data.Repositories;
 
 /// <summary>
 /// Repository implementation for performing data analysis and retrieving statistics.
@@ -25,7 +25,7 @@ public class AnalyseRepository(
     {
         try
         {
-            using (var cmd = context.Database.GetDbConnection().CreateCommand())
+            await using (var cmd = context.Database.GetDbConnection().CreateCommand())
             {
                 cmd.CommandText = "SELECT * FROM get_monthly_stats()";
                 await context.Database.OpenConnectionAsync();

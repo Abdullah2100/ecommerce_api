@@ -12,3 +12,4 @@
 /home/abdullah/Desktop/ecommerce_api/data/obj/Debug/net10.0/data.pdb
 /home/abdullah/Desktop/ecommerce_api/data/obj/Debug/net10.0/data.genruntimeconfig.cache
 /home/abdullah/Desktop/ecommerce_api/data/obj/Debug/net10.0/ref/data.dll
+/home/abdullah/Desktop/ecommerce_api/data/obj/Debug/net10.0/data.sourcelink.json

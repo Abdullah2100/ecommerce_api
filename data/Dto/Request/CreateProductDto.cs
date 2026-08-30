@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using data.dto.Request;
 
-namespace api.Presentation.dto.Request;
+namespace data.Dto.Request;
 
 public class CreateProductDto
 {
@@ -15,5 +15,5 @@ public class CreateProductDto
     public String Symbol { get; set; }
 
     public ICollection<CreateProductVariantDto>? ProductVariants { get; set; } = null;
-    public ICollection<byte[]> Images { get; set; }
+    public List<byte[]> Images { get; set; }
 }

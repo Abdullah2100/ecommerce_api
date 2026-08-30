@@ -67,7 +67,7 @@ public class ProductImageRepository(AppDbContext context) : IProductImageReposit
             .AsNoTracking()
             .Where(pi => pi.ProductId == id)
             .Select(pi => pi.Path)
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 
     /// <summary>

@@ -254,3 +254,4 @@
 /home/abdullah/Desktop/ecommerce_api/api/obj/Debug/net10.0/api.pdb
 /home/abdullah/Desktop/ecommerce_api/api/obj/Debug/net10.0/api.genruntimeconfig.cache
 /home/abdullah/Desktop/ecommerce_api/api/obj/Debug/net10.0/ref/api.dll
+/home/abdullah/Desktop/ecommerce_api/api/obj/Debug/net10.0/api.sourcelink.json

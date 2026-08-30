@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using data.dto.Request;
 
-namespace api.Presentation.dto.Request;
+namespace data.Dto.Request;
 
 public class UpdateProductDto
 {
@@ -19,6 +19,6 @@ public class UpdateProductDto
 
     public ICollection<CreateProductVariantDto>? ProductVariants { get; set; } = null;
     public ICollection<CreateProductVariantDto>? DeletedProductVariants { get; set; } = null;
-    public ICollection<byte[]>? Images { get; set; } = null;
-    public ICollection<string>? Deletedimages { get; set; } = null;
+    public List<byte[]>? Images { get; set; } = null;
+    public List<string>? Deletedimages { get; set; } = null;
 }

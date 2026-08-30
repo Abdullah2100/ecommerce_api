@@ -1,5 +1,5 @@
 using api.domain.entity;
-using api.Presentation.dto.Request;
+using data.Dto.Request;
 using data.dto.Response;
 
 namespace business.mapper;

@@ -3,7 +3,7 @@ using api.domain.entity;
 using data.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace api.Infrastructure.Repositories;
+namespace data.Repositories;
 
 /// <summary>
 /// Repository implementation for managing <see cref="ReseatPasswordOtp"/> entities.
@@ -25,7 +25,7 @@ public class ReseatPasswordRepository(AppDbContext context) : IRecreatePasswordR
             .AsNoTracking()
             .Skip((page - 1) * length)
             .Take(length)
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 
     /// <summary>
@@ -51,13 +51,14 @@ public class ReseatPasswordRepository(AppDbContext context) : IRecreatePasswordR
     /// </summary>
     /// <param name="id">The unique identifier of the reference OTP.</param>
     /// <exception cref="ArgumentNullException">Thrown when the OTP with the specified ID is not found.</exception>
-    public void Delete(Guid id)
+    public async Task Delete(Guid id)
     {
-        ReseatPasswordOtp? entity = context.ReseatPasswords.Find(id);
+        var entity = await context.ReseatPasswords.FindAsync(id);
         if (entity == null) throw new ArgumentNullException();
-        var previousPassword = context.ReseatPasswords
+        var previousPassword = await context.ReseatPasswords
             .Where(f => f.Email == entity.Email)
-            .ToICollection();
+            .ToListAsync();
+        if(previousPassword.Count==0)return;
         context.ReseatPasswords.RemoveRange(previousPassword!);
     }
 
@@ -95,9 +96,8 @@ public class ReseatPasswordRepository(AppDbContext context) : IRecreatePasswordR
         // Delete previous OTPs for this email to ensure only the current one remains
         await DeleteAllEmailOtp(email, otp);
 
-        ReseatPasswordOtp? passwordOtp = await GetOtp(otp);
-        if (passwordOtp is null) return false;
-        return true;
+        var passwordOtp = await GetOtp(otp);
+        return passwordOtp is not null;
     }
 
     /// <summary>

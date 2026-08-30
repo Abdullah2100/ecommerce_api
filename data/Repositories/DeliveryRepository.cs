@@ -1,13 +1,13 @@
 using api.application;
 using api.domain.entity;
-using data.Interface;
 using data.dto.Response;
+using data.Interface;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
-namespace api.Infrastructure.Repositories;
+namespace data.Repositories;
 
-/// <summary>
+/// +<summary>
 /// Repository implementation for managing <see cref="Delivery"/> entities and their associated data.
 /// </summary>
 /// <param name="context">The database context used for data access.</param>
@@ -55,7 +55,7 @@ public class DeliveryRepository(
     /// <exception cref="ArgumentNullException">Thrown when the delivery entity is not found.</exception>
     public void Delete(Guid id)
     {
-        Delivery? entity = context.Deliveries.Find(id);
+        var entity = context.Deliveries.Find(id);
         if (entity is null) throw new ArgumentNullException();
         entity.IsBlocked = !entity.IsBlocked;
     }
@@ -115,7 +115,7 @@ public class DeliveryRepository(
             .AsNoTracking()
             .Take(page)
             .Skip((page - 1) * size)
-            .ToICollectionAsync();
+            .ToListAsync();
         foreach (var delivery in deliveries)
         {
             delivery.Address = (await context.Address
@@ -141,7 +141,7 @@ public class DeliveryRepository(
             .AsNoTracking()
             .Take(page)
             .Skip((page - 1) * size)
-            .ToICollectionAsync());
+            .ToListAsync());
 
         return delivery;
     }
@@ -153,7 +153,7 @@ public class DeliveryRepository(
     /// <returns>A task representing the asynchronous operation, returning the total page count.</returns>
     public async Task<int> GetDeliveriesPage(int deliveryPerSize)
     {
-        int deliveriesCount = await context.Deliveries.CountAsync();
+        var deliveriesCount = await context.Deliveries.CountAsync();
         if (deliveriesCount == 0) return 0;
         return (int)Math.Ceiling((decimal)(deliveriesCount) / deliveryPerSize);
     }
@@ -165,32 +165,26 @@ public class DeliveryRepository(
     /// <returns>A task representing the asynchronous operation, returning a <see cref="DeliveryAnalyseDto"/> or null.</returns>
     public async Task<DeliveryAnalyseDto?> GetDeliveryAnalys(Guid id)
     {
-        using (var cmd = context.Database.GetDbConnection().CreateCommand())
+        await using var cmd = context.Database.GetDbConnection().CreateCommand();
+        cmd.CommandText = "SELECT * FROM get_delivery_fee_info(@deliveryId)";
+        cmd.Parameters.Add(new NpgsqlParameter("@deliveryId", id));
+        await context.Database.OpenConnectionAsync();
+        DeliveryAnalyseDto? info = null;
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (!reader.HasRows) return info;
+        if (await reader.ReadAsync())
         {
-            cmd.CommandText = "SELECT * FROM get_delivery_fee_info(@deliveryId)";
-            cmd.Parameters.Add(new NpgsqlParameter("@deliveryId", id));
-            await context.Database.OpenConnectionAsync();
-            DeliveryAnalyseDto? info = null;
-            using (var reader = await cmd.ExecuteReaderAsync())
+            info = new DeliveryAnalyseDto
             {
-                if (reader.HasRows)
-                {
-                    if (reader.Read())
-                    {
-                        info = new DeliveryAnalyseDto
-                        {
-                            DayFee = (decimal?)reader["dayFee"],
-                            WeekFee = (decimal?)reader["weekFee"],
-                            MonthFee = (decimal?)reader["monthFee"],
-                            DayOrder = (int)reader["dayorder"],
-                            WeekOrder = (int)reader["weekorder"]
-                        };
-                    }
-                }
-            }
-
-            return info;
+                DayFee = (decimal?)reader["dayFee"],
+                WeekFee = (decimal?)reader["weekFee"],
+                MonthFee = (decimal?)reader["monthFee"],
+                DayOrder = (int)reader["dayorder"],
+                WeekOrder = (int)reader["weekorder"]
+            };
         }
+
+        return info;
     }
 
     /// <summary>

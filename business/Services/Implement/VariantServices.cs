@@ -86,7 +86,7 @@ public class VariantServices(
             return new Result(false, validationResult.Item1, null, validationResult.Item2);
         }
 
-        var variant = await unitOfWork.VariantRepository.GetVarient(variantDto.Id);
+        var variant = await unitOfWork.VariantRepository.GetVariant(variantDto.Id);
 
         if (variant is null)
         {
@@ -131,7 +131,7 @@ public class VariantServices(
             return new Result(false, validationResult.Item1, null, validationResult.Item2);
         }
 
-        var variant = await unitOfWork.VariantRepository.GetVarient(vairantId);
+        var variant = await unitOfWork.VariantRepository.GetVariant(vairantId);
 
         if (variant is null)
         {
@@ -167,7 +167,7 @@ public class VariantServices(
             return new Result(false, validationResult.Item1, null, validationResult.Item2);
         }
 
-        var count = await unitOfWork.VariantRepository.GetVarientCount(variantPerPage);
+        var count = await unitOfWork.VariantRepository.GetVariantCount(variantPerPage);
 
         logger.LogInformation("end getting variants page count");
         return new Result(true, null, count, 200);
@@ -181,7 +181,7 @@ public class VariantServices(
             async dt =>
             {
                 var variants = (await unitOfWork.VariantRepository
-                        .GetVarients(page, pageSize))
+                        .GetVariants(page, pageSize))
                     .Select(va => va.ToDto()).ToList();
 
                 return variants;

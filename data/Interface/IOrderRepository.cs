@@ -23,6 +23,6 @@ public interface IOrderRepository : IRepository<Order>
     Task<ICollection<Order>> GetOrderBelongToDelivery(Guid deliveryId, int pageNum, int pageSize);
     void RemoveOrderFromDelivery(Guid id, Guid deliveryId);
     Task<bool> IsSavedDistanceToOrder(Guid id);
-    void Delete(Guid id);
+    Task Delete(Guid id);
     void Delete(ICollection<Order> orders);
 }

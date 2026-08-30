@@ -1,11 +1,11 @@
 using api.application;
 using api.domain.entity;
-using data.Interface;
 using data.dto.Request;
+using data.Interface;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
-namespace api.Infrastructure.Repositories;
+namespace data.Repositories;
 
 /// <summary>
 /// Repository implementation for managing <see cref="Order"/> entities.
@@ -39,7 +39,7 @@ public class OrderRepository(AppDbContext context)
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
             .OrderDescending()
-            .ToICollectionAsync();
+            .ToListAsync();
 
         foreach (var order in orders)
         {
@@ -49,7 +49,7 @@ public class OrderRepository(AppDbContext context)
                 .Include(oi => oi.Store)
                 .AsSplitQuery()
                 .Where(oi => oi.OrderId == order.Id)
-                .ToICollectionAsync();
+                .ToListAsync();
         }
 
         return orders;
@@ -73,7 +73,7 @@ public class OrderRepository(AppDbContext context)
             .Skip((page - 1) * length)
             .Take(length)
             .OrderDescending()
-            .ToICollectionAsync();
+            .ToListAsync();
 
         foreach (var order in orders)
         {
@@ -104,13 +104,13 @@ public class OrderRepository(AppDbContext context)
                             .Address
                             .AsNoTracking()
                             .Where(ad => ad.OwnerId == it.Store.Id)
-                            .ToICollection()
+                            .ToList()
                     },
                     Product = it.Product,
                     OrderProductsVariants = it.OrderProductsVariants,
                     Status = it.Status
                 })
-                .ToICollectionAsync();
+                .ToListAsync();
         }
 
         return orders;
@@ -128,7 +128,7 @@ public class OrderRepository(AppDbContext context)
             .Include(o => o.PaymentType)
             .OrderBy(x => Guid.NewGuid())
             .Take(randomNumber)
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 
     /// <summary>
@@ -155,7 +155,7 @@ public class OrderRepository(AppDbContext context)
             .AsSplitQuery()
             .AsNoTracking()
             .Where(oi => oi.OrderId == order.Id)
-            .ToICollectionAsync();
+            .ToListAsync();
 
         return order;
     }
@@ -184,7 +184,7 @@ public class OrderRepository(AppDbContext context)
             .Include(oi => oi.Store)
             .AsSplitQuery()
             .Where(oi => oi.OrderId == order.Id)
-            .ToICollectionAsync();
+            .ToListAsync();
 
         return order;
     }
@@ -239,13 +239,13 @@ public class OrderRepository(AppDbContext context)
         foreach (var item in items)
         {
             var product = await context.Products.FindAsync(item.ProductId);
-            var currencies = await context.Currencies.ToICollectionAsync();
+            var currencies = await context.Currencies.ToListAsync();
             int variantPrice = 0;
 
             for (var i = 0; i < item.ProductVariant?.Count; i++)
             {
                 var productVariantPrice = await context.ProductVariants.FirstOrDefaultAsync(p =>
-                        p.ProductId == p.Id && p.Id == item.ProductVariant[i]);
+                        p.ProductId == p.Id && p.Id == item.ProductVariant.ElementAt(i));
 
                 if (productVariantPrice is null)
                 {
@@ -292,7 +292,7 @@ public class OrderRepository(AppDbContext context)
                 .Skip((pageNum - 1) * pageSize)
                 .Take(pageSize)
                 .OrderDescending()
-                .ToICollectionAsync();
+                .ToListAsync();
 
         foreach (var order in orders)
         {
@@ -324,13 +324,13 @@ public class OrderRepository(AppDbContext context)
                             .Address
                             .AsNoTracking()
                             .Where(ad => ad.OwnerId == it.Store.Id)
-                            .ToICollection()
+                            .ToList()
                     },
                     Product = it.Product,
                     OrderProductsVariants = it.OrderProductsVariants,
                     Status = it.Status
                 })
-                .ToICollectionAsync();
+                .ToListAsync();
         }
 
         return orders;
@@ -355,7 +355,7 @@ public class OrderRepository(AppDbContext context)
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
             .OrderDescending()
-            .ToICollectionAsync();
+            .ToListAsync();
 
         foreach (var order in orders)
         {
@@ -386,13 +386,13 @@ public class OrderRepository(AppDbContext context)
                             .Address
                             .AsNoTracking()
                             .Where(ad => ad.OwnerId == it.Store.Id)
-                            .ToICollection()
+                            .ToList()
                     },
                     Product = it.Product,
                     OrderProductsVariants = it.OrderProductsVariants,
                     Status = it.Status
                 })
-                .ToICollectionAsync();
+                .ToListAsync();
         }
 
         return orders;
@@ -468,9 +468,10 @@ public class OrderRepository(AppDbContext context)
     /// Deletes a specific order by its unique identifier.
     /// </summary>
     /// <param name="id">The unique identifier of the order to delete.</param>
-    public void Delete(Guid id)
+    public async Task Delete(Guid id)
     {
-        var orders = context.Orders.Where(o => o.Id == id).ToICollection();
+        var orders = await context.Orders.Where(o => o.Id == id).ToListAsync();
+        if (orders.Count == 0) return;
         context.Orders.RemoveRange(orders);
     }
 
@@ -494,7 +495,7 @@ public class OrderRepository(AppDbContext context)
         var result = (await IsSavedDistance(id) == true ? 1 : 0);
         if (result == 0)
         {
-            Delete(id);
+           await Delete(id);
             return false;
         }
 

@@ -3,7 +3,7 @@ using api.domain.entity;
 using data.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace api.Infrastructure.Repositories;
+namespace data.Repositories;
 /// <summary>
 /// Provides data access operations for <see cref="UserRefreshToken"/> entities.
 /// Supports creating, updating, and retrieving refresh tokens associated with users.

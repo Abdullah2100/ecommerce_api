@@ -3,7 +3,7 @@ using api.domain.entity;
 using data.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace api.Infrastructure.Repositories;
+namespace data.Repositories;
 
 /// <summary>
 /// Repository implementation for managing <see cref="OrderItem"/> entities.
@@ -37,7 +37,7 @@ public class OrderItemRepository(AppDbContext context) : IOrderItemRepository
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
             .OrderDescending()
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 
     /// <summary>

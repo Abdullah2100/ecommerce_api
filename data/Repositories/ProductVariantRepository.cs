@@ -1,239 +1,98 @@
 using api.application;
 using api.domain.entity;
+using data.dto.Request;
 using data.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace api.Infrastructure.Repositories;
+namespace data.Repositories;
 
 /// <summary>
-/// Repository implementation for managing <see cref="Store"/> entities.
-/// Provides methods for store registration, updates, and complex querying including related addresses and users.
+/// Repository class for managing database operations related to product variants.
+/// Implements the <see cref="IProductVariantRepository"/> interface using Entity Framework Core.
 /// </summary>
-/// <param name="context">The database context used for data access.</param>
-public class StoreRepository(AppDbContext context) : IStoreRepository
+/// <param name="context">The application database context dependency injected via primary constructor.</param>
+public class ProductVariantRepository(AppDbContext context) : IProductVariantRepository
 {
     /// <summary>
-    /// Adds a new store to the database context.
+    /// Retrieves a specific product variant based on its product ID and variant ID.
     /// </summary>
-    /// <param name="entity">The store entity to add.</param>
-    public void Add(Store entity)
+    /// <param name="productId">The unique identifier of the parent product.</param>
+    /// <param name="id">The unique identifier of the specific product variant.</param>
+    /// <returns>The matching <see cref="ProductVariant"/> if found; otherwise, <c>null</c>.</returns>
+    public async Task<ProductVariant?> GetProductVariant(Guid productId, Guid id)
     {
-        context.Stores.Add(entity);
+        return await context.ProductVariants
+            .FirstOrDefaultAsync(or => or.ProductId == productId && or.Id == id);
     }
 
     /// <summary>
-    /// Updates an existing store in the database context.
-    /// Creates a new store instance to ensure only specific fields are updated.
+    /// Processes a collection of product variants to either update existing ones or add new ones.
     /// </summary>
-    /// <param name="entity">The store entity containing updated values.</param>
-    public void Update(Store entity)
+    /// <param name="productVariants">The collection of product variants to be saved.</param>
+    /// <returns>A task that represents the asynchronous save operation.</returns>
+    public async Task SaveProductVariants(ICollection<ProductVariant> productVariants)
     {
-        var storeData = new Store()
+        for (var i = 0; i < productVariants.Count; i++)
         {
-            Id = entity.Id,
-            Name = entity.Name,
-            WallpaperImage = entity.WallpaperImage,
-            SmallImage = entity.SmallImage,
-            IsBlock = entity.IsBlock,
-            UserId = entity.UserId,
-            UpdatedAt = entity.UpdatedAt
-        };
-        context.Stores.Update(storeData);
-    }
-
-    /// <summary>
-    /// Toggles the blocked status of a store by its unique identifier.
-    /// </summary>
-    /// <param name="id">The unique identifier of the store.</param>
-    /// <exception cref="ArgumentNullException">Thrown when the store is not found.</exception>
-    public void Delete(Guid id)
-    {
-        Store? store = context.Stores.Find(id);
-        if (store == null) throw new ArgumentNullException();
-        store.IsBlock = !store.IsBlock;
-    }
-
-    /// <summary>
-    /// Retrieves a specific store by its identifier, including user info and associated addresses.
-    /// </summary>
-    /// <param name="id">The unique identifier of the store.</param>
-    /// <returns>A task representing the asynchronous operation, returning the store or <c>null</c> if not found.</returns>
-    public async Task<Store?> GetStore(Guid id)
-    {
-        Store? store = await context
-            .Stores
-            .Include(st => st.user)
-            .AsSplitQuery()
-            .AsNoTracking()
-            .FirstOrDefaultAsync(st => st.Id == id);
-
-        if (store is null) return null;
-
-        store.Addresses = await context
-            .Address
-            .AsNoTracking()
-            .Where(ad => ad.OwnerId == store.Id)
-            .ToICollectionAsync();
-        return store;
-    }
-
-    /// <summary>
-    /// Retrieves a store associated with a specific user ID.
-    /// </summary>
-    /// <param name="id">The unique identifier of the user (owner).</param>
-    /// <returns>A task representing the asynchronous operation, returning the store or <c>null</c> if not found.</returns>
-    public async Task<Store?> GetStoreByUserId(Guid id)
-    {
-        Store? store = await context
-            .Stores
-            .Include(st => st.user)
-            .AsSplitQuery()
-            .AsNoTracking()
-            .FirstOrDefaultAsync(st => st.UserId == id);
-
-        if (store is null) return null;
-
-        store.Addresses = await context
-            .Address
-            .AsNoTracking()
-            .Where(ad => ad.OwnerId == store.Id)
-            .ToICollectionAsync();
-        return store;
-    }
-
-    /// <summary>
-    /// Retrieves a collection of stores whose names start with the specified prefix.
-    /// </summary>
-    /// <param name="prefix">The name prefix to search for.</param>
-    /// <param name="length">The maximum number of stores to retrieve.</param>
-    /// <returns>A task representing the asynchronous operation, returning a collection of matching stores.</returns>
-    public async Task<ICollection<Store>> GetStores(string prefix, int length)
-    {
-        var stores = await context
-            .Stores
-            .Include(st => st.user)
-            .AsSplitQuery()
-            .AsNoTracking()
-            .Where(x => x.Name.StartsWith(prefix))
-            .Take(length)
-            .ToICollectionAsync();
-
-        foreach (var store in stores)
-        {
-            store.Addresses = await context
-                .Address
-                .AsNoTracking()
-                .Where(ad => ad.OwnerId == store.Id)
-                .ToICollectionAsync();
+            if (productVariants.ElementAt(i)?.Id is not null)
+                await Task.Run(() => Update(productVariants.ElementAt(i)));
+            else
+                await Task.Run(() => Add(productVariants.ElementAt(i)));
         }
-
-        return stores;
     }
 
     /// <summary>
-    /// Retrieves a paged collection of stores, including their subcategories and addresses.
+    /// Deletes all product variants associated with a specific product ID.
     /// </summary>
-    /// <param name="page">The page number to retrieve (1-indexed).</param>
-    /// <param name="length">The number of items per page.</param>
-    /// <returns>A task representing the asynchronous operation, returning a collection of stores.</returns>
-    public async Task<ICollection<Store>> GetStores(int page, int length)
+    /// <param name="productId">The unique identifier of the product whose variants should be removed.</param>
+    public async Task DeleteProductVariantByProductId(Guid productId)
     {
-        ICollection<Store> stores = await context
-            .Stores
-            .Include(st => st.user)
-            .Include(st => st.SubCategories)
-            .AsSplitQuery()
-            .AsNoTracking()
-            .Skip((page - 1) * length)
-            .Take(length)
-            .ToICollectionAsync();
+        var result = await context.ProductVariants.Where(p => p.ProductId == productId).ToListAsync();
+        if (result.Count == 0) return;
+        context.ProductVariants.RemoveRange(result);
+    }
 
-        if (stores.Count <= 0) return new ICollection<Store>();
-
-        foreach (var store in stores)
+    /// <summary>
+    /// Deletes specific product variants that match the provided criteria from a DTO collection and product ID.
+    /// </summary>
+    /// <param name="productVariants">The collection of DTOs containing variant identifiers and names to match against.</param>
+    /// <param name="productId">The unique identifier of the parent product.</param>
+    public async Task DeleteProductVariant(ICollection<CreateProductVariantDto> productVariants, Guid productId)
+    {
+        try
         {
-            store.Addresses = await context
-                .Address
-                .AsNoTracking()
-                .Where(ad => ad.OwnerId == store.Id)
-                .ToICollectionAsync();
+            for (var i = 0; i < productVariants.Count; i++)
+            {
+                var result = await context.ProductVariants
+                    .FirstOrDefaultAsync(pv =>
+                        pv.ProductId == productId && pv.VariantId == productVariants.ElementAt(i).VariantId &&
+                        pv.Name == productVariants.ElementAt(i).Name
+                    );
+                if (result is not null)
+                    context.ProductVariants.Remove(result);
+            }
         }
-
-        return stores;
+        catch (System.Exception ex)
+        {
+            Console.WriteLine($"{ex.Message}");
+        }
     }
 
     /// <summary>
-    /// Calculates the total number of pages available for all stores based on the items per page.
+    /// Tracks a new product variant entity for insertion into the database context.
     /// </summary>
-    /// <param name="storePerPage">The number of stores per page.</param>
-    /// <returns>A task representing the asynchronous operation, returning the total page count.</returns>
-    public async Task<int> GetStoresCount(int storePerPage)
+    /// The product variant entity to add.</param>
+    public void Add(ProductVariant entity)
     {
-        int count = await context
-            .Stores
-            .AsNoTracking()
-            .CountAsync();
-        if (count == 0) return 0;
-        count = (int)Math.Ceiling((double)count / storePerPage);
-        return count;
+        context.ProductVariants.Add(entity);
     }
 
     /// <summary>
-    /// Checks if a store exists with the specified name.
+    /// Tracks an existing product variant entity for modification within the database context.
     /// </summary>
-    /// <param name="name">The name to check.</param>
-    /// <returns>A task representing the asynchronous operation, returning <c>true</c> if it exists.</returns>
-    public async Task<bool> IsExist(string name)
+    /// The product variant entity to update.</param>
+    public void Update(ProductVariant entity)
     {
-        return await context
-            .Stores
-            .AsNoTracking()
-            .AnyAsync(st => st.Name == name);
-    }
-
-    /// <summary>
-    /// Checks if a store exists with the specified name, excluding a specific identifier.
-    /// Useful for name uniqueness validation during updates.
-    /// </summary>
-    /// <param name="name">The name to check.</param>
-    /// <param name="id">The unique identifier to exclude.</param>
-    /// <returns>A task representing the asynchronous operation, returning <c>true</c> if another store exists with that name.</returns>
-    public async Task<bool> IsExist(string name, Guid id)
-    {
-        return await context
-            .Stores
-            .AsNoTracking()
-            .AnyAsync(st => st.Name == name && st.Id != id);
-    }
-
-    /// <summary>
-    /// Checks if a store exists with the specified unique identifier.
-    /// </summary>
-    /// <param name="id">The unique identifier to check.</param>
-    /// <returns>A task representing the asynchronous operation, returning <c>true</c> if it exists.</returns>
-    public async Task<bool> IsExist(Guid id)
-    {
-        return await context
-            .Stores
-            .AsNoTracking()
-            .AnyAsync(st => st.Id == id);
-    }
-
-    /// <summary>
-    /// Checks if a store exists and contains a specific subcategory.
-    /// </summary>
-    /// <param name="id">The unique identifier of the store.</param>
-    /// <param name="subCategoryId">The unique identifier of the subcategory.</param>
-    /// <returns>A task representing the asynchronous operation, returning <c>true</c> if the store contains the subcategory.</returns>
-    public async Task<bool> IsExist(Guid id, Guid subCategoryId)
-    {
-        return await context
-            .Stores
-            .Include(st => st.SubCategories)
-            .AsNoTracking()
-            .AnyAsync(st =>
-                st.SubCategories != null &&
-                st.Id == id &
-                st.SubCategories.FirstOrDefault(sc => sc.Id == subCategoryId) != null);
+        context.ProductVariants.Update(entity);
     }
 }

@@ -27,6 +27,10 @@ builder.Services.AddUnitOfWork();
 //services
 builder.Services.AddServices();
 
+
+//rate limit 
+builder.Services.AddRateLimit();
+
 //firebase 
 /*
 

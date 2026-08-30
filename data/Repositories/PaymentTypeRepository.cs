@@ -3,7 +3,7 @@ using api.domain.entity;
 using data.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace api.Infrastructure.Repositories;
+namespace data.Repositories;
 
 /// <summary>
 /// Repository implementation for managing <see cref="PaymentType"/> entities.
@@ -51,7 +51,7 @@ public class PaymentTypeRepository(AppDbContext context) : IPaymentTypeRepositor
         return await context.PaymentTypes.AsNoTracking()
             .Take(pageSie)
             .Skip((pageNum - 1) * pageSie)
-            .ToICollectionAsync();
+            .ToListAsync();
     }
 
     /// <summary>

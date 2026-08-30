@@ -3,7 +3,7 @@ using api.domain.entity;
 using data.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace api.Infrastructure.Repositories;
+namespace data.Repositories;
 
 /// <summary>
 /// Repository implementation for managing <see cref="Address"/> entities.
@@ -38,7 +38,8 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
     {
         return context
             .Address
-            .AsNoTracking().Where(ad => ad.OwnerId == id)
+            .AsNoTracking()
+            .Where(ad => ad.OwnerId == id)
             .CountAsync();
     }
 
@@ -61,6 +62,7 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
     {
         return await context
             .Address
+            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.OwnerId == id);
     }
 
@@ -73,6 +75,7 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
     {
         return await context
             .Address
+            .AsNoTracking()
             .Where(x => x.OwnerId == id)
             .ToListAsync();
     }
@@ -86,6 +89,7 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
     public void UpdateCurrentLocation(Guid id, Guid ownerId)
     {
         var currentAddress = context.Address
+            .AsNoTracking()
             .FirstOrDefault(ad => ad.OwnerId == ownerId && ad.Id == id);
         if (currentAddress == null) throw new ArgumentNullException();
         currentAddress.IsCurrent = true;
@@ -116,6 +120,7 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
     {
         var address = context
             .Address
+            .AsNoTracking()
             .FirstOrDefault(x => x.Id == id);
         if (address is null) throw new ArgumentNullException();
         context.Remove(address);
