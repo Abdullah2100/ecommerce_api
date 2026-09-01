@@ -1,16 +1,23 @@
 using api.application;
 using api.domain.entity;
 using data.Interface;
+using data.util;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace data.Repositories;
+
 /// <summary>
 /// Provides data access operations for <see cref="Variant"/> entities.
 /// Supports retrieving variants with pagination, checking for existing variants,
 /// and performing basic create, update, and delete operations.
 /// </summary>
 /// <param name="context">The database context used to access variant data.</param>
-public class VariantRepository(AppDbContext context) : IVariantRepository
+/// <param name="logger">The logger used to log generated SQL queries.</param>
+public class VariantRepository(
+    AppDbContext context,
+    ILogger<VariantRepository> logger
+) : IVariantRepository
 {
     /// <summary>
     /// Retrieves a paginated collection of variants.
@@ -23,12 +30,18 @@ public class VariantRepository(AppDbContext context) : IVariantRepository
     /// </returns>
     public async Task<ICollection<Variant>> GetAllAsync(int page, int length)
     {
-        return await context
+        var query = context
             .Variants
             .AsNoTracking()
             .Skip((page - 1) * length)
-            .Take(length)
-            .ToListAsync();
+            .Take(length);
+
+        ClsUtil.logSql<VariantRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -58,11 +71,18 @@ public class VariantRepository(AppDbContext context) : IVariantRepository
     /// <param name="id">The unique identifier of the variant to delete.</param>
     public async Task Delete(Guid id)
     {
-        var variants = await context
+        var query = context
             .Variants
-            .Where(i => i.Id == id)
-            .ToListAsync();
-        if(variants.Count==0)return;
+            .AsNoTracking()
+            .Where(i => i.Id == id);
+
+        ClsUtil.logSql<VariantRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        var variants = await query.ToListAsync();
+        if (variants.Count == 0) return;
 
         context.Variants.RemoveRange(variants);
     }
@@ -77,6 +97,7 @@ public class VariantRepository(AppDbContext context) : IVariantRepository
     /// </returns>
     public async Task<Variant?> GetVariant(Guid id)
     {
+        // FindAsync is a direct key lookup and does not support ToQueryString()
         return await context
             .Variants
             .FindAsync(id);
@@ -93,12 +114,18 @@ public class VariantRepository(AppDbContext context) : IVariantRepository
     /// </returns>
     public async Task<ICollection<Variant>> GetVariants(int page, int length)
     {
-        var variants = await context
+        var query = context
             .Variants
             .AsNoTracking()
             .Skip((page - 1) * length)
-            .Take(length)
-            .ToListAsync();
+            .Take(length);
+
+        ClsUtil.logSql<VariantRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        var variants = await query.ToListAsync();
 
         return variants;
     }
@@ -116,10 +143,16 @@ public class VariantRepository(AppDbContext context) : IVariantRepository
     /// </returns>
     public async Task<int> GetVariantCount(int variantPerPage)
     {
-        int count = await context
+        var query = context
             .Stores
-            .AsNoTracking()
-            .CountAsync();
+            .AsNoTracking();
+
+        ClsUtil.logSql<VariantRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        int count = await query.CountAsync();
 
         if (count == 0)
             return 0;
@@ -139,10 +172,17 @@ public class VariantRepository(AppDbContext context) : IVariantRepository
     /// </returns>
     public async Task<bool> IsExist(Guid id)
     {
-        return await context
+        var query = context
             .Variants
             .AsNoTracking()
-            .AnyAsync(i => i.Id == id);
+            .Where(i => i.Id == id);
+
+        ClsUtil.logSql<VariantRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 
     /// <summary>
@@ -156,10 +196,17 @@ public class VariantRepository(AppDbContext context) : IVariantRepository
     /// </returns>
     public async Task<bool> IsExist(string name)
     {
-        return await context
+        var query = context
             .Variants
             .AsNoTracking()
-            .AnyAsync(i => i.Name == name);
+            .Where(i => i.Name == name);
+
+        ClsUtil.logSql<VariantRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 
     /// <summary>
@@ -178,9 +225,16 @@ public class VariantRepository(AppDbContext context) : IVariantRepository
     /// </returns>
     public async Task<bool> IsExist(string name, Guid id)
     {
-        return await context
+        var query = context
             .Variants
             .AsNoTracking()
-            .AnyAsync(i => i.Name == name && i.Id != id);
+            .Where(i => i.Name == name && i.Id != id);
+
+        ClsUtil.logSql<VariantRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 }

@@ -1,9 +1,12 @@
 using api.application;
 using api.domain.entity;
 using data.Interface;
+using data.util;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace data.Repositories;
+
 /// <summary>
 /// Provides data access operations for <see cref="User"/> entities.
 /// Supports retrieving users by identifier, email, store, or credentials,
@@ -11,7 +14,11 @@ namespace data.Repositories;
 /// and performing basic entity management operations.
 /// </summary>
 /// <param name="dbContext">The database context used to access user and address data.</param>
-public class UserRepository(AppDbContext dbContext) : IUserRepository
+/// <param name="logger">The logger used to log generated SQL queries.</param>
+public class UserRepository(
+    AppDbContext dbContext,
+    ILogger<UserRepository> logger
+) : IUserRepository
 {
     /// <summary>
     /// Retrieves a user by their unique identifier.
@@ -24,19 +31,32 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
     /// </returns>
     public async Task<User?> GetUser(Guid id)
     {
-        User? user = await dbContext
+        var query = dbContext
             .Users
             .Include(u => u.Store)
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == id);
+            .Where(u => u.Id == id);
+
+        ClsUtil.logSql<UserRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        User? user = await query.FirstOrDefaultAsync();
 
         if (user == null) return null;
 
-        user.Addresses = await dbContext
+        var addressQuery = dbContext
             .Address
             .AsNoTracking()
-            .Where(u => u.OwnerId == id)
-            .ToListAsync();
+            .Where(u => u.OwnerId == id);
+
+        ClsUtil.logSql<UserRepository>(
+            logger,
+            addressQuery.ToQueryString()
+        );
+
+        user.Addresses = await addressQuery.ToListAsync();
 
         return user;
     }
@@ -52,19 +72,32 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
     /// </returns>
     public async Task<User?> GetUser(string email)
     {
-        User? user = await dbContext
+        var query = dbContext
             .Users
             .Include(u => u.Store)
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Email == email);
+            .Where(u => u.Email == email);
+
+        ClsUtil.logSql<UserRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        User? user = await query.FirstOrDefaultAsync();
 
         if (user == null) return null;
 
-        user.Addresses = await dbContext
+        var addressQuery = dbContext
             .Address
             .AsNoTracking()
-            .Where(u => u.OwnerId == user.Id)
-            .ToListAsync();
+            .Where(u => u.OwnerId == user.Id);
+
+        ClsUtil.logSql<UserRepository>(
+            logger,
+            addressQuery.ToQueryString()
+        );
+
+        user.Addresses = await addressQuery.ToListAsync();
 
         return user;
     }
@@ -78,10 +111,16 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
     /// </returns>
     public async Task<int> GetUserCount()
     {
-        return await dbContext
+        var query = dbContext
             .Users
-            .AsNoTracking()
-            .CountAsync();
+            .AsNoTracking();
+
+        ClsUtil.logSql<UserRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.CountAsync();
     }
 
     /// <summary>
@@ -94,11 +133,17 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
     /// </returns>
     public async Task<int> GetUserAddressCount(Guid id)
     {
-        return await dbContext
+        var query = dbContext
             .Address
             .AsNoTracking()
-            .Where(u => u.OwnerId == id)
-            .CountAsync();
+            .Where(u => u.OwnerId == id);
+
+        ClsUtil.logSql<UserRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.CountAsync();
     }
 
     /// <summary>
@@ -112,20 +157,33 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
     /// </returns>
     public async Task<User?> GetUserByStoreId(Guid id)
     {
-        User? user = await dbContext
+        var query = dbContext
             .Users
             .Include(u => u.Store)
             .AsSplitQuery()
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Store != null && u.Store.Id == id);
+            .Where(u => u.Store != null && u.Store.Id == id);
+
+        ClsUtil.logSql<UserRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        User? user = await query.FirstOrDefaultAsync();
 
         if (user == null) return null;
 
-        user.Addresses = await dbContext
+        var addressQuery = dbContext
             .Address
             .AsNoTracking()
-            .Where(u => u.OwnerId == id)
-            .ToListAsync();
+            .Where(u => u.OwnerId == id);
+
+        ClsUtil.logSql<UserRepository>(
+            logger,
+            addressQuery.ToQueryString()
+        );
+
+        user.Addresses = await addressQuery.ToListAsync();
 
         return user;
     }
@@ -142,23 +200,35 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
     /// </returns>
     public async Task<ICollection<User>> GetUsers(int page, int length)
     {
-        ICollection<User>? users = await dbContext
+        var query = dbContext
             .Users
             .Include(u => u.Store)
             .AsSplitQuery()
             .AsNoTracking()
             .Skip((page - 1) * length)
             .OrderDescending()
-            .Take(length)
-            .ToListAsync();
+            .Take(length);
+
+        ClsUtil.logSql<UserRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        ICollection<User>? users = await query.ToListAsync();
 
         foreach (var user in users)
         {
-            user.Addresses = await dbContext
+            var addressQuery = dbContext
                 .Address
                 .AsNoTracking()
-                .Where(u => u.OwnerId == user.Id)
-                .ToListAsync();
+                .Where(u => u.OwnerId == user.Id);
+
+            ClsUtil.logSql<UserRepository>(
+                logger,
+                addressQuery.ToQueryString()
+            );
+
+            user.Addresses = await addressQuery.ToListAsync();
         }
 
         return users;
@@ -182,21 +252,34 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
     {
         try
         {
-            User? user = await dbContext
+            var query = dbContext
                 .Users
                 .Include(u => u.Store)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(u =>
+                .Where(u =>
                     (u.Name == username || u.Email == username) &&
                     u.Password == password);
 
+            ClsUtil.logSql<UserRepository>(
+                logger,
+                query.ToQueryString()
+            );
+
+            User? user = await query.FirstOrDefaultAsync();
+
             if (user == null) return null;
 
-            user.Addresses = await dbContext
+            var addressQuery = dbContext
                 .Address
                 .AsNoTracking()
-                .Where(u => u.OwnerId == user.Id)
-                .ToListAsync();
+                .Where(u => u.OwnerId == user.Id);
+
+            ClsUtil.logSql<UserRepository>(
+                logger,
+                addressQuery.ToQueryString()
+            );
+
+            user.Addresses = await addressQuery.ToListAsync();
 
             return user;
         }
@@ -219,10 +302,17 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
     /// </returns>
     public async Task<bool> IsExist(bool role)
     {
-        return await dbContext
+        var query = dbContext
             .Users
             .AsNoTracking()
-            .AnyAsync(u => u.IsUser == role);
+            .Where(u => u.IsUser == role);
+
+        ClsUtil.logSql<UserRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 
     /// <summary>
@@ -236,10 +326,17 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
     /// </returns>
     public async Task<bool> IsExistByPhone(string phone)
     {
-        return await dbContext
+        var query = dbContext
             .Users
             .AsNoTracking()
-            .AnyAsync(u => u.Phone == phone);
+            .Where(u => u.Phone == phone);
+
+        ClsUtil.logSql<UserRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 
     /// <summary>
@@ -253,10 +350,17 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
     /// </returns>
     public async Task<bool> IsExistByEmail(string email)
     {
-        return await dbContext
+        var query = dbContext
             .Users
             .AsNoTracking()
-            .AnyAsync(u => u.Email == email);
+            .Where(u => u.Email == email);
+
+        ClsUtil.logSql<UserRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 
     /// <summary>
@@ -307,6 +411,13 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
     /// </returns>
     public async Task<bool> IsExist(Guid id)
     {
-        return await dbContext.Users.FindAsync(id) != null;
+        var query = dbContext.Users.Where(u => u.Id == id);
+
+        ClsUtil.logSql<UserRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 }

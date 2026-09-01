@@ -25,31 +25,25 @@ public class AnalyseRepository(
     {
         try
         {
-            await using (var cmd = context.Database.GetDbConnection().CreateCommand())
+            await using var cmd = context.Database.GetDbConnection().CreateCommand();
+            cmd.CommandText = "SELECT * FROM get_monthly_stats()";
+            await context.Database.OpenConnectionAsync();
+            AnalyzesOrderDto? info = null;
+            await using var reader = await cmd.ExecuteReaderAsync();
+            if (!reader.HasRows) return info;
+            if (await reader.ReadAsync())
             {
-                cmd.CommandText = "SELECT * FROM get_monthly_stats()";
-                await context.Database.OpenConnectionAsync();
-                AnalyzesOrderDto? info = null;
-                using (var reader = await cmd.ExecuteReaderAsync())
+                info = new AnalyzesOrderDto
                 {
-                    if (reader.HasRows)
-                    {
-                        if (reader.Read())
-                        {
-                            info = new AnalyzesOrderDto
-                            {
-                                TotalFee = (decimal?)reader["totalFee"],
-                                TotalOrders = (long?)reader["totalOrder"],
-                                TotalDeliveryDistance = (decimal?)reader["totalDeliveryDistance"],
-                                UsersCount = (long)reader["userCount"],
-                                ProductCount = (long)reader["productcount"],
-                            };
-                        }
-                    }
-                }
-
-                return info;
+                    TotalFee = (decimal?)reader["totalFee"],
+                    TotalOrders = (long?)reader["totalOrder"],
+                    TotalDeliveryDistance = (decimal?)reader["totalDeliveryDistance"],
+                    UsersCount = (long)reader["userCount"],
+                    ProductCount = (long)reader["productcount"],
+                };
             }
+
+            return info;
         }
         catch (Exception ex)
         {

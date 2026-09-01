@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace data.util
 {
@@ -14,7 +15,7 @@ namespace data.util
         Payment,
     };
 
-   public static class ClsUtil
+    public static class ClsUtil
     {
         public static Guid GenerateGuid() => Guid.NewGuid();
 
@@ -43,6 +44,15 @@ namespace data.util
 
             // Convert the byte array to string format
             return BitConverter.ToString(hashValue).Replace("-", "");
+        }
+
+        public static void logSql<T>(ILogger logger, string sql)
+        {
+            logger.LogDebug("====================================");
+            logger.LogDebug("             Query Sql              ");
+            logger.LogDebug("====================================");
+            logger.LogDebug(sql);
+            logger.LogDebug("====================================");
         }
     }
 }

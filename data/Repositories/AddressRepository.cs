@@ -1,7 +1,9 @@
 using api.application;
 using api.domain.entity;
 using data.Interface;
+using data.util;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace data.Repositories;
 
@@ -9,7 +11,9 @@ namespace data.Repositories;
 /// Repository implementation for managing <see cref="Address"/> entities.
 /// </summary>
 /// <param name="context">The database context used for data access.</param>
-public class AddressRepository(AppDbContext context) : IAddressRepository
+public class AddressRepository(
+    AppDbContext context,
+    ILogger<AddressRepository> logger) : IAddressRepository
 {
     /// <summary>
     /// Adds a new address to the database context.
@@ -36,11 +40,17 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
     /// <returns>A task representing the asynchronous operation, returning the count of addresses.</returns>
     public Task<int> GetAddressCount(Guid id)
     {
-        return context
+        var query = context
             .Address
             .AsNoTracking()
-            .Where(ad => ad.OwnerId == id)
+            .Where(ad => ad.OwnerId == id);
+
+        ClsUtil.logSql<AddressRepository>(logger, query.ToQueryString());
+
+        var addressCount = query
             .CountAsync();
+
+        return addressCount;
     }
 
     /// <summary>
@@ -60,10 +70,14 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
     /// <returns>A task representing the asynchronous operation, returning the address if found; otherwise, null.</returns>
     public async Task<Address?> GetAddressByOwnerId(Guid id)
     {
-        return await context
+        var query = context
             .Address
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.OwnerId == id);
+            .Where(x => x.OwnerId == id);
+
+        ClsUtil.logSql<AddressRepository>(logger, query.ToQueryString());
+
+        return await query.FirstOrDefaultAsync();
     }
 
     /// <summary>
@@ -73,36 +87,29 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
     /// <returns>A task representing the asynchronous operation, returning a collection of addresses.</returns>
     public async Task<ICollection<Address>> GetAllAddressByOwnerId(Guid id)
     {
-        return await context
+        var query = context
             .Address
             .AsNoTracking()
-            .Where(x => x.OwnerId == id)
-            .ToListAsync();
-    }
+            .Where(x => x.OwnerId == id);
 
-    /// <summary>
-    /// Sets a specific address as the current (active) location for an owner.
-    /// </summary>
-    /// <param name="id">The unique identifier of the address.</param>
-    /// <param name="ownerId">The unique identifier of the owner.</param>
-    /// <exception cref="ArgumentNullException">Thrown if the address is not found.</exception>
-    public void UpdateCurrentLocation(Guid id, Guid ownerId)
-    {
-        var currentAddress = context.Address
-            .AsNoTracking()
-            .FirstOrDefault(ad => ad.OwnerId == ownerId && ad.Id == id);
-        if (currentAddress == null) throw new ArgumentNullException();
-        currentAddress.IsCurrent = true;
+        ClsUtil.logSql<AddressRepository>(logger, query.ToQueryString());
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
     /// Marks all addresses of a specific owner as not being the current location.
     /// </summary>
     /// <param name="ownerId">The unique identifier of the owner.</param>
-    public void MakeAddressNotCurrentToId(Guid ownerId)
+    public async Task MakeAddressNotCurrentToId(Guid ownerId)
     {
-        var address = context.Address
+        var query = context.Address
             .Where(ad => ad.OwnerId == ownerId);
+
+        ClsUtil.logSql<AddressRepository>(logger, query.ToQueryString());
+
+        var address = await query.ToListAsync();
+
         foreach (var currentAddress in address)
         {
             currentAddress.IsCurrent = false;
@@ -118,11 +125,15 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
     /// <exception cref="ArgumentNullException">Thrown if the address is not found.</exception>
     public void Delete(Guid id)
     {
-        var address = context
+        var query = context
             .Address
             .AsNoTracking()
-            .FirstOrDefault(x => x.Id == id);
-        if (address is null) throw new ArgumentNullException();
-        context.Remove(address);
+            .Where(x => x.Id == id);
+
+        ClsUtil.logSql<AddressRepository>(logger, query.ToQueryString());
+
+
+        if (!query.Any()) throw new ArgumentNullException();
+        context.Remove(query);
     }
 }

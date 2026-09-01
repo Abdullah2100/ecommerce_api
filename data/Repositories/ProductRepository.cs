@@ -1,7 +1,9 @@
 using api.application;
 using api.domain.entity;
 using data.Interface;
+using data.util;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace data.Repositories;
 
@@ -17,7 +19,8 @@ namespace data.Repositories;
 /// when loading multiple related collections.
 /// </remarks>
 public class ProductRepository(
-    AppDbContext context
+    AppDbContext context,
+    ILogger<ProductRepository> logger
 ) : IProductRepository
 {
     /// <summary>
@@ -28,16 +31,23 @@ public class ProductRepository(
     /// <returns>A collection containing the products for the requested page.</returns>
     public async Task<ICollection<Product>> GetAllAsync(int page, int length)
     {
-        return await context.Products
+        var query = context.Products
             .AsNoTracking()
             .Include(pro => pro.SubCategory)
             .Include(pro => pro.ProductImages)
             .Include(pro => pro.ProductVariants)
             .AsSplitQuery()
+            .AsNoTracking()
             .Skip((page - 1) * length)
             .Take(length)
-            .OrderDescending()
-            .ToListAsync();
+            .OrderDescending();
+
+        ClsUtil.logSql<ProductRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -111,14 +121,22 @@ public class ProductRepository(
     /// </returns>
     public async Task<Product?> GetProduct(Guid id)
     {
-        return await context.Products
+        var query = context.Products
             .AsNoTracking()
             .Include(pro => pro.Store)
             .Include(pro => pro.SubCategory)
             .Include(pro => pro.ProductImages)
             .Include(pro => pro.ProductVariants)
             .AsSplitQuery()
-            .FirstOrDefaultAsync(p => p.Id == id);
+            .AsNoTracking()
+            .Where(p => p.Id == id);
+
+        ClsUtil.logSql<ProductRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.FirstOrDefaultAsync();
     }
 
     /// <summary>
@@ -131,23 +149,38 @@ public class ProductRepository(
     /// </returns>
     public async Task<Product?> GetProduct(Guid id, Guid storeId)
     {
-        return await context.Products
+        var query = context.Products
             .AsNoTracking()
             .Include(pro => pro.Store)
             .Include(pro => pro.SubCategory)
             .Include(pro => pro.ProductImages)
             .Include(pro => pro.ProductVariants)
             .AsSplitQuery()
-            .FirstOrDefaultAsync(p => p.Id == id && p.StoreId == storeId);
+            .AsNoTracking()
+            .Where(p => p.Id == id && p.StoreId == storeId);
+
+        ClsUtil.logSql<ProductRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.FirstOrDefaultAsync();
     }
 
     /// <summary>
     /// Gets the total number of products.
     /// </summary>
     /// <returns>The total number of products in the database.</returns>
-    public Task<int> GetProduct()
+    public async Task<int> GetProduct()
     {
-        return context.Products.CountAsync();
+        var query = context.Products.AsNoTracking();
+
+        ClsUtil.logSql<ProductRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.CountAsync();
     }
 
     /// <summary>
@@ -156,7 +189,14 @@ public class ProductRepository(
     /// <returns>The total product count, or <c>null</c> if applicable.</returns>
     public async Task<int?> GetProductPages()
     {
-        return await context.Products.CountAsync();
+        var query = context.Products.AsNoTracking();
+
+        ClsUtil.logSql<ProductRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.CountAsync();
     }
 
     /// <summary>
@@ -170,14 +210,22 @@ public class ProductRepository(
     /// </returns>
     public async Task<Product?> GetProductByUser(Guid id, Guid userId)
     {
-        return await context.Products
+        var query = context.Products
             .AsNoTracking()
             .Include(pro => pro.Store)
             .Include(pro => pro.SubCategory)
             .Include(pro => pro.ProductImages)
             .Include(pro => pro.ProductVariants)
             .AsSplitQuery()
-            .FirstOrDefaultAsync(p => p.Id == id && p.Store.UserId == userId);
+            .AsNoTracking()
+            .Where(p => p.Id == id && p.Store.UserId == userId);
+
+        ClsUtil.logSql<ProductRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.FirstOrDefaultAsync();
     }
 
     /// <summary>
@@ -194,18 +242,25 @@ public class ProductRepository(
         int pageNum,
         int pageSize)
     {
-        return await context.Products
+        var query = context.Products
             .AsNoTracking()
             .Include(pro => pro.Store)
             .Include(pro => pro.SubCategory)
             .Include(pro => pro.ProductImages)
             .Include(pro => pro.ProductVariants)
             .AsSplitQuery()
+            .AsNoTracking()
             .Where(p => p.StoreId == storeId && p.SubcategoryId == subCategoryId)
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
-            .OrderDescending()
-            .ToListAsync();
+            .OrderDescending();
+
+        ClsUtil.logSql<ProductRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -220,18 +275,25 @@ public class ProductRepository(
         int pageNum,
         int pageSize)
     {
-        return await context.Products
+        var query = context.Products
             .AsNoTracking()
             .Include(pro => pro.Store)
             .Include(pro => pro.SubCategory)
             .Include(pro => pro.ProductImages)
             .Include(pro => pro.ProductVariants)
             .AsSplitQuery()
+            .AsNoTracking()
             .Where(p => p.StoreId == storeId)
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
-            .OrderDescending()
-            .ToListAsync();
+            .OrderDescending();
+
+        ClsUtil.logSql<ProductRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -247,27 +309,42 @@ public class ProductRepository(
     {
         try
         {
-            var products = await context.Products
+            var query = context.Products
                 .AsNoTracking()
                 .Include(pro => pro.Store)
                 .Include(pro => pro.SubCategory)
                 .Include(pro => pro.ProductImages)
                 .Include(pro => pro.ProductVariants)
                 .AsSplitQuery()
+                .AsNoTracking()
                 .Skip((page - 1) * length)
                 .Take(length)
-                .OrderDescending()
-                .ToListAsync();
+                .OrderDescending();
 
-            if (products.Count==0)
+            ClsUtil.logSql<ProductRepository>(
+                logger,
+                query.ToQueryString()
+            );
+
+            var products = await query.ToListAsync();
+
+            if (products.Count == 0)
                 return new List<Product>();
 
             for (int i = 0; i < products.Count; i++)
             {
-                products[i].ProductVariants = await context.ProductVariants
+                var variantQuery = context.ProductVariants
                     .Include(pr => pr.Variant)
-                    .Where(p => p.ProductId == products[i].Id)
-                    .ToListAsync();
+                    .AsSplitQuery()
+                    .AsNoTracking()
+                    .Where(p => p.ProductId == products[i].Id);
+
+                ClsUtil.logSql<ProductRepository>(
+                    logger,
+                    variantQuery.ToQueryString()
+                );
+
+                products[i].ProductVariants = await variantQuery.ToListAsync();
             }
 
             return products;
@@ -286,11 +363,18 @@ public class ProductRepository(
     /// <returns>A collection containing randomly selected products.</returns>
     public async Task<ICollection<Product>> GetProducts(int randomNumber)
     {
-        return await context
+        var query = context
             .Products
+            .AsNoTracking()
             .OrderBy(x => Guid.NewGuid())
-            .Take(randomNumber)
-            .ToListAsync();
+            .Take(randomNumber);
+
+        ClsUtil.logSql<ProductRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -307,18 +391,25 @@ public class ProductRepository(
         int pageNum,
         int pageSize)
     {
-        return await context.Products
+        var query = context.Products
             .AsNoTracking()
             .Include(pro => pro.Store)
             .Include(pro => pro.SubCategory)
             .Include(pro => pro.ProductImages)
             .Include(pro => pro.ProductVariants)
             .AsSplitQuery()
+            .AsNoTracking()
             .Where(p => p.SubCategory.CategoryId == categoryId)
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
-            .OrderDescending()
-            .ToListAsync();
+            .OrderDescending();
+
+        ClsUtil.logSql<ProductRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -330,6 +421,15 @@ public class ProductRepository(
     /// </returns>
     public async Task<bool> IsExist(Guid id)
     {
-        return await context.Products.FindAsync(id) != null;
+        var query = context.Products
+            .AsNoTracking()
+            .Where(p => p.Id == id);
+
+        ClsUtil.logSql<ProductRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 }

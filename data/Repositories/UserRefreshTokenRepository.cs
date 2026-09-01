@@ -1,15 +1,22 @@
 using api.application;
 using api.domain.entity;
 using data.Interface;
+using data.util;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace data.Repositories;
+
 /// <summary>
 /// Provides data access operations for <see cref="UserRefreshToken"/> entities.
 /// Supports creating, updating, and retrieving refresh tokens associated with users.
 /// </summary>
 /// <param name="context">The database context used to access user refresh token data.</param>
-public class UserRefreshTokenRepository(AppDbContext context) : IUserRefreshTokenRepository
+/// <param name="logger">The logger used to log generated SQL queries.</param>
+public class UserRefreshTokenRepository(
+    AppDbContext context,
+    ILogger<UserRefreshTokenRepository> logger
+) : IUserRefreshTokenRepository
 {
     /// <summary>
     /// Determines whether a refresh token exists for the specified user.
@@ -21,10 +28,17 @@ public class UserRefreshTokenRepository(AppDbContext context) : IUserRefreshToke
     /// </returns>
     private async Task<bool> IsExistByUserId(Guid userId)
     {
-        return await context
+        var query = context
             .UserRefreshTokens
             .AsNoTracking()
-            .AnyAsync(value => value.UserId == userId);
+            .Where(value => value.UserId == userId);
+
+        ClsUtil.logSql<UserRefreshTokenRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 
     /// <summary>
@@ -39,11 +53,17 @@ public class UserRefreshTokenRepository(AppDbContext context) : IUserRefreshToke
     /// </returns>
     private async Task UpdateUserRefreshToken(UserRefreshToken data)
     {
-        await context.UserRefreshTokens
-            .Where(user => user.UserId == data.UserId)
-            .ExecuteUpdateAsync(value => value
-                .SetProperty(value => value.ExpireAt, data.ExpireAt)
-                .SetProperty(value => value.Refresh, data.Refresh));
+        var query = context.UserRefreshTokens
+            .Where(user => user.UserId == data.UserId);
+
+        ClsUtil.logSql<UserRefreshTokenRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        await query.ExecuteUpdateAsync(value => value
+            .SetProperty(value => value.ExpireAt, data.ExpireAt)
+            .SetProperty(value => value.Refresh, data.Refresh));
     }
 
     /// <summary>
@@ -101,9 +121,16 @@ public class UserRefreshTokenRepository(AppDbContext context) : IUserRefreshToke
     /// </returns>
     public async Task<UserRefreshToken?> GetByUserId(Guid id)
     {
-        return await context
+        var query = context
             .UserRefreshTokens
             .AsNoTracking()
-            .FirstOrDefaultAsync(value => value.UserId == id);
+            .Where(value => value.UserId == id);
+
+        ClsUtil.logSql<UserRefreshTokenRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.FirstOrDefaultAsync();
     }
 }

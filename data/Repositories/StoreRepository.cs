@@ -1,7 +1,9 @@
 using api.application;
 using api.domain.entity;
 using data.Interface;
+using data.util;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace data.Repositories;
 
@@ -10,7 +12,11 @@ namespace data.Repositories;
 /// Provides methods for store registration, updates, and complex querying including related addresses and users.
 /// </summary>
 /// <param name="context">The database context used for data access.</param>
-public class StoreRepository(AppDbContext context) : IStoreRepository
+/// <param name="logger">The logger used to log generated SQL queries.</param>
+public class StoreRepository(
+    AppDbContext context,
+    ILogger<StoreRepository> logger
+) : IStoreRepository
 {
     /// <summary>
     /// Adds a new store to the database context.
@@ -60,20 +66,33 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
     /// <returns>A task representing the asynchronous operation, returning the store or <c>null</c> if not found.</returns>
     public async Task<Store?> GetStore(Guid id)
     {
-        var store = await context
+        var query = context
             .Stores
             .Include(st => st.user)
             .AsSplitQuery()
             .AsNoTracking()
-            .FirstOrDefaultAsync(st => st.Id == id);
+            .Where(st => st.Id == id);
+
+        ClsUtil.logSql<StoreRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        var store = await query.FirstOrDefaultAsync();
 
         if (store is null) return null;
 
-        store.Addresses = await context
+        var addressQuery = context
             .Address
             .AsNoTracking()
-            .Where(ad => ad.OwnerId == store.Id)
-            .ToListAsync();
+            .Where(ad => ad.OwnerId == store.Id);
+
+        ClsUtil.logSql<StoreRepository>(
+            logger,
+            addressQuery.ToQueryString()
+        );
+
+        store.Addresses = await addressQuery.ToListAsync();
         return store;
     }
 
@@ -84,20 +103,33 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
     /// <returns>A task representing the asynchronous operation, returning the store or <c>null</c> if not found.</returns>
     public async Task<Store?> GetStoreByUserId(Guid id)
     {
-        Store? store = await context
+        var query = context
             .Stores
             .Include(st => st.user)
             .AsSplitQuery()
             .AsNoTracking()
-            .FirstOrDefaultAsync(st => st.UserId == id);
+            .Where(st => st.UserId == id);
+
+        ClsUtil.logSql<StoreRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        Store? store = await query.FirstOrDefaultAsync();
 
         if (store is null) return null;
 
-        store.Addresses = await context
+        var addressQuery = context
             .Address
             .AsNoTracking()
-            .Where(ad => ad.OwnerId == store.Id)
-            .ToListAsync();
+            .Where(ad => ad.OwnerId == store.Id);
+
+        ClsUtil.logSql<StoreRepository>(
+            logger,
+            addressQuery.ToQueryString()
+        );
+
+        store.Addresses = await addressQuery.ToListAsync();
         return store;
     }
 
@@ -109,22 +141,34 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
     /// <returns>A task representing the asynchronous operation, returning a collection of matching stores.</returns>
     public async Task<ICollection<Store>> GetStores(string prefix, int length)
     {
-        var stores = await context
+        var query = context
             .Stores
             .AsNoTracking()
             .Include(st => st.user)
             .AsSplitQuery()
             .Where(x => x.Name.StartsWith(prefix))
-            .Take(length)
-            .ToListAsync();
+            .Take(length);
+
+        ClsUtil.logSql<StoreRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        var stores = await query.ToListAsync();
 
         foreach (var store in stores)
         {
-            store.Addresses = await context
+            var addressQuery = context
                 .Address
                 .AsNoTracking()
-                .Where(ad => ad.OwnerId == store.Id)
-                .ToListAsync();
+                .Where(ad => ad.OwnerId == store.Id);
+
+            ClsUtil.logSql<StoreRepository>(
+                logger,
+                addressQuery.ToQueryString()
+            );
+
+            store.Addresses = await addressQuery.ToListAsync();
         }
 
         return stores;
@@ -138,25 +182,37 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
     /// <returns>A task representing the asynchronous operation, returning a collection of stores.</returns>
     public async Task<ICollection<Store>> GetStores(int page, int length)
     {
-        ICollection<Store> stores = await context
+        var query = context
             .Stores
             .Include(st => st.user)
             .Include(st => st.SubCategories)
             .AsSplitQuery()
             .AsNoTracking()
             .Skip((page - 1) * length)
-            .Take(length)
-            .ToListAsync();
+            .Take(length);
+
+        ClsUtil.logSql<StoreRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        ICollection<Store> stores = await query.ToListAsync();
 
         if (stores.Count <= 0) return new List<Store>();
 
         foreach (var store in stores)
         {
-            store.Addresses = await context
+            var addressQuery = context
                 .Address
                 .AsNoTracking()
-                .Where(ad => ad.OwnerId == store.Id)
-                .ToListAsync();
+                .Where(ad => ad.OwnerId == store.Id);
+
+            ClsUtil.logSql<StoreRepository>(
+                logger,
+                addressQuery.ToQueryString()
+            );
+
+            store.Addresses = await addressQuery.ToListAsync();
         }
 
         return stores;
@@ -169,10 +225,16 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
     /// <returns>A task representing the asynchronous operation, returning the total page count.</returns>
     public async Task<int> GetStoresCount(int storePerPage)
     {
-        var count = await context
+        var query = context
             .Stores
-            .AsNoTracking()
-            .CountAsync();
+            .AsNoTracking();
+
+        ClsUtil.logSql<StoreRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        var count = await query.CountAsync();
         if (count == 0) return 0;
         count = (int)Math.Ceiling((double)count / storePerPage);
         return count;
@@ -185,10 +247,17 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
     /// <returns>A task representing the asynchronous operation, returning <c>true</c> if it exists.</returns>
     public async Task<bool> IsExist(string name)
     {
-        return await context
+        var query = context
             .Stores
             .AsNoTracking()
-            .AnyAsync(st => st.Name == name);
+            .Where(st => st.Name == name);
+
+        ClsUtil.logSql<StoreRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 
     /// <summary>
@@ -200,10 +269,17 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
     /// <returns>A task representing the asynchronous operation, returning <c>true</c> if another store exists with that name.</returns>
     public async Task<bool> IsExist(string name, Guid id)
     {
-        return await context
+        var query = context
             .Stores
             .AsNoTracking()
-            .AnyAsync(st => st.Name == name && st.Id != id);
+            .Where(st => st.Name == name && st.Id != id);
+
+        ClsUtil.logSql<StoreRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 
     /// <summary>
@@ -213,10 +289,17 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
     /// <returns>A task representing the asynchronous operation, returning <c>true</c> if it exists.</returns>
     public async Task<bool> IsExist(Guid id)
     {
-        return await context
+        var query = context
             .Stores
             .AsNoTracking()
-            .AnyAsync(st => st.Id == id);
+            .Where(st => st.Id == id);
+
+        ClsUtil.logSql<StoreRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 
     /// <summary>
@@ -227,12 +310,20 @@ public class StoreRepository(AppDbContext context) : IStoreRepository
     /// <returns>A task representing the asynchronous operation, returning <c>true</c> if the store contains the subcategory.</returns>
     public async Task<bool> IsExist(Guid id, Guid subCategoryId)
     {
-        return await context
+        var query = context
             .Stores
             .Include(st => st.SubCategories)
+            .AsSplitQuery()
             .AsNoTracking()
-            .AnyAsync(st =>
+            .Where(st =>
                 st.Id == id &&
                 st.SubCategories.Any(sc => sc.Id == subCategoryId) != false);
+
+        ClsUtil.logSql<StoreRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 }

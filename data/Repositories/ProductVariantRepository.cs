@@ -2,7 +2,9 @@ using api.application;
 using api.domain.entity;
 using data.dto.Request;
 using data.Interface;
+using data.util;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace data.Repositories;
 
@@ -11,7 +13,11 @@ namespace data.Repositories;
 /// Implements the <see cref="IProductVariantRepository"/> interface using Entity Framework Core.
 /// </summary>
 /// <param name="context">The application database context dependency injected via primary constructor.</param>
-public class ProductVariantRepository(AppDbContext context) : IProductVariantRepository
+/// <param name="logger">The logger used to log generated SQL queries.</param>
+public class ProductVariantRepository(
+    AppDbContext context,
+    ILogger<ProductVariantRepository> logger
+) : IProductVariantRepository
 {
     /// <summary>
     /// Retrieves a specific product variant based on its product ID and variant ID.
@@ -21,8 +27,16 @@ public class ProductVariantRepository(AppDbContext context) : IProductVariantRep
     /// <returns>The matching <see cref="ProductVariant"/> if found; otherwise, <c>null</c>.</returns>
     public async Task<ProductVariant?> GetProductVariant(Guid productId, Guid id)
     {
-        return await context.ProductVariants
-            .FirstOrDefaultAsync(or => or.ProductId == productId && or.Id == id);
+        var query = context.ProductVariants
+            .AsNoTracking()
+            .Where(or => or.ProductId == productId && or.Id == id);
+
+        ClsUtil.logSql<ProductVariantRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.FirstOrDefaultAsync();
     }
 
     /// <summary>
@@ -47,7 +61,17 @@ public class ProductVariantRepository(AppDbContext context) : IProductVariantRep
     /// <param name="productId">The unique identifier of the product whose variants should be removed.</param>
     public async Task DeleteProductVariantByProductId(Guid productId)
     {
-        var result = await context.ProductVariants.Where(p => p.ProductId == productId).ToListAsync();
+        var query = context
+        .ProductVariants
+        .AsNoTracking()
+        .Where(p => p.ProductId == productId);
+
+        ClsUtil.logSql<ProductVariantRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        var result = await query.ToListAsync();
         if (result.Count == 0) return;
         context.ProductVariants.RemoveRange(result);
     }
@@ -63,11 +87,19 @@ public class ProductVariantRepository(AppDbContext context) : IProductVariantRep
         {
             for (var i = 0; i < productVariants.Count; i++)
             {
-                var result = await context.ProductVariants
-                    .FirstOrDefaultAsync(pv =>
+                var query = context.ProductVariants
+                    .AsNoTracking()
+                    .Where(pv =>
                         pv.ProductId == productId && pv.VariantId == productVariants.ElementAt(i).VariantId &&
                         pv.Name == productVariants.ElementAt(i).Name
                     );
+
+                ClsUtil.logSql<ProductVariantRepository>(
+                    logger,
+                    query.ToQueryString()
+                );
+
+                var result = await query.FirstOrDefaultAsync();
                 if (result is not null)
                     context.ProductVariants.Remove(result);
             }

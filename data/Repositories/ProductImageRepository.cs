@@ -3,6 +3,7 @@ using api.domain.entity;
 using data.Interface;
 using data.util;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace data.Repositories;
 
@@ -11,7 +12,11 @@ namespace data.Repositories;
 /// Provides functionality for adding, retrieving, and deleting product images.
 /// </summary>
 /// <param name="context">The database context used for data access.</param>
-public class ProductImageRepository(AppDbContext context) : IProductImageRepository
+/// <param name="logger">The logger used to log generated SQL queries.</param>
+public class ProductImageRepository(
+    AppDbContext context,
+    ILogger<ProductImageRepository> logger
+) : IProductImageRepository
 {
     /// <summary>
     /// Deletes a product image based on the product identifier.
@@ -23,7 +28,17 @@ public class ProductImageRepository(AppDbContext context) : IProductImageReposit
     /// <exception cref="ArgumentNullException">Thrown if an image for the product exists.</exception>
     public void DeleteProductImages(Guid id)
     {
-        var result = context.ProductImages.FirstOrDefault(p => p.ProductId == id);
+        var query = context
+        .ProductImages
+        .AsNoTracking()
+        .Where(p => p.ProductId == id);
+
+        ClsUtil.logSql<ProductImageRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        var result = query.FirstOrDefault();
         if (result != null) throw new ArgumentNullException();
         if (result != null) context.ProductImages.Remove(result);
     }
@@ -38,7 +53,18 @@ public class ProductImageRepository(AppDbContext context) : IProductImageReposit
         foreach (var t in images)
         {
             var imagePath = ClsUtil.RemoveAdditionalPath(t);
-            var result = context.ProductImages.FirstOrDefault(pi => pi.Path == imagePath && pi.ProductId == id);
+
+            var query = context
+            .ProductImages
+            .AsNoTracking()
+            .Where(pi => pi.Path == imagePath && pi.ProductId == id);
+
+            ClsUtil.logSql<ProductImageRepository>(
+                logger,
+                query.ToQueryString()
+            );
+
+            var result = query.FirstOrDefault();
             if (result is not null)
                 context.ProductImages.Remove(result);
         }
@@ -63,11 +89,17 @@ public class ProductImageRepository(AppDbContext context) : IProductImageReposit
     /// <returns>A task representing the asynchronous operation, returning a collection of image path strings.</returns>
     public async Task<ICollection<string>> GetProductImages(Guid id)
     {
-        return await context.ProductImages
+        var query = context.ProductImages
             .AsNoTracking()
             .Where(pi => pi.ProductId == id)
-            .Select(pi => pi.Path)
-            .ToListAsync();
+            .Select(pi => pi.Path);
+
+        ClsUtil.logSql<ProductImageRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.ToListAsync();
     }
 
     /// <summary>

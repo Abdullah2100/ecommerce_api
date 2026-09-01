@@ -1,7 +1,9 @@
 using api.application;
 using api.domain.entity;
 using data.Interface;
+using data.util;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace data.Repositories;
 
@@ -9,7 +11,9 @@ namespace data.Repositories;
 /// Repository implementation for managing <see cref="Banner"/> entities.
 /// </summary>
 /// <param name="context">The database context used for data access.</param>
-public class BannerRepository(AppDbContext context) : IBannerRepository
+public class BannerRepository(
+    AppDbContext context,
+    ILogger<BannerRepository> logger) : IBannerRepository
 {
     /// <summary>
     /// Tracks a new banner entity to be added to the database.
@@ -39,10 +43,12 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
     /// <returns>A task representing the asynchronous operation, returning the total count.</returns>
     public Task<int> GetBannerCount()
     {
-        return context
+        var query = context
             .Banner
-            .AsNoTracking()
-            .CountAsync();
+            .AsNoTracking();
+
+        ClsUtil.logSql<BannerRepository>(logger, query.ToQueryString());
+        return query.CountAsync();
     }
 
     /// <summary>
@@ -53,10 +59,12 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
     /// <returns>A task representing the asynchronous operation, returning the count of active banners.</returns>
     public Task<int> GetBannerCount(Guid storeId)
     {
-        return context.Banner
+        var query = context.Banner
             .AsNoTracking()
-            .Where(ba => ba.StoreId == storeId && ba.CreatedAt.AddHours(1) >= DateTime.Now)
-            .CountAsync();
+            .Where(ba => ba.StoreId == storeId && ba.CreatedAt.AddHours(1) >= DateTime.Now);
+
+        ClsUtil.logSql<BannerRepository>(logger, query.ToQueryString());
+        return query.CountAsync();
     }
 
     /// <summary>
@@ -65,12 +73,15 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
     /// <param name="id">The unique identifier of the banner to delete.</param>
     public void Delete(Guid id)
     {
-        var banner = context
+        var query = context
             .Banner
-            .FirstOrDefault(ba => ba.Id == id);
-        if (banner is null) return;
+            .AsNoTracking()
+            .Where(ba => ba.Id == id);
+        ClsUtil.logSql<BannerRepository>(logger, query.ToQueryString());
 
-        context.Remove(banner);
+        if (!query.Any()) return;
+
+        context.Remove(query);
     }
 
     /// <summary>
@@ -89,10 +100,13 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
     /// <returns>A task representing the asynchronous operation, returning the banner or null if not found.</returns>
     public async Task<Banner?> GetBanner(Guid id)
     {
-        return await context
+        var query = context
             .Banner
             .AsNoTracking()
-            .FirstOrDefaultAsync(ba => ba.Id == id);
+            .Where(ba => ba.Id == id);
+        ClsUtil.logSql<BannerRepository>(logger, query.ToQueryString());
+
+        return await query.FirstOrDefaultAsync();
     }
 
     /// <summary>
@@ -103,10 +117,13 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
     /// <returns>A task representing the asynchronous operation, returning the banner or null if not found.</returns>
     public async Task<Banner?> GetBanner(Guid id, Guid storeId)
     {
-        return await context
+        var query = context
             .Banner
             .AsNoTracking()
-            .FirstOrDefaultAsync(ba => ba.Id == id && ba.StoreId == storeId);
+            .Where(ba => ba.Id == id && ba.StoreId == storeId);
+        ClsUtil.logSql<BannerRepository>(logger, query.ToQueryString());
+
+        return await query.FirstOrDefaultAsync();
     }
 
     /// <summary>
@@ -118,13 +135,16 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
     /// <returns>A task representing the asynchronous operation, returning a collection of banners.</returns>
     public async Task<ICollection<Banner>> GetBanners(Guid id, int pageNumber, int pageSize)
     {
-        return await context.Banner
+        var query = context.Banner
             .AsNoTracking()
             .Where(ba => ba.StoreId == id)
             .OrderByDescending(ba => ba.CreatedAt)
             .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+            .Take(pageSize);
+
+        ClsUtil.logSql<BannerRepository>(logger, query.ToQueryString());
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -135,12 +155,15 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
     /// <returns>A task representing the asynchronous operation, returning a collection of banners.</returns>
     public async Task<ICollection<Banner>> GetBanners(int pageNumber, int pageSize)
     {
-        return await context.Banner
+        var query = context.Banner
             .AsNoTracking()
             .OrderByDescending(ba => ba.CreatedAt)
             .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+            .Take(pageSize);
+
+        ClsUtil.logSql<BannerRepository>(logger, query.ToQueryString());
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -150,11 +173,13 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
     /// <returns>A task representing the asynchronous operation, returning a collection of banners.</returns>
     public async Task<ICollection<Banner>> GetBanners(int randomLength)
     {
-        return await context.Banner
+        var query = context.Banner
             .AsNoTracking()
             .OrderBy(ba => ba.Id)
-            .Take(randomLength)
-            .ToListAsync();
+            .Take(randomLength);
+        ClsUtil.logSql<BannerRepository>(logger, query.ToQueryString());
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -164,11 +189,14 @@ public class BannerRepository(AppDbContext context) : IBannerRepository
     /// <returns>A task representing the asynchronous operation, returning a collection of banners.</returns>
     public async Task<ICollection<Banner>> GetNotActiveBanners(int randomLength)
     {
-          return await context.Banner
-            .AsNoTracking()
-            .Where(ba=>(ba.CreatedAt.Subtract(DateTime.Now).Days)>2)
-            .OrderBy(ba => ba.Id)
-            .Take(randomLength)
-            .ToListAsync();
+        var query = context.Banner
+                .AsNoTracking()
+                .Where(ba => (ba.CreatedAt-DateTime.UtcNow).Days > 2)
+                .OrderBy(ba => ba.Id)
+                .Take(randomLength)
+            ;
+        ClsUtil.logSql<BannerRepository>(logger, query.ToQueryString());
+
+        return await query.ToListAsync();
     }
 }

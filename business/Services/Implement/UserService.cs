@@ -473,8 +473,10 @@ public class UserService(
             return new Result(false, "address is already current address", null, 409);
         }
 
-        unitOfWork.AddressRepository.MakeAddressNotCurrentToId(user!.Id);
-        unitOfWork.AddressRepository.UpdateCurrentLocation(addressId, user!.Id);
+        address.IsCurrent = true;
+        
+      await  unitOfWork.AddressRepository.MakeAddressNotCurrentToId(user!.Id);
+        unitOfWork.AddressRepository.Update(address);
         var result = await unitOfWork.SaveChanges();
 
         if (result == 0)

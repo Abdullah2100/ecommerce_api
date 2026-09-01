@@ -8,7 +8,6 @@ public interface IAddressRepository : IRepository<Address>
     Task<Address?> GetAddress(Guid id);
     Task<Address?> GetAddressByOwnerId(Guid id);
     Task<ICollection<Address>> GetAllAddressByOwnerId(Guid id);
-    void UpdateCurrentLocation(Guid id, Guid ownerId);
-    void MakeAddressNotCurrentToId(Guid ownerId);
+    Task MakeAddressNotCurrentToId(Guid ownerId);
     void Delete(Guid id);
 }

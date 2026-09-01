@@ -1,7 +1,9 @@
 using api.application;
 using api.domain.entity;
 using data.Interface;
+using data.util;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace data.Repositories;
 
@@ -9,7 +11,9 @@ namespace data.Repositories;
 /// Repository implementation for managing <see cref="Category"/> entities.
 /// </summary>
 /// <param name="context">The database context used for data access.</param>
-public class CategoryRepository(AppDbContext context) : ICategoryRepository
+public class CategoryRepository(
+    AppDbContext context,
+    ILogger<CategoryRepository> logger) : ICategoryRepository
 {
     /// <summary>
     /// Tracks a new category entity to be added to the database.
@@ -47,13 +51,16 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
     /// <returns>A task representing the asynchronous operation, returning a collection of categories.</returns>
     public async Task<ICollection<Category>> GetCategories(int page, int length)
     {
-        return await context
-            .Categories
-            .AsNoTracking()
-            .Skip((page - 1) * length)
-            .Take(length)
-            .OrderDescending()
-            .ToListAsync();
+        var query = context
+                .Categories
+                .AsNoTracking()
+                .Skip((page - 1) * length)
+                .Take(length)
+                .OrderDescending()
+            ;
+        ClsUtil.logSql<CategoryRepository>(logger, query.ToQueryString());
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -62,10 +69,13 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
     /// <returns>A task representing the asynchronous operation, returning the total count.</returns>
     public async Task<int> GetCategoriesCount()
     {
-        return await context
-            .Categories
-            .AsNoTracking()
-            .CountAsync();
+        var query = context
+                .Categories
+                .AsNoTracking()
+            ;
+        ClsUtil.logSql<CategoryRepository>(logger, query.ToQueryString());
+
+        return await query.CountAsync();
     }
 
     /// <summary>
@@ -75,12 +85,15 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
     /// <returns>A task representing the asynchronous operation, returning a collection of categories.</returns>
     public async Task<ICollection<Category>> GetCategories(int randomNumber)
     {
-        return await context
-            .Categories
-            .AsNoTracking()
-            .OrderBy(x => Guid.NewGuid())
-            .Take(randomNumber)
-            .ToListAsync();
+        var query = context
+                .Categories
+                .AsNoTracking()
+                .OrderBy(x => Guid.NewGuid())
+                .Take(randomNumber)
+            ;
+        ClsUtil.logSql<CategoryRepository>(logger, query.ToQueryString());
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -90,10 +103,14 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
     /// <returns>A task representing the asynchronous operation, returning true if it exists; otherwise, false.</returns>
     public async Task<bool> IsExist(Guid id)
     {
-        return await context
+        var query = context
             .Categories
             .AsNoTracking()
-            .AnyAsync(e => e.Id == id);
+            .Where(e => e.Id == id);
+
+        ClsUtil.logSql<CategoryRepository>(logger, query.ToQueryString());
+
+        return await query.AnyAsync();
     }
 
     /// <summary>
@@ -103,10 +120,14 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
     /// <returns>A task representing the asynchronous operation, returning true if it exists; otherwise, false.</returns>
     public async Task<bool> IsExist(string name)
     {
-        return await context
+        var query = context
             .Categories
             .AsNoTracking()
-            .AnyAsync(e => e.Name == name);
+            .Where(e => e.Name == name);
+
+        ClsUtil.logSql<CategoryRepository>(logger, query.ToQueryString());
+
+        return await query.AnyAsync();
     }
 
     /// <summary>
@@ -118,10 +139,13 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
     /// <returns>A task representing the asynchronous operation, returning true if another category exists with that name.</returns>
     public async Task<bool> IsExist(string name, Guid id)
     {
-        return await context
+        var query = context
             .Categories
             .AsNoTracking()
-            .AnyAsync(e => e.Name == name && e.Id != id);
+            .Where(e => e.Name == name && e.Id != id);
+        ClsUtil.logSql<CategoryRepository>(logger, query.ToQueryString());
+
+        return await query.AnyAsync();
     }
 
     /// <summary>
@@ -131,12 +155,15 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
     /// <exception cref="ArgumentNullException">Thrown when the category is not found.</exception>
     public void Delete(Guid id)
     {
-        var category = context
+        var query = context
             .Categories
             .AsNoTracking()
-            .FirstOrDefault(ca => ca.Id == id);
-        if (category is null) throw new ArgumentNullException();
-        context.Categories.Remove(category);
+            .Where(ca => ca.Id == id);
+
+        ClsUtil.logSql<CategoryRepository>(logger, query.ToQueryString());
+
+        if (!query.Any()) throw new ArgumentNullException();
+        context.Categories.RemoveRange(query);
     }
 
     /// <summary>

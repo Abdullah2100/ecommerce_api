@@ -1,7 +1,9 @@
 using api.application;
 using api.domain.entity;
 using data.Interface;
+using data.util;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace data.Repositories;
 
@@ -10,7 +12,11 @@ namespace data.Repositories;
 /// Provides methods for adding, updating, and querying payment types.
 /// </summary>
 /// <param name="context">The database context used for data access.</param>
-public class PaymentTypeRepository(AppDbContext context) : IPaymentTypeRepository
+/// <param name="logger">The logger used to log generated SQL queries.</param>
+public class PaymentTypeRepository(
+    AppDbContext context,
+    ILogger<PaymentTypeRepository> logger
+) : IPaymentTypeRepository
 {
     /// <summary>
     /// Adds a new payment type to the database context.
@@ -37,7 +43,16 @@ public class PaymentTypeRepository(AppDbContext context) : IPaymentTypeRepositor
     /// <returns>A task representing the asynchronous operation, returning the payment type if found; otherwise, <c>null</c>.</returns>
     public async Task<PaymentType?> GetPaymentTypeGetPayment(Guid id)
     {
-        return await context.PaymentTypes.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+        var query = context.PaymentTypes
+            .AsNoTracking()
+            .Where(x => x.Id == id);
+
+        ClsUtil.logSql<PaymentTypeRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.FirstOrDefaultAsync();
     }
 
     /// <summary>
@@ -48,10 +63,17 @@ public class PaymentTypeRepository(AppDbContext context) : IPaymentTypeRepositor
     /// <returns>A task representing the asynchronous operation, returning a collection of payment types.</returns>
     public async Task<ICollection<PaymentType>> GetPaymentTypes(int pageNum, int pageSie)
     {
-        return await context.PaymentTypes.AsNoTracking()
+        var query = context.PaymentTypes
+            .AsNoTracking()
             .Take(pageSie)
-            .Skip((pageNum - 1) * pageSie)
-            .ToListAsync();
+            .Skip((pageNum - 1) * pageSie);
+
+        ClsUtil.logSql<PaymentTypeRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -63,7 +85,16 @@ public class PaymentTypeRepository(AppDbContext context) : IPaymentTypeRepositor
     /// <returns>A task representing the asynchronous operation, returning <c>true</c> if another payment type exists with that name.</returns>
     public async Task<bool> IsExistPaymentType(string name, Guid id)
     {
-        return await context.PaymentTypes.AsNoTracking().AnyAsync(x => x.Name == name && x.Id != id);
+        var query = context.PaymentTypes
+            .AsNoTracking()
+            .Where(x => x.Name == name && x.Id != id);
+
+        ClsUtil.logSql<PaymentTypeRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 
     /// <summary>
@@ -73,6 +104,15 @@ public class PaymentTypeRepository(AppDbContext context) : IPaymentTypeRepositor
     /// <returns>A task representing the asynchronous operation, returning <c>true</c> if it exists; otherwise, <c>false</c>.</returns>
     public async Task<bool> IsExistPaymentType(Guid id)
     {
-        return await context.PaymentTypes.AsNoTracking().AnyAsync(x => x.Id == id);
+        var query = context.PaymentTypes
+            .AsNoTracking()
+            .Where(x => x.Id == id);
+
+        ClsUtil.logSql<PaymentTypeRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 }

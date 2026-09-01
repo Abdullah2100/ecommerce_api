@@ -1,7 +1,9 @@
 using api.application;
 using api.domain.entity;
 using data.Interface;
+using data.util;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace data.Repositories;
 
@@ -10,7 +12,11 @@ namespace data.Repositories;
 /// Handles the generation, retrieval, validation, and cleanup of One-Time Passwords (OTPs) for password resets.
 /// </summary>
 /// <param name="context">The database context used for data access.</param>
-public class ReseatPasswordRepository(AppDbContext context) : IRecreatePasswordRepository
+/// <param name="logger">The logger used to log generated SQL queries.</param>
+public class ReseatPasswordRepository(
+    AppDbContext context,
+    ILogger<ReseatPasswordRepository> logger
+) : IRecreatePasswordRepository
 {
     /// <summary>
     /// Retrieves a paged collection of all reset password OTP records.
@@ -20,12 +26,18 @@ public class ReseatPasswordRepository(AppDbContext context) : IRecreatePasswordR
     /// <returns>A task representing the asynchronous operation, returning a collection of OTP entities.</returns>
     public async Task<ICollection<ReseatPasswordOtp>> GetAllAsync(int page, int length)
     {
-        return await context
+        var query = context
             .ReseatPasswords
             .AsNoTracking()
             .Skip((page - 1) * length)
-            .Take(length)
-            .ToListAsync();
+            .Take(length);
+
+        ClsUtil.logSql<ReseatPasswordRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -55,10 +67,18 @@ public class ReseatPasswordRepository(AppDbContext context) : IRecreatePasswordR
     {
         var entity = await context.ReseatPasswords.FindAsync(id);
         if (entity == null) throw new ArgumentNullException();
-        var previousPassword = await context.ReseatPasswords
-            .Where(f => f.Email == entity.Email)
-            .ToListAsync();
-        if(previousPassword.Count==0)return;
+
+        var query = context.ReseatPasswords
+            .AsNoTracking()
+            .Where(f => f.Email == entity.Email);
+
+        ClsUtil.logSql<ReseatPasswordRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        var previousPassword = await query.ToListAsync();
+        if (previousPassword.Count == 0) return;
         context.ReseatPasswords.RemoveRange(previousPassword!);
     }
 
@@ -69,9 +89,16 @@ public class ReseatPasswordRepository(AppDbContext context) : IRecreatePasswordR
     /// <returns>A task representing the asynchronous operation, returning the OTP entity if found; otherwise, <c>null</c>.</returns>
     public async Task<ReseatPasswordOtp?> GetOtp(string otp)
     {
-        return await context.ReseatPasswords
+        var query = context.ReseatPasswords
             .AsNoTracking()
-            .FirstOrDefaultAsync(f => f.Otp == otp);
+            .Where(f => f.Otp == otp);
+
+        ClsUtil.logSql<ReseatPasswordRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.FirstOrDefaultAsync();
     }
 
     /// <summary>
@@ -82,7 +109,14 @@ public class ReseatPasswordRepository(AppDbContext context) : IRecreatePasswordR
     /// <returns>A task representing the asynchronous operation.</returns>
     private async Task DeleteAllEmailOtp(string email, string otp)
     {
-        await context.ReseatPasswords.Where(rp => rp.Email == email && rp.Otp != otp).ExecuteDeleteAsync();
+        var query = context.ReseatPasswords.Where(rp => rp.Email == email && rp.Otp != otp);
+
+        ClsUtil.logSql<ReseatPasswordRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        await query.ExecuteDeleteAsync();
     }
 
     /// <summary>
@@ -113,9 +147,16 @@ public class ReseatPasswordRepository(AppDbContext context) : IRecreatePasswordR
     /// </remarks>
     public async Task<ReseatPasswordOtp?> GetOtp(string otp, string email, bool state)
     {
-        var otpHolder = await context.ReseatPasswords
+        var query = context.ReseatPasswords
             .AsNoTracking()
-            .FirstOrDefaultAsync(f => f.Otp == otp && f.Email == email && f.IsValidated == state);
+            .Where(f => f.Otp == otp && f.Email == email && f.IsValidated == state);
+
+        ClsUtil.logSql<ReseatPasswordRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        var otpHolder = await query.FirstOrDefaultAsync();
 
         if (otpHolder is null) return null;
 

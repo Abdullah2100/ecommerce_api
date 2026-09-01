@@ -1,7 +1,9 @@
 using api.application;
 using api.domain.entity;
 using data.Interface;
+using data.util;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace data.Repositories;
 
@@ -10,7 +12,11 @@ namespace data.Repositories;
 /// Provides functionality to filter subcategories by store, handle pagination, and manage basic CRUD operations.
 /// </summary>
 /// <param name="context">The database context used for data access.</param>
-public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepository
+/// <param name="logger">The logger used to log generated SQL queries.</param>
+public class SubCategoryRepository(
+    AppDbContext context,
+    ILogger<SubCategoryRepository> logger
+) : ISubCategoryRepository
 {
     /// <summary>
     /// Retrieves a specific subcategory by its unique identifier.
@@ -19,6 +25,7 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
     /// <returns>A task representing the asynchronous operation, returning the subcategory if found; otherwise, <c>null</c>.</returns>
     public async Task<SubCategory?> GetSubCategory(Guid id)
     {
+        // FindAsync is a direct key lookup and does not support ToQueryString()
         return await context.SubCategories.FindAsync(id);
     }
 
@@ -35,14 +42,20 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
         int pageSize
     )
     {
-        return await context
+        var query = context
             .SubCategories
             .AsNoTracking()
             .Where(su => su.StoreId == storeId)
             .Skip((pageNumber - 1) * pageSize)
             .OrderDescending()
-            .Take(pageSize)
-            .ToListAsync();
+            .Take(pageSize);
+
+        ClsUtil.logSql<SubCategoryRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -56,13 +69,19 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
         int pageSize
     )
     {
-        return await context
+        var query = context
             .SubCategories
             .AsNoTracking()
             .Skip((pageNumber - 1) * pageSize)
             .OrderDescending()
-            .Take(pageSize)
-            .ToListAsync();
+            .Take(pageSize);
+
+        ClsUtil.logSql<SubCategoryRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -72,11 +91,17 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
     /// <returns>A task representing the asynchronous operation, returning the count of subcategories.</returns>
     public async Task<int> GetSubCategoriesCount(Guid storeId)
     {
-        return await context
+        var query = context
             .SubCategories
             .AsNoTracking()
-            .Where(su => su.StoreId == storeId)
-            .CountAsync();
+            .Where(su => su.StoreId == storeId);
+
+        ClsUtil.logSql<SubCategoryRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.CountAsync();
     }
 
     /// <summary>
@@ -86,7 +111,16 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
     /// <returns>A task representing the asynchronous operation, returning <c>true</c> if it exists.</returns>
     public async Task<bool> IsExist(Guid id)
     {
-        return await context.SubCategories.AsNoTracking().AnyAsync(x => x.Id == id);
+        var query = context.SubCategories
+            .AsNoTracking()
+            .Where(x => x.Id == id);
+
+        ClsUtil.logSql<SubCategoryRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 
     /// <summary>
@@ -98,9 +132,16 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
     /// <returns>A task representing the asynchronous operation, returning <c>true</c> if a match exists.</returns>
     public async Task<bool> IsExist(Guid storeId, string name)
     {
-        return await context.SubCategories
+        var query = context.SubCategories
             .AsNoTracking()
-            .AnyAsync(su => su.StoreId == storeId && su.Name == name);
+            .Where(su => su.StoreId == storeId && su.Name == name);
+
+        ClsUtil.logSql<SubCategoryRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 
     /// <summary>
@@ -111,9 +152,16 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
     /// <returns>A task representing the asynchronous operation, returning <c>true</c> if it exists in the store.</returns>
     public async Task<bool> IsExist(Guid storeId, Guid id)
     {
-        return await context.SubCategories
+        var query = context.SubCategories
             .AsNoTracking()
-            .AnyAsync(su => su.StoreId == storeId && su.Id == id);
+            .Where(su => su.StoreId == storeId && su.Id == id);
+
+        ClsUtil.logSql<SubCategoryRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.AnyAsync();
     }
 
     /// <summary>
@@ -124,13 +172,19 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
     /// <returns>A task representing the asynchronous operation, returning a collection of subcategories.</returns>
     public async Task<ICollection<SubCategory>> getAllAsync(int page, int length)
     {
-        return await context
+        var query = context
             .SubCategories
             .AsNoTracking()
             .Skip((page - 1) * length)
             .OrderDescending()
-            .Take(length)
-            .ToListAsync();
+            .Take(length);
+
+        ClsUtil.logSql<SubCategoryRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -157,8 +211,14 @@ public class SubCategoryRepository(AppDbContext context) : ISubCategoryRepositor
     /// <param name="id">The unique identifier of the subcategory to delete.</param>
     public async Task Delete(Guid id)
     {
-        var subcategories = await context.SubCategories.Where(su => su.Id == id)
-            .ToListAsync();
+        var query = context.SubCategories.Where(su => su.Id == id);
+
+        ClsUtil.logSql<SubCategoryRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        var subcategories = await query.ToListAsync();
         if (subcategories.Count == 0) return;
         context.SubCategories.RemoveRange(subcategories);
     }

@@ -1,7 +1,9 @@
 using api.application;
 using api.domain.entity;
 using data.Interface;
+using data.util;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace data.Repositories;
 
@@ -9,7 +11,9 @@ namespace data.Repositories;
 /// Repository implementation for managing <see cref="Currency"/> entities.
 /// </summary>
 /// <param name="context">The database context used for data access.</param>
-public class CurrencyRepository(AppDbContext context) : ICurrencyRepository
+public class CurrencyRepository(
+    AppDbContext context,
+    ILogger<CurrencyRepository> logger) : ICurrencyRepository
 {
     /// <summary>
     /// Tracks a new currency entity to be added to the database.
@@ -49,24 +53,31 @@ public class CurrencyRepository(AppDbContext context) : ICurrencyRepository
     /// <returns>A task representing the asynchronous operation, returning a collection of random currencies.</returns>
     public async Task<ICollection<Currency>> GetCurrencies(int randomNumber)
     {
-        return await context
-            .Currencies
-            .AsNoTracking()
-            .OrderBy(x => Guid.NewGuid())
-            .Take(randomNumber)
-            .ToListAsync();
+        var query = context
+                .Currencies
+                .AsNoTracking()
+                .OrderBy(x => Guid.NewGuid())
+                .Take(randomNumber)
+            ;
+
+        ClsUtil.logSql<CurrencyRepository>(logger, query.ToQueryString());
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
     /// Gets the total number of currencies in the Currencies collection.
     /// </summary>
     /// <returns>A task representing the asynchronous operation, returning the total count.</returns>
-    public Task<int> GetCurrenciesCount()
+    public async Task<int> GetCurrenciesCount()
     {
-        return context
+        var query = context
             .Currencies
-            .AsNoTracking()
-            .CountAsync();
+            .AsNoTracking();
+
+        ClsUtil.logSql<CurrencyRepository>(logger, query.ToQueryString());
+
+        return await query.CountAsync();
     }
 
     /// <summary>
@@ -77,11 +88,14 @@ public class CurrencyRepository(AppDbContext context) : ICurrencyRepository
     /// <returns>A task representing the asynchronous operation, returning a collection of currencies.</returns>
     public async Task<ICollection<Currency>> GetAll(int pageNum, int pageSize)
     {
-        return await context.Payments
-            .AsNoTracking()
-            .Skip((pageNum - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+        var query = context.Payments
+                .AsNoTracking()
+                .Skip((pageNum - 1) * pageSize)
+                .Take(pageSize)
+            ;
+        ClsUtil.logSql<CurrencyRepository>(logger, query.ToQueryString());
+
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -91,13 +105,14 @@ public class CurrencyRepository(AppDbContext context) : ICurrencyRepository
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task Delete(Guid id)
     {
-        var element = await context
+        var query = context
             .Payments
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .Where(x => x.Id == id);
+        ClsUtil.logSql<CurrencyRepository>(logger, query.ToQueryString());
 
-        if (element is null) return;
-        context.Payments.Remove(element);
+        if (! await query.AnyAsync()) return;
+        context.Payments.RemoveRange(query);
     }
 
     /// <summary>
@@ -116,8 +131,11 @@ public class CurrencyRepository(AppDbContext context) : ICurrencyRepository
     /// <returns>A task representing the asynchronous operation, returning true if it exists; otherwise, false.</returns>
     public async Task<bool> isExist(string symbol)
     {
-        return await context.Payments
+        var query =  context.Payments
             .AsNoTracking()
-            .AnyAsync(x => x.Symbol == symbol);
+            .Where(x => x.Symbol == symbol);
+        ClsUtil.logSql<CurrencyRepository>(logger, query.ToQueryString());
+ 
+        return await  query.AnyAsync();
     }
 }

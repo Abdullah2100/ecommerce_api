@@ -1,0 +1,156 @@
+# ASP.NET Core / .NET specific
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Build outputs
+*.dll
+*.exe
+*.pdb
+*.cache
+*.ilk
+*.meta
+*.obj
+*.pch
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# Visual Studio
+.vs/
+.vscode/
+*.csproj.user
+*.pubxml
+*.pubxml.user
+*.wixproj.user
+*.dbmdl
+*.dbproj.schemaview
+*.pfx
+*.publishsettings
+orleans.codegen.cs
+
+# Rider / IntelliJ
+.idea/
+*.sln.iml
+*.dotSettings
+*.dotSettings.user
+
+# NuGet
+*.nupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Entity Framework
+*.mdf
+*.ldf
+*.ndf
+Migrations/
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.trx
+*.coverage
+*.coveragexml
+
+# Publish / Deploy
+publish/
+*.azurePubxml
+*.pubxml
+*.publishproj
+app.publish/
+
+# IIS
+*.swp
+*.*~
+project.lock.json
+.DS_Store
+*.nupkg
+ 
+bin/
+obj/
+
+# Secrets & Config (uncomment if you want strict exclusion)
+# appsettings.Development.json
+# appsettings.Production.json
+# appsettings.Staging.json
+# *.Development.json
+# *.Production.json
+# secrets.json
+
+# Local environment files
+.env
+.env.local
+.env.*.local
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.nfs*
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Coverage
+coverage/
+*.opencover.xml
+*.cobertura.xml
+
+# BenchmarkDotNet
+BenchmarkDotNet.Artifacts/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+
+
+# Node (if using npm/yarn for frontend)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Generated files
+Generated/
+generated/
