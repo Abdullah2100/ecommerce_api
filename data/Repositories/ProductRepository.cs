@@ -1,6 +1,8 @@
 using api.application;
 using api.domain.entity;
+using data.dto.Response;
 using data.Interface;
+using data.mapper;
 using data.util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -29,10 +31,9 @@ public class ProductRepository(
     /// <param name="page">The one-based page number.</param>
     /// <param name="length">The maximum number of products to return.</param>
     /// <returns>A collection containing the products for the requested page.</returns>
-    public async Task<ICollection<Product>> GetAllAsync(int page, int length)
+    public async Task<List<ProductDto>> GetAllAsync(int page, int length, string url)
     {
         var query = context.Products
-            .AsNoTracking()
             .Include(pro => pro.SubCategory)
             .Include(pro => pro.ProductImages)
             .Include(pro => pro.ProductVariants)
@@ -40,6 +41,7 @@ public class ProductRepository(
             .AsNoTracking()
             .Skip((page - 1) * length)
             .Take(length)
+            .Select(value => value.ToDto(url))
             .OrderDescending();
 
         ClsUtil.logSql<ProductRepository>(
@@ -122,7 +124,6 @@ public class ProductRepository(
     public async Task<Product?> GetProduct(Guid id)
     {
         var query = context.Products
-            .AsNoTracking()
             .Include(pro => pro.Store)
             .Include(pro => pro.SubCategory)
             .Include(pro => pro.ProductImages)
@@ -150,7 +151,6 @@ public class ProductRepository(
     public async Task<Product?> GetProduct(Guid id, Guid storeId)
     {
         var query = context.Products
-            .AsNoTracking()
             .Include(pro => pro.Store)
             .Include(pro => pro.SubCategory)
             .Include(pro => pro.ProductImages)
@@ -211,7 +211,6 @@ public class ProductRepository(
     public async Task<Product?> GetProductByUser(Guid id, Guid userId)
     {
         var query = context.Products
-            .AsNoTracking()
             .Include(pro => pro.Store)
             .Include(pro => pro.SubCategory)
             .Include(pro => pro.ProductImages)
@@ -235,15 +234,16 @@ public class ProductRepository(
     /// <param name="subCategoryId">The unique identifier of the subcategory.</param>
     /// <param name="pageNum">The one-based page number.</param>
     /// <param name="pageSize">The maximum number of products to return.</param>
+    /// <param name="url"></param>
     /// <returns>A paginated collection of products matching the store and subcategory.</returns>
-    public async Task<ICollection<Product>> GetProducts(
+    public async Task<ICollection<ProductDto>> GetProducts(
         Guid storeId,
         Guid subCategoryId,
         int pageNum,
-        int pageSize)
+        int pageSize,
+        string url)
     {
         var query = context.Products
-            .AsNoTracking()
             .Include(pro => pro.Store)
             .Include(pro => pro.SubCategory)
             .Include(pro => pro.ProductImages)
@@ -253,6 +253,7 @@ public class ProductRepository(
             .Where(p => p.StoreId == storeId && p.SubcategoryId == subCategoryId)
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
+            .Select(value => value.ToDto(url))
             .OrderDescending();
 
         ClsUtil.logSql<ProductRepository>(
@@ -269,14 +270,15 @@ public class ProductRepository(
     /// <param name="storeId">The unique identifier of the store.</param>
     /// <param name="pageNum">The one-based page number.</param>
     /// <param name="pageSize">The maximum number of products to return.</param>
+    /// <param name="url"></param>
     /// <returns>A paginated collection of products belonging to the specified store.</returns>
-    public async Task<ICollection<Product>> GetProducts(
+    public async Task<ICollection<ProductDto>> GetProducts(
         Guid storeId,
         int pageNum,
-        int pageSize)
+        int pageSize,
+        string url)
     {
         var query = context.Products
-            .AsNoTracking()
             .Include(pro => pro.Store)
             .Include(pro => pro.SubCategory)
             .Include(pro => pro.ProductImages)
@@ -286,6 +288,7 @@ public class ProductRepository(
             .Where(p => p.StoreId == storeId)
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
+            .Select(value => value.ToDto(url))
             .OrderDescending();
 
         ClsUtil.logSql<ProductRepository>(
@@ -301,16 +304,16 @@ public class ProductRepository(
     /// </summary>
     /// <param name="page">The one-based page number.</param>
     /// <param name="length">The maximum number of products to return.</param>
+    /// <param name="url"></param>
     /// <returns>
     /// A collection of products for the requested page. An empty collection is
     /// returned when an exception occurs.
     /// </returns>
-    public async Task<ICollection<Product>> GetProducts(int page, int length)
+    public async Task<List<ProductDto>> GetProducts(int page, int length, string url)
     {
         try
         {
             var query = context.Products
-                .AsNoTracking()
                 .Include(pro => pro.Store)
                 .Include(pro => pro.SubCategory)
                 .Include(pro => pro.ProductImages)
@@ -319,6 +322,7 @@ public class ProductRepository(
                 .AsNoTracking()
                 .Skip((page - 1) * length)
                 .Take(length)
+                .Select(value => value.ToDto(url))
                 .OrderDescending();
 
             ClsUtil.logSql<ProductRepository>(
@@ -329,22 +333,28 @@ public class ProductRepository(
             var products = await query.ToListAsync();
 
             if (products.Count == 0)
-                return new List<Product>();
+                return new List<ProductDto>();
 
-            for (int i = 0; i < products.Count; i++)
+            for (var i = 0; i < products.Count; i++)
             {
                 var variantQuery = context.ProductVariants
-                    .Include(pr => pr.Variant)
-                    .AsSplitQuery()
-                    .AsNoTracking()
-                    .Where(p => p.ProductId == products[i].Id);
+                        .Include(pr => pr.Variant)
+                        .AsSplitQuery()
+                        .AsNoTracking()
+                        .Where(p => p.ProductId == products[i].Id)
+                    ;
+                //.Select(value=>value.ToProductVariantDto());
 
                 ClsUtil.logSql<ProductRepository>(
                     logger,
                     variantQuery.ToQueryString()
                 );
 
-                products[i].ProductVariants = await variantQuery.ToListAsync();
+                if (await variantQuery.AnyAsync())
+                    products[i].ProductVariants = await variantQuery
+                        ?.GroupBy(pv => pv.VariantId, (key, g)
+                            => g.Select(pvH => pvH.ToProductVariantDto()).ToList()
+                        ).ToListAsync() ?? new List<List<ProductVariantDto>>();
             }
 
             return products;
@@ -352,7 +362,7 @@ public class ProductRepository(
         catch (System.Exception ex)
         {
             Console.WriteLine(ex.Message);
-            return new List<Product>();
+            return new List<ProductDto>();
         }
     }
 
@@ -361,13 +371,14 @@ public class ProductRepository(
     /// </summary>
     /// <param name="randomNumber">The maximum number of random products to return.</param>
     /// <returns>A collection containing randomly selected products.</returns>
-    public async Task<ICollection<Product>> GetProducts(int randomNumber)
+    public async Task<ICollection<ProductDto>> GetProducts(int randomNumber,string url)
     {
         var query = context
             .Products
             .AsNoTracking()
-            .OrderBy(x => Guid.NewGuid())
-            .Take(randomNumber);
+            .Take(randomNumber)
+            .Select(value => value.ToDto(url))
+            .OrderBy(x => Guid.NewGuid());
 
         ClsUtil.logSql<ProductRepository>(
             logger,
@@ -386,13 +397,13 @@ public class ProductRepository(
     /// <returns>
     /// A paginated collection of products whose subcategory belongs to the specified category.
     /// </returns>
-    public async Task<ICollection<Product>> GetProductsByCategory(
+    public async Task<ICollection<ProductDto>> GetProductsByCategory(
         Guid categoryId,
         int pageNum,
-        int pageSize)
+        int pageSize,
+        string url)
     {
         var query = context.Products
-            .AsNoTracking()
             .Include(pro => pro.Store)
             .Include(pro => pro.SubCategory)
             .Include(pro => pro.ProductImages)
@@ -402,6 +413,7 @@ public class ProductRepository(
             .Where(p => p.SubCategory.CategoryId == categoryId)
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
+            .Select(value => value.ToDto(url))
             .OrderDescending();
 
         ClsUtil.logSql<ProductRepository>(

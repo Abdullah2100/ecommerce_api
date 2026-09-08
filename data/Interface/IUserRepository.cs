@@ -1,4 +1,5 @@
 using api.domain.entity;
+using data.dto.Response;
 
 namespace data.Interface;
 
@@ -8,7 +9,7 @@ public interface IUserRepository : IRepository<User>
     Task<User?> GetUser(string email);
     Task<int> GetUserCount();
     Task<User?> GetUserByStoreId(Guid id);
-    Task<ICollection<User>> GetUsers(int page, int length);
+    Task<ICollection<UserInfoDto>> GetUsers(int page, int length,string url);
     Task<User?> GetUser(string username, string password);
 
     Task<bool> IsExist(Guid id);

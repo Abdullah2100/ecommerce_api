@@ -2,7 +2,7 @@ using api.application;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
-using business.mapper;
+using data.mapper;
 using api.util;
 using business.Services.Interface;
 using data.dto.Request;
@@ -64,7 +64,7 @@ public class BannerServices(
 
         if (result == 0)
         {
-            logger.LogError("coud not create banner {bannerId} ", banner.Id);
+            logger.LogError("could not create banner {bannerId} ", banner.Id);
             fileServices.DeleteFile(image,rootPath);
             return new Result(false, "error while adding new banner", null, 500);
         }
@@ -137,8 +137,7 @@ public class BannerServices(
         var banners = await cache.GetOrCreateAsync(MemoryCacheKeys.BannersKey + "/admin" + adminId + '/' + pageNumber,
             async ct =>
             {
-                var banners = (await unitOfWork.BannerRepository.GetBanners(pageNumber, pageSize))
-                    .Select(ba => ba.ToDto(config["url_file"] ?? ""))
+                var banners = (await unitOfWork.BannerRepository.GetBanners( pageNumber, pageSize,config["url_file"] ?? ""))
                     .ToList();
                 return banners;
             },
@@ -163,8 +162,7 @@ public class BannerServices(
         var banners = await cache.GetOrCreateAsync(MemoryCacheKeys.BannersKey + "/" + userId + '/' + pageNumber,
             async ct =>
             {
-                var banners = (await unitOfWork.BannerRepository.GetBanners(userId, pageNumber, pageSize))
-                    .Select(ba => ba.ToDto(config["url_file"] ?? ""))
+                var banners = (await unitOfWork.BannerRepository.GetBannersByStoreId(store.Id, pageNumber, pageSize,config["url_file"] ?? ""))
                     .ToList();
                 return banners;
             },
@@ -181,8 +179,7 @@ public class BannerServices(
         var banners = await cache.GetOrCreateAsync(MemoryCacheKeys.BannersKey + "/" + randomLenght,
             async ct =>
             {
-                var banners = (await unitOfWork.BannerRepository.GetBanners(randomLenght))
-                    .Select(ba => ba.ToDto(config["url_file"] ?? ""))
+                var banners = (await unitOfWork.BannerRepository.GetBanners(randomLenght,config["url_file"] ?? ""))
                     .ToList();
                 return banners;
             },

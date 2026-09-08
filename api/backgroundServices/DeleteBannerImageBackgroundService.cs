@@ -4,6 +4,7 @@ using business.Services.Interface;
 namespace api.backgroundServices
 {
     public class DeleteBannerImageBackgroundService(
+        IConfiguration config,
         IUnitOfWork unitOfWork,
         IFileServices services,
         IWebHostEnvironment environment,
@@ -19,7 +20,7 @@ namespace api.backgroundServices
             {
                 try
                 {
-                    var listBanner = await unitOfWork.BannerRepository.GetNotActiveBanners(20);
+                    var listBanner = await unitOfWork.BannerRepository.GetNotActiveBanners(20,config["url_file"] ?? "");
                     if (listBanner.Count > 0)
                     {
                         var rootPath = environment.WebRootPath;

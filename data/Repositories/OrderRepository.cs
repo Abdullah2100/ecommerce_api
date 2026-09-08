@@ -1,7 +1,9 @@
 using api.application;
 using api.domain.entity;
 using data.dto.Request;
+using data.dto.Response;
 using data.Interface;
+using data.mapper;
 using data.util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -27,12 +29,12 @@ public class OrderRepository(
     /// <param name="userId">The unique identifier of the user.</param>
     /// <param name="pageNum">The page number to retrieve (1-indexed).</param>
     /// <param name="pageSize">The number of items per page.</param>
+    /// <param name="url"></param>
     /// <returns>A task representing the asynchronous operation, returning a collection of orders.</returns>
-    public async Task<ICollection<Order>> GetOrders(
-        Guid userId,
+    public async Task<List<OrderDto>> GetOrders(Guid userId,
         int pageNum,
-        int pageSize
-    )
+        int pageSize,
+        string url)
     {
         var query = context.Orders
             .Include(o => o.PaymentType)
@@ -43,6 +45,7 @@ public class OrderRepository(
             .Where(o => o.UserId == userId)
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
+            .Select(value => value.ToDto(url))
             .OrderDescending();
 
         ClsUtil.logSql<OrderRepository>(
@@ -59,14 +62,16 @@ public class OrderRepository(
                 .Include(oi => oi.Product)
                 .Include(oi => oi.Store)
                 .AsSplitQuery()
-                .Where(oi => oi.OrderId == order.Id);
+                .Where(oi => oi.OrderId == order.Id)
+                .Select(value => value.ToOrderItemDto(url));
 
             ClsUtil.logSql<OrderRepository>(
                 logger,
                 itemQuery.ToQueryString()
             );
+            if (await itemQuery.AnyAsync())
 
-            order.Items = await itemQuery.ToListAsync();
+                order.OrderItems = await itemQuery.ToListAsync();
         }
 
         return orders;
@@ -78,8 +83,9 @@ public class OrderRepository(
     /// </summary>
     /// <param name="page">The page number to retrieve.</param>
     /// <param name="length">The number of items per page.</param>
+    /// <param name="url"></param>
     /// <returns>A task representing the asynchronous operation, returning a collection of orders.</returns>
-    public async Task<ICollection<Order>> GetOrders(int page, int length)
+    public async Task<ICollection<OrderDto>> GetOrders(int page, int length, string url)
     {
         var query = context.Orders
             .Include(o => o.PaymentType)
@@ -89,6 +95,7 @@ public class OrderRepository(
             .AsNoTracking()
             .Skip((page - 1) * length)
             .Take(length)
+            .Select(value => value.ToDto(url))
             .OrderDescending();
 
         ClsUtil.logSql<OrderRepository>(
@@ -107,68 +114,48 @@ public class OrderRepository(
                 .AsSplitQuery()
                 .AsNoTracking()
                 .Where(oi => oi.OrderId == order.Id)
-                .Select(it => new OrderItem
-                {
-                    Id = it.Id,
-                    OrderId = it.OrderId,
-                    ProductId = it.ProductId,
-                    Price = it.Price,
-                    Quantity = it.Quantity,
-                    StoreId = it.StoreId,
-                    Order = it.Order,
-                    Store = new Store
-                    {
-                        Id = it.Store.Id,
-                        Name = it.Store.Name,
-                        WallpaperImage = "",
-                        SmallImage = "",
-                        IsBlock = it.Store.IsBlock,
-                        UserId = it.Store.UserId,
-                        Addresses = context
-                            .Address
-                            .AsNoTracking()
-                            .Where(ad => ad.OwnerId == it.Store.Id)
-                            .ToList()
-                    },
-                    Product = it.Product,
-                    OrderProductsVariants = it.OrderProductsVariants,
-                    Status = it.Status
-                });
+                //  /*  .Select(it => new OrderItem
+                //       {
+                //      Id = it.Id,
+                //       OrderId = it.OrderId,
+                //      ProductId = it.ProductId,
+                //  //  //      Price = it.Price,
+                //         Quantity = it.Quantity,
+                //      StoreId = it.StoreId,
+                //      Order = it.Order,
+                //      Store = new Store
+                //      {
+                //          Id = it.Store.Id,
+                //          Name = it.Store.Name,
+                //          WallpaperImage = "",
+                //          SmallImage = "",
+                //          IsBlock = it.Store.IsBlock,
+                //          UserId = it.Store.UserId,
+                //          Addresses = context
+                //          .Address
+                //          .AsNoTracking()
+                //          .Where(ad => ad.OwnerId == it.Store.Id)
+                //          .ToList()
+                //  },
+                //        Product = it.Product,
+                //  OrderProductsVariants = it.OrderProductsVariants,
+                //   Status = it.Status
+                //  })
+                //      */
+                .Select(value => value.ToOrderItemDto(url));
 
             ClsUtil.logSql<OrderRepository>(
                 logger,
                 itemQuery.ToQueryString()
             );
 
-            order.Items = await itemQuery.ToListAsync();
+            order.OrderItems = await itemQuery.ToListAsync();
         }
 
         return orders;
     }
 
-    /// <summary>
-    /// Retrieves a specified number of orders in a random order.
-    /// </summary>
-    /// <param name="randomNumber">The number of orders to retrieve.</param>
-    /// <returns>A task representing the asynchronous operation, returning a collection of random orders.</returns>
-    public async Task<ICollection<Order>> GetOrders(int randomNumber)
-    {
-        var query = context
-            .Orders
-            .Include(o => o.PaymentType)
-            .AsSplitQuery()
-            .AsNoTracking()
-            .OrderBy(x => Guid.NewGuid())
-            .Take(randomNumber);
-
-        ClsUtil.logSql<OrderRepository>(
-            logger,
-            query.ToQueryString()
-        );
-
-        return await query.ToListAsync();
-    }
-
+   
     /// <summary>
     /// Retrieves a specific order by its identifier.
     /// </summary>
@@ -222,11 +209,16 @@ public class OrderRepository(
             .Include(o => o.Items)
             .AsSplitQuery()
             .AsNoTracking()
-            .FirstOrDefaultAsync(o => o.Id == id && o.UserId == userId);
+            .Where(o => o.Id == id && o.UserId == userId);
 
-        var order = await query;
+        if (!await query.AnyAsync()) return new Order();
 
-        if (order is null) return null;
+        ClsUtil.logSql<OrderRepository>(
+            logger,
+            query.ToQueryString()
+        );
+
+        var order = await query.SingleAsync();
 
         var itemQuery = context.OrderItems
             .Include(oi => oi.Order)
@@ -311,19 +303,19 @@ public class OrderRepository(
     /// <returns>A task representing the asynchronous operation, returning true if the price is valid.</returns>
     public async Task<bool> IsValidTotalPrice(decimal totalPrice, ICollection<CreateOrderItemDto> items, string symbol)
     {
-        bool isAmbiguous = false;
+        var isAmbiguous = false;
         decimal realPrice = 0;
 
         foreach (var item in items)
         {
             var product = await context.Products.FindAsync(item.ProductId);
             var currencies = await context.Currencies.AsNoTracking().ToListAsync();
-            int variantPrice = 0;
+            var variantPrice = 0;
 
             for (var i = 0; i < item.ProductVariant?.Count; i++)
             {
                 var productVariantPrice = await context.ProductVariants.AsNoTracking().FirstOrDefaultAsync(p =>
-                        p.ProductId == p.Id && p.Id == item.ProductVariant.ElementAt(i));
+                    p.ProductId == p.Id && p.Id == item.ProductVariant.ElementAt(i));
 
                 if (productVariantPrice is null)
                 {
@@ -357,19 +349,21 @@ public class OrderRepository(
     /// </summary>
     /// <param name="pageNum">The page number to retrieve.</param>
     /// <param name="pageSize">The number of items per page.</param>
+    /// <param name="url"></param>
     /// <returns>A task representing the asynchronous operation, returning a collection of unassigned orders.</returns>
-    public async Task<ICollection<Order>> GetOrderNoBelongToAnyDelivery(int pageNum, int pageSize)
+    public async Task<ICollection<OrderDto>> GetOrderNoBelongToAnyDelivery(int pageNum, int pageSize, string url)
     {
         var query = context.Orders
-                .Include(o => o.PaymentType)
-                .Include(o => o.Items)
-                .Include(o => o.User)
-                .AsSplitQuery()
-                .AsNoTracking()
-                .Where(o => o.DeliveryId == null)
-                .Skip((pageNum - 1) * pageSize)
-                .Take(pageSize)
-                .OrderDescending();
+            .Include(o => o.PaymentType)
+            .Include(o => o.Items)
+            .Include(o => o.User)
+            .AsSplitQuery()
+            .AsNoTracking()
+            .Where(o => o.DeliveryId == null)
+            .Skip((pageNum - 1) * pageSize)
+            .Take(pageSize)
+            .Select(value => value.ToDto(url))
+            .OrderDescending();
 
         ClsUtil.logSql<OrderRepository>(
             logger,
@@ -388,40 +382,41 @@ public class OrderRepository(
                 .AsSplitQuery()
                 .AsNoTracking()
                 .Where(oi => oi.OrderId == order.Id)
-                .Select(it => new OrderItem
-                {
-                    Id = it.Id,
-                    OrderId = it.OrderId,
-                    ProductId = it.ProductId,
-                    Price = it.Price,
-                    Quantity = it.Quantity,
-                    StoreId = it.StoreId,
-                    Order = it.Order,
-                    Store = new Store
-                    {
-                        Id = it.Store.Id,
-                        Name = it.Store.Name,
-                        WallpaperImage = "",
-                        SmallImage = "",
-                        IsBlock = it.Store.IsBlock,
-                        UserId = it.Store.UserId,
-                        Addresses = context
-                            .Address
-                            .AsNoTracking()
-                            .Where(ad => ad.OwnerId == it.Store.Id)
-                            .ToList()
-                    },
-                    Product = it.Product,
-                    OrderProductsVariants = it.OrderProductsVariants,
-                    Status = it.Status
-                });
+                .Select(value => value.ToOrderItemDto(url));
+            //       .Select(it => new OrderItem
+            //      {
+            //         Id = it.Id,
+            //        OrderId = it.OrderId,
+            //       ProductId = it.ProductId,
+            //      Price = it.Price,
+            //     Quantity = it.Quantity,
+            //    StoreId = it.StoreId,
+            //            Order = it.Order,
+            //           Store = new Store
+            //          {
+            //            Id = it.Store.Id,
+            //           Name = it.Store.Name,
+            //              WallpaperImage = "",
+            //              SmallImage = "",
+//                        IsBlock = it.Store.IsBlock,
+            //                       UserId = it.Store.UserId,
+            //                      Addresses = context
+            //                         .Address
+            //                        .AsNoTracking()
+            //                       .Where(ad => ad.OwnerId == it.Store.Id)
+            //                       .ToList()
+            //              },
+            //            Product = it.Product,
+            //           OrderProductsVariants = it.OrderProductsVariants,
+            //         Status = it.Status
+            //    });
 
             ClsUtil.logSql<OrderRepository>(
                 logger,
                 itemQuery.ToQueryString()
             );
 
-            order.Items = await itemQuery.ToListAsync();
+            order.OrderItems = await itemQuery.ToListAsync();
         }
 
         return orders;
@@ -433,8 +428,9 @@ public class OrderRepository(
     /// <param name="deliveryId">The unique identifier of the delivery person.</param>
     /// <param name="pageNum">The page number to retrieve.</param>
     /// <param name="pageSize">The number of items per page.</param>
+    /// <param name="url"></param>
     /// <returns>A task representing the asynchronous operation, returning a collection of assigned orders.</returns>
-    public async Task<ICollection<Order>> GetOrderBelongToDelivery(Guid deliveryId, int pageNum, int pageSize)
+    public async Task<ICollection<OrderDto>> GetOrderBelongToDelivery(Guid deliveryId, int pageNum, int pageSize,string url )
     {
         var query = context.Orders
             .Include(o => o.PaymentType)
@@ -445,6 +441,7 @@ public class OrderRepository(
             .Where(o => o.DeliveryId == deliveryId)
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
+            .Select(value=>value.ToDto(url))
             .OrderDescending();
 
         ClsUtil.logSql<OrderRepository>(
@@ -463,7 +460,8 @@ public class OrderRepository(
                 .AsSplitQuery()
                 .AsNoTracking()
                 .Where(oi => oi.OrderId == order.Id)
-                .Select(it => new OrderItem
+                .Select(value => value.ToOrderItemDto(url));
+             /*   .Select(it => new OrderItem
                 {
                     Id = it.Id,
                     OrderId = it.OrderId,
@@ -489,14 +487,14 @@ public class OrderRepository(
                     Product = it.Product,
                     OrderProductsVariants = it.OrderProductsVariants,
                     Status = it.Status
-                });
+                });*/
 
             ClsUtil.logSql<OrderRepository>(
                 logger,
                 itemQuery.ToQueryString()
             );
 
-            order.Items = await itemQuery.ToListAsync();
+            order.OrderItems = await itemQuery.ToListAsync();
         }
 
         return orders;
@@ -510,7 +508,7 @@ public class OrderRepository(
     /// <exception cref="ArgumentNullException">Thrown when the order matching the criteria is not found.</exception>
     public void RemoveOrderFromDelivery(Guid id, Guid deliveryId)
     {
-        Order? result = context
+        var result = context
             .Orders
             .FirstOrDefault(o => o.Id == id && o.DeliveryId == deliveryId);
 
@@ -526,28 +524,21 @@ public class OrderRepository(
     /// <param name="currentSymbol">The target currency symbol.</param>
     /// <param name="currencies">A collection of all available currencies and their exchange values.</param>
     /// <returns>The converted price value.</returns>
-    public decimal ConvertPriceFromCurrencyToAnother(decimal price, string productSymbol, string currentSymbol,
+    private decimal ConvertPriceFromCurrencyToAnother(decimal price, string productSymbol, string currentSymbol,
         ICollection<Currency> currencies)
     {
         var currentCurrency = currencies.First(x => x.Symbol == currentSymbol);
         var productCurrency = currencies.First(x => x.Symbol == productSymbol);
 
-        switch (currentCurrency.IsDefault && !productCurrency.IsDefault)
+        return (currentCurrency.IsDefault && !productCurrency.IsDefault) switch
         {
-            case true:
-                return price / (productCurrency.Value);
-            default:
-                {
-                    switch (currentCurrency == productCurrency)
-                    {
-                        case true: return price;
-                        default:
-                            {
-                                return (price / productCurrency.Value) * currentCurrency.Value;
-                            }
-                    }
-                }
-        }
+            true => price / (productCurrency.Value),
+            _ => (currentCurrency == productCurrency) switch
+            {
+                true => price,
+                _ => (price / productCurrency.Value) * currentCurrency.Value
+            }
+        };
     }
 
     /// <summary>
@@ -604,13 +595,9 @@ public class OrderRepository(
     public async Task<bool> IsSavedDistanceToOrder(Guid id)
     {
         var result = (await IsSavedDistance(id) == true ? 1 : 0);
-        if (result == 0)
-        {
-            await Delete(id);
-            return false;
-        }
-
-        return true;
+        if (result != 0) return true;
+        await Delete(id);
+        return false;
     }
 
     /// <summary>
@@ -623,14 +610,12 @@ public class OrderRepository(
     {
         try
         {
-            using (var command = context.Database.GetDbConnection().CreateCommand())
-            {
-                command.CommandText = @"SELECT * FROM fun_calculate_distance_between_user_and_stores(@orderId)";
-                command.Parameters.Add(new NpgsqlParameter("@orderId", orderId));
-                await context.Database.OpenConnectionAsync();
-                var result = await command.ExecuteScalarAsync();
-                return (bool?)result == true;
-            }
+            await using var command = context.Database.GetDbConnection().CreateCommand();
+            command.CommandText = @"SELECT * FROM fun_calculate_distance_between_user_and_stores(@orderId)";
+            command.Parameters.Add(new NpgsqlParameter("@orderId", orderId));
+            await context.Database.OpenConnectionAsync();
+            var result = await command.ExecuteScalarAsync();
+            return (bool?)result == true;
         }
         catch (System.Exception ex)
         {

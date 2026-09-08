@@ -3,7 +3,7 @@ using api.application;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
-using business.mapper;
+using data.mapper;
 using api.util;
 using data.dto.Request;
 using data.util;
@@ -181,8 +181,7 @@ public class VariantServices(
             async dt =>
             {
                 var variants = (await unitOfWork.VariantRepository
-                        .GetVariants(page, pageSize))
-                    .Select(va => va.ToDto()).ToList();
+                        .GetVariants(page, pageSize)).ToList();
 
                 return variants;
             },

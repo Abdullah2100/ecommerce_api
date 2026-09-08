@@ -1,7 +1,9 @@
  
 using api.application;
 using api.domain.entity;
+using data.dto.Response;
 using data.Interface;
+using data.mapper;
 using data.util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -27,7 +29,7 @@ public class GeneralSettingRepository(
     /// A task representing the asynchronous operation, returning a collection
     /// of general settings.
     /// </returns>
-    public async Task<ICollection<GeneralSetting>> Getgenralsettings(
+    public async Task<ICollection<GeneralSettingDto>> GeneralSettings(
         int page,
         int length
     )
@@ -36,7 +38,8 @@ public class GeneralSettingRepository(
             .GeneralSettings
             .AsNoTracking()
             .Skip((page - 1) * length)
-            .Take(length);
+            .Take(length)
+            .Select(value=>value.ToDto());
 
         ClsUtil.logSql<GeneralSettingRepository>(
             logger,
@@ -73,10 +76,10 @@ public class GeneralSettingRepository(
     /// </exception>
     public void Delete(Guid id)
     {
-        var query = context
+        var query =  context
             .GeneralSettings
             .AsNoTracking()
-            .Where(gs => gs.Id == id);
+            .Where(gs=>gs.Id==  id);
 
         ClsUtil.logSql<GeneralSettingRepository>(
             logger,

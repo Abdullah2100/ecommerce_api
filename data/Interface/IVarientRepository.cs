@@ -1,11 +1,12 @@
 using api.domain.entity;
+using data.dto.Response;
 
 namespace data.Interface;
 
 public interface IVariantRepository : IRepository<Variant>
 {
     Task<Variant?> GetVariant(Guid id);
-    Task<ICollection<Variant>> GetVariants(int page, int lenght);
+    Task<ICollection<VariantDto>> GetVariants(int page, int lenght);
     Task<int> GetVariantCount(int variantPerPage);
     Task<bool> IsExist(Guid id);
     Task<bool> IsExist(string name);

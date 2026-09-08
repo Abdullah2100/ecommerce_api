@@ -107,7 +107,7 @@ public class ReseatPasswordRepository(
     /// <param name="email">The email address to clean up.</param>
     /// <param name="otp">The current valid OTP code to exclude from deletion.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    private async Task DeleteAllEmailOtp(string email, string otp)
+    public async Task DeleteAllEmailOtp(string email, string otp)
     {
         var query = context.ReseatPasswords.Where(rp => rp.Email == email && rp.Otp != otp);
 
@@ -127,11 +127,7 @@ public class ReseatPasswordRepository(
     /// <returns>A task representing the asynchronous operation, returning <c>true</c> if the OTP exists; otherwise, <c>false</c>.</returns>
     public async Task<bool> IsExist(string otp, string email)
     {
-        // Delete previous OTPs for this email to ensure only the current one remains
-        await DeleteAllEmailOtp(email, otp);
-
-        var passwordOtp = await GetOtp(otp);
-        return passwordOtp is not null;
+        return await context.ReseatPasswords.AnyAsync(f => f.Otp == otp && f.Email == email) ;
     }
 
     /// <summary>

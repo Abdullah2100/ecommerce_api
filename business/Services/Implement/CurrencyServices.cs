@@ -2,7 +2,7 @@ using api.application;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
-using business.mapper;
+using data.mapper;
 using api.util;
 using data.dto.Request;
 using data.util;
@@ -138,8 +138,7 @@ public class CurrencyServices(
         var currencies = await cache.GetOrCreateAsync(MemoryCacheKeys.CurrenciesKey + pageNum, async ct =>
             {
                 var currencies = (await unitOfWork.CurrencyRepository
-                        .GetAll(pageNum, pageSize))
-                    .Select(payment => payment.ToPaymentDto()).ToList();
+                        .GetAll(pageNum, pageSize)).ToList();
                 return currencies;
             },
             tags: [MemoryCacheKeys.CurrenciesKey]);

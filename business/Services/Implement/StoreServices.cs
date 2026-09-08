@@ -2,7 +2,7 @@ using api.application;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
-using business.mapper;
+using data.mapper;
 using api.util;
 using business.Services.Interface;
 using data.dto.Request;
@@ -33,8 +33,7 @@ public class StoreServices(
             async ct =>
             {
                 var stores = (await unitOfWork.StoreRepository
-                        .GetStores(prefix, pageSize))
-                    .Select(st => st.ToDto(config["url_file"] ?? ""))
+                        .GetStores(prefix, pageSize,config["url_file"] ?? ""))
                     .ToList();
 
                 return stores;
@@ -185,10 +184,7 @@ public class StoreServices(
         {
             return new Result(false, "could not update store", null, 500);
         }
-
-        var store = await unitOfWork.StoreRepository.GetStore(user.Store.Id);
-        store?.Addresses = await unitOfWork.AddressRepository.GetAllAddressByOwnerId(store!.Id);
-
+        
         await cache.RemoveByTagAsync(MemoryCacheKeys.StoresKey);
 
         return new Result(true, null, null, 204);
@@ -243,8 +239,7 @@ public class StoreServices(
             async ct =>
             {
                 var stores = (await unitOfWork.StoreRepository
-                        .GetStores(pageNumber, pageSize))
-                    .Select(st => st.ToDto(config["url_file"] ?? ""))
+                        .GetStores(pageNumber, pageSize,config["url_file"] ?? ""))
                     .ToList();
                 return stores;
             },

@@ -2,7 +2,7 @@ using api.application;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
-using business.mapper;
+using data.mapper;
 using api.util;
 using business.Services.Interface;
 using data.dto.Request;
@@ -130,8 +130,9 @@ public class PaymentTypeServices(
             MemoryCacheKeys.PaymentTypesKey + '/' + pageNum,
             async ct =>
             {
-                var paymentTypes = (await unitOfWork.PaymentTypeRepository.GetPaymentTypes(pageNum, pageSie))
-                    .Select(s => s.ToDto(config["url_file"] ?? ""));
+                var paymentTypes =
+                    (await unitOfWork.PaymentTypeRepository.GetPaymentTypes(pageNum, pageSie,
+                        config["url_file"] ?? ""));
                 return paymentTypes;
             },
             tags: [MemoryCacheKeys.PaymentTypesKey]);

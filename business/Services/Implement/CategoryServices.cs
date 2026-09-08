@@ -2,7 +2,7 @@ using api.application;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
-using business.mapper;
+using data.mapper;
 using api.util;
 using business.Services.Interface;
 using data.dto.Request;
@@ -180,8 +180,8 @@ public class CategoryServices(
             {
                 var categories = (await unitOfWork
                         .CategoryRepository
-                        .GetCategories(pageNumber, pageSize))
-                    .Select(ca => ca.ToDto(config["url_file"] ?? ""))
+                        .GetCategories(pageNumber, pageSize,config["url_file"] ?? ""))
+                    
                     .ToList();
                 return categories;
             },

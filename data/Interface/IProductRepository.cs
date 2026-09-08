@@ -1,4 +1,5 @@
 using api.domain.entity;
+using data.dto.Response;
 
 namespace data.Interface;
 
@@ -10,11 +11,11 @@ public interface IProductRepository : IRepository<Product>
     Task<int?> GetProductPages();
     Task<Product?> GetProductByUser(Guid id, Guid userId);
 
-    Task<ICollection<Product>> GetProducts(Guid storeId, Guid subCategoryId, int pageNum, int pageSize);
-    Task<ICollection<Product>> GetProducts(Guid storeId, int pageNum, int pageSize);
-    Task<ICollection<Product>> GetProducts(int page, int length);
-    Task<ICollection<Product>> GetProducts(int randomNumber);
-    Task<ICollection<Product>> GetProductsByCategory(Guid categoryId, int pageNum, int pageSize);
+    Task<ICollection<ProductDto>> GetProducts(Guid storeId, Guid subCategoryId, int pageNum, int pageSize,string url);
+    Task<ICollection<ProductDto>> GetProducts(Guid storeId, int pageNum, int pageSize,string url);
+    Task<List<ProductDto>> GetProducts(int page, int length, string url);
+    Task<ICollection<ProductDto>> GetProducts(int randomNumber,string url);
+    Task<ICollection<ProductDto>> GetProductsByCategory(Guid categoryId, int pageNum, int pageSize,string url);
 
     Task<bool> IsExist(Guid id);
     void Delete(Guid id);

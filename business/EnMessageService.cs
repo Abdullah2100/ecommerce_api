@@ -1,4 +1,4 @@
-namespace business;
+namespace data;
 
 public enum EnMessageService
 {

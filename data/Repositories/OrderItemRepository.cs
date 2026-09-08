@@ -1,7 +1,9 @@
 
 using api.application;
 using api.domain.entity;
+using data.dto.Response;
 using data.Interface;
+using data.mapper;
 using data.util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -26,14 +28,16 @@ public class OrderItemRepository(
     /// <param name="storeId">The unique identifier of the store.</param>
     /// <param name="pageNum">The page number to retrieve (1-indexed).</param>
     /// <param name="pageSize">The number of items per page.</param>
+    /// <param name="url"></param>
     /// <returns>
     /// A task representing the asynchronous operation, returning a collection
     /// of order items.
     /// </returns>
-    public async Task<ICollection<OrderItem>> GetOrderItems(
+    public async Task<ICollection<OrderItemDto>> GetOrderItems(
         Guid storeId,
         int pageNum,
-        int pageSize
+        int pageSize,
+        string url
     )
     {
         var query = context.OrderItems
@@ -46,6 +50,7 @@ public class OrderItemRepository(
             .Where(o => o.StoreId == storeId && ((int)o.Order.Status) > 1)
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
+            .Select(value=>value.ToOrderItemDto(url))
             .OrderDescending();
 
         ClsUtil.logSql<OrderItemRepository>(

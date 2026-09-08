@@ -2,6 +2,7 @@ using api.application;
 using api.domain.entity;
 using data.dto.Response;
 using data.Interface;
+using data.mapper;
 using data.util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -85,7 +86,7 @@ public class DeliveryRepository(
         var addressSql = context.Address
             .AsNoTracking()
             .Where(ad => ad.OwnerId == (delivery!.Id));
-
+        
         ClsUtil.logSql<DeliveryRepository>(logger, addressSql.ToQueryString());
         delivery?.Address = await addressSql.FirstOrDefaultAsync();
 
@@ -101,8 +102,9 @@ public class DeliveryRepository(
     {
         var query = (context
             .Deliveries
-            .AsNoTracking()
             .Include(de => de.User)
+            .AsSplitQuery()
+            .AsNoTracking()
             .Where(de => de.UserId == userId));
 
         if (!await query.AnyAsync()) return null;
@@ -112,7 +114,7 @@ public class DeliveryRepository(
         var addressSql = context.Address
             .AsNoTracking()
             .Where(ad => ad.OwnerId == delivery!.Id);
-
+        
         ClsUtil.logSql<DeliveryRepository>(logger, addressSql.ToQueryString());
         delivery?.Address = await addressSql.FirstOrDefaultAsync();
 
@@ -125,17 +127,20 @@ public class DeliveryRepository(
     /// <param name="belongToId">The identifier the delivery belongs to.</param>
     /// <param name="page">The page number to retrieve.</param>
     /// <param name="size">The number of items per page.</param>
+    /// <param name="url"></param>
     /// <returns>A task representing the asynchronous operation, returning a collection of deliveries.</returns>
-    public async Task<ICollection<Delivery>?> GetDeliveriesByBelongTo(Guid belongToId, int page, int size)
+    public async Task<ICollection<DeliveryDto>> GetDeliveriesByBelongTo(Guid belongToId, int page, int size,string url)
     {
         var query = context
             .Deliveries
             .Include(de => de.User)
             .AsSplitQuery()
             .AsNoTracking()
+            .Where(d=>d.BelongTo==belongToId)
             .Take(page)
-            .Skip((page - 1) * size);
-        if (!await query.AnyAsync()) return null;
+            .Skip((page - 1) * size)
+            .Select(value=>value.ToDto(url));
+        if (!await query.AnyAsync()) return new List<DeliveryDto>();
 
         var deliveries = await query.ToListAsync();
         foreach (var delivery in deliveries)
@@ -143,9 +148,9 @@ public class DeliveryRepository(
             var addressSql = context.Address
                 .AsNoTracking()
                 .Where(ad => ad.Id == delivery.Id);
-
+            
             ClsUtil.logSql<DeliveryRepository>(logger, addressSql.ToQueryString());
-            delivery?.Address = await addressSql.FirstOrDefaultAsync();
+            delivery?.Address = await addressSql.Select(value=>value.ToDeliveryDto()).FirstOrDefaultAsync();
         }
 
         return deliveries;
@@ -156,21 +161,23 @@ public class DeliveryRepository(
     /// </summary>
     /// <param name="page">The page number to retrieve.</param>
     /// <param name="size">The number of items per page.</param>
+    /// <param name="url"></param>
     /// <returns>A task representing the asynchronous operation, returning a collection of deliveries.</returns>
-    public async Task<ICollection<Delivery>?> GetDeliveries(int page, int size)
+    public async Task<List<string?>> GetDeliveries(int page, int size)
     {
         var query = context
                 .Deliveries
-                 .Include(de => de.User)
-                 .AsSplitQuery()
-            .AsNoTracking()
-            .Take(page)
+                .Include(de => de.User)
+                .AsSplitQuery()
+                .AsNoTracking()
+                .Take(page)
                 .Skip((page - 1) * size)
+                .Select(value=>value.DeviceToken)
             ;
 
-        if (!await query.AnyAsync()) return null;
+        if (!await query.AnyAsync()) return [];
 
-        return await query.ToListAsync();        
+        return await query.ToListAsync();
     }
 
     /// <summary>
@@ -221,12 +228,12 @@ public class DeliveryRepository(
     /// <returns>A task representing the asynchronous operation, returning true if it exists; otherwise, false.</returns>
     public async Task<bool> IsExistByUserId(Guid userId)
     {
-        var query =  context
+        var query = context
             .Deliveries
             .AsNoTracking()
             .Where(de => de.UserId == userId);
         if (!await query.AnyAsync()) return false;
 
-        return  await query.AnyAsync();
+        return await query.AnyAsync();
     }
 }

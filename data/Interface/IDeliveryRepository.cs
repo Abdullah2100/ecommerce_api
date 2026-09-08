@@ -7,8 +7,8 @@ public interface IDeliveryRepository : IRepository<Delivery>
 {
     Task<Delivery?> GetDelivery(Guid id);
     Task<Delivery?> GetDeliveryByUserId(Guid userId);
-    Task<ICollection<Delivery>?> GetDeliveriesByBelongTo(Guid belongToId, int page, int size);
-    Task<ICollection<Delivery>?> GetDeliveries(int page, int size);
+    Task<ICollection<DeliveryDto>> GetDeliveriesByBelongTo(Guid belongToId, int page, int size, string url);
+    Task<List<string?>> GetDeliveries(int page, int size);
     Task<int> GetDeliveriesPage(int deliveryPerSize);
 
 

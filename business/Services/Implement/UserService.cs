@@ -2,9 +2,10 @@ using api.application;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
-using business.mapper;
+using data.mapper;
 using api.util;
 using business.Services.Interface;
+using data;
 using data.dto.Request;
 using data.dto.Response;
 using data.util;
@@ -159,8 +160,7 @@ public class UserService(
         var users = await cache.GetOrCreateAsync(MemoryCacheKeys.UsersKey + "/" + id + "/" + page,
             async ct =>
             {
-                var users = (await unitOfWork.UserRepository.GetUsers(page, 25))
-                    .Select(u => u.ToUserInfoDto(config["url_file"] ?? ""))
+                var users = (await unitOfWork.UserRepository.GetUsers(page, 25,config["url_file"] ?? ""))
                     .ToList();
                 return users;
             },
@@ -512,6 +512,8 @@ public class UserService(
             do
             {
                 otp = ClsUtil.GenerateGuid().ToString().Substring(0, 6).Replace("-", "");
+                
+                await unitOfWork.PasswordRepository.DeleteAllEmailOtp(user.Email, otp);
                 isOtpExist = await unitOfWork.PasswordRepository.IsExist(otp, user!.Email);
             } while (isOtpExist);
         }

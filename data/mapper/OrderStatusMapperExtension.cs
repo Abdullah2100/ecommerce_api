@@ -1,4 +1,4 @@
-namespace business.mapper;
+namespace data.mapper;
 
 public static class OrderStatusMapperExtension
 {

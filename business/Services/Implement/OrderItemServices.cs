@@ -1,7 +1,7 @@
 using api.application;
 using api.domain.entity;
 using api.Infrastructure;
-using business.mapper;
+using data.mapper;
 using api.util;
 using business.Services.Interface;
 using data.dto.Request;
@@ -36,8 +36,7 @@ public class OrderItemServices(
             async ct =>
             {
                 var orderItems = (await unitOfWork.OrderItemRepository
-                        .GetOrderItems(storeId: user!.Store!.Id, pageNum: pageNum, pageSize: pageSize))
-                    .Select(p => p.ToOrderItemDto(config["url_file"] ?? ""))
+                        .GetOrderItems(storeId: user!.Store!.Id, pageNum: pageNum, pageSize: pageSize,config["url_file"] ?? ""))
                     .ToList();
                 return orderItems;
             },

@@ -2,7 +2,7 @@ using api.application;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
-using business.mapper;
+using data.mapper;
 using api.util;
 using business.Services.Interface;
 using data.dto.Request;
@@ -250,9 +250,7 @@ public class DeliveryServices(
             MemoryCacheKeys.DeliveriesKey + "/belong_to" + belongToId + '/' + pageNumber,
             async ct =>
             {
-                var deliveriesDto = (await unitOfWork.DeliveryRepository.GetDeliveriesByBelongTo(id, pageNumber, pageSize))
-                    ?.Select((de) => de.ToDto(config["url_file"] ?? ""))
-                    .ToList();
+                var deliveriesDto = await unitOfWork.DeliveryRepository.GetDeliveriesByBelongTo(id, pageNumber, pageSize,config["url_file"] ?? "");
 
                 if (deliveriesDto == null) return null;
                 foreach (var delivery in deliveriesDto)

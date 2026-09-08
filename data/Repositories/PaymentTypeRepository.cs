@@ -1,6 +1,8 @@
 using api.application;
 using api.domain.entity;
+using data.dto.Response;
 using data.Interface;
+using data.mapper;
 using data.util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -60,13 +62,15 @@ public class PaymentTypeRepository(
     /// </summary>
     /// <param name="pageNum">The page number to retrieve (1-indexed).</param>
     /// <param name="pageSie">The number of items per page.</param>
+    /// <param name="url"></param>
     /// <returns>A task representing the asynchronous operation, returning a collection of payment types.</returns>
-    public async Task<ICollection<PaymentType>> GetPaymentTypes(int pageNum, int pageSie)
+    public async Task<ICollection<PaymentTypeDto>> GetPaymentTypes(int pageNum, int pageSie,string url)
     {
         var query = context.PaymentTypes
             .AsNoTracking()
             .Take(pageSie)
-            .Skip((pageNum - 1) * pageSie);
+            .Skip((pageNum - 1) * pageSie)
+            .Select(value=>value.ToDto(url));
 
         ClsUtil.logSql<PaymentTypeRepository>(
             logger,
@@ -97,22 +101,4 @@ public class PaymentTypeRepository(
         return await query.AnyAsync();
     }
 
-    /// <summary>
-    /// Checks if a payment type exists with the specified unique identifier.
-    /// </summary>
-    /// <param name="id">The unique identifier to check.</param>
-    /// <returns>A task representing the asynchronous operation, returning <c>true</c> if it exists; otherwise, <c>false</c>.</returns>
-    public async Task<bool> IsExistPaymentType(Guid id)
-    {
-        var query = context.PaymentTypes
-            .AsNoTracking()
-            .Where(x => x.Id == id);
-
-        ClsUtil.logSql<PaymentTypeRepository>(
-            logger,
-            query.ToQueryString()
-        );
-
-        return await query.AnyAsync();
-    }
 }

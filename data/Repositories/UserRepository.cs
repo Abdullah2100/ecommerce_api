@@ -1,6 +1,8 @@
 using api.application;
 using api.domain.entity;
+using data.dto.Response;
 using data.Interface;
+using data.mapper;
 using data.util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -34,6 +36,7 @@ public class UserRepository(
         var query = dbContext
             .Users
             .Include(u => u.Store)
+            .AsSplitQuery()
             .AsNoTracking()
             .Where(u => u.Id == id);
 
@@ -42,7 +45,7 @@ public class UserRepository(
             query.ToQueryString()
         );
 
-        User? user = await query.FirstOrDefaultAsync();
+        var user = await query.FirstOrDefaultAsync();
 
         if (user == null) return null;
 
@@ -75,6 +78,7 @@ public class UserRepository(
         var query = dbContext
             .Users
             .Include(u => u.Store)
+            .AsSplitQuery()
             .AsNoTracking()
             .Where(u => u.Email == email);
 
@@ -83,7 +87,7 @@ public class UserRepository(
             query.ToQueryString()
         );
 
-        User? user = await query.FirstOrDefaultAsync();
+        var user = await query.FirstOrDefaultAsync();
 
         if (user == null) return null;
 
@@ -169,7 +173,7 @@ public class UserRepository(
             query.ToQueryString()
         );
 
-        User? user = await query.FirstOrDefaultAsync();
+        var user = await query.FirstOrDefaultAsync();
 
         if (user == null) return null;
 
@@ -198,7 +202,7 @@ public class UserRepository(
     /// A task representing the asynchronous operation. The task result
     /// contains the requested page of users.
     /// </returns>
-    public async Task<ICollection<User>> GetUsers(int page, int length)
+    public async Task<ICollection<UserInfoDto>> GetUsers(int page, int length,string url)
     {
         var query = dbContext
             .Users
@@ -206,29 +210,31 @@ public class UserRepository(
             .AsSplitQuery()
             .AsNoTracking()
             .Skip((page - 1) * length)
-            .OrderDescending()
-            .Take(length);
+            .Take(length)
+            .Select(value=>value.ToUserInfoDto(url))
+            .OrderDescending() ;
 
         ClsUtil.logSql<UserRepository>(
             logger,
             query.ToQueryString()
         );
 
-        ICollection<User>? users = await query.ToListAsync();
+        ICollection<UserInfoDto>? users = await query.ToListAsync();
 
         foreach (var user in users)
         {
             var addressQuery = dbContext
                 .Address
                 .AsNoTracking()
-                .Where(u => u.OwnerId == user.Id);
+                .Where(u => u.OwnerId == user.Id)
+                .Select(value=>value.ToDto());
 
             ClsUtil.logSql<UserRepository>(
                 logger,
                 addressQuery.ToQueryString()
             );
 
-            user.Addresses = await addressQuery.ToListAsync();
+            user.Address = await addressQuery.ToListAsync();
         }
 
         return users;
@@ -255,6 +261,7 @@ public class UserRepository(
             var query = dbContext
                 .Users
                 .Include(u => u.Store)
+                .AsSplitQuery()
                 .AsNoTracking()
                 .Where(u =>
                     (u.Name == username || u.Email == username) &&
@@ -265,7 +272,7 @@ public class UserRepository(
                 query.ToQueryString()
             );
 
-            User? user = await query.FirstOrDefaultAsync();
+            var user = await query.FirstOrDefaultAsync();
 
             if (user == null) return null;
 
@@ -283,9 +290,9 @@ public class UserRepository(
 
             return user;
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
-            Console.WriteLine($"this the excptino error from get user {ex.Message}");
+            Console.WriteLine($"this the exception error from get user {ex.Message}");
             return null;
         }
     }
@@ -393,7 +400,7 @@ public class UserRepository(
     /// </exception>
     public void Delete(Guid id)
     {
-        User? user = dbContext.Users.Find(id);
+        var user = dbContext.Users.Find(id);
 
         if (user == null)
             throw new ArgumentNullException();

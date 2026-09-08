@@ -2,7 +2,7 @@ using api.application;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
-using business.mapper;
+using data.mapper;
 using api.util;
 using business.Services.Interface;
 using data.Dto.Request;
@@ -34,8 +34,7 @@ public class ProductServices(
             MemoryCacheKeys.ProductsKey + "/store" + storeId + '/' + pageNum,
             async ct =>
             {
-                var products = (await unitOfWork.ProductRepository.GetProducts(storeId, pageNum, pageSize))
-                    .Select(de => de.ToDto(config["url_file"] ?? ""))
+                var products = (await unitOfWork.ProductRepository.GetProducts(storeId, pageNum, pageSize,config["url_file"] ?? ""))
                     .ToList();
                 return products;
             },
@@ -50,8 +49,7 @@ public class ProductServices(
             MemoryCacheKeys.ProductsKey + "/category" + categryId + '/' + pageNum,
             async ct =>
             {
-                var products = (await unitOfWork.ProductRepository.GetProductsByCategory(categryId, pageNum, pageSize))
-                    .Select(de => de.ToDto(config["url_file"] ?? ""))
+                var products = (await unitOfWork.ProductRepository.GetProductsByCategory(categryId, pageNum, pageSize,config["url_file"] ?? ""))
                     .ToList();
                 return products;
             },
@@ -66,8 +64,7 @@ public class ProductServices(
             MemoryCacheKeys.ProductsKey + '/' + storeId + '/' + subCategoryId + '/' + pageNum,
             async ct =>
             {
-                var products = (await unitOfWork.ProductRepository.GetProducts(storeId, subCategoryId, pageNum, pageSize))
-                    .Select(de => de.ToDto(config["url_file"] ?? ""))
+                var products = (await unitOfWork.ProductRepository.GetProducts(storeId, subCategoryId, pageNum, pageSize,config["url_file"] ?? ""))
                     .ToList();
                 return products;
             },
@@ -82,8 +79,7 @@ public class ProductServices(
             MemoryCacheKeys.ProductsKey + '/' + pageNum,
             async ct =>
             {
-                var products = (await unitOfWork.ProductRepository.GetProducts(pageNum, pageSize))
-                    .Select(de => de.ToDto(config["url_file"] ?? ""))
+                var products = (await unitOfWork.ProductRepository.GetProducts(pageNum, pageSize,config["url_file"] ?? ""))
                     .ToList();
                 return products;
             },
@@ -106,8 +102,7 @@ public class ProductServices(
             MemoryCacheKeys.ProductsKey + '/' + adminId + '/' + pageNum,
             async ct =>
             {
-                var products = (await unitOfWork.ProductRepository.GetProducts(pageNum, pageSize))
-                    .Select(de => de.ToAdminDto(config["url_file"] ?? ""))
+                var products = (await unitOfWork.ProductRepository.GetProducts(pageNum, pageSize,config["url_file"] ?? ""))
                     .ToList();
                 return products;
             },
@@ -142,7 +137,7 @@ public class ProductServices(
             return new Result(false, validationResult.Item1, null, validationResult.Item2);
         }
 
-        var isExistCurrency = await unitOfWork.CurrencyRepository.isExist(productDto.Symbol);
+        var isExistCurrency = await unitOfWork.CurrencyRepository.IsExist(productDto.Symbol);
         if (!isExistCurrency)
         {
             return new Result(false, "Currency is Not Exist", null, 404);
@@ -236,7 +231,7 @@ public class ProductServices(
 
         if (productDto.Symbol is not null)
         {
-            var isExistCurrency = await unitOfWork.CurrencyRepository.isExist(productDto.Symbol);
+            var isExistCurrency = await unitOfWork.CurrencyRepository.IsExist(productDto.Symbol);
             if (!isExistCurrency)
             {
                 return new Result(false, "Currency is Not Exist", null, 404);

@@ -2,7 +2,7 @@ using api.domain.entity;
 using data.Dto.Request;
 using data.dto.Response;
 
-namespace business.mapper;
+namespace data.mapper;
 
 public static class ProductMapperExtension
 {

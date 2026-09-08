@@ -2,9 +2,10 @@ using api.application;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
-using business.mapper;
+using data.mapper;
 using api.util;
 using business.Services.Interface;
+using data;
 using data.dto.Request;
 using data.dto.Response;
 using data.util;
@@ -152,8 +153,7 @@ public class OrderServices(
 
         var orders = await cache.GetOrCreateAsync(MemoryCacheKeys.OrdersKey + "/" + userId + "/" + pageNum, async ct =>
             {
-                var orders = (await unitOfWork.OrderRepository.GetOrders(userId, pageNum, pageSize))
-                    .Select(o => o.ToDto(config["url_file"] ?? ""))
+                var orders = (await unitOfWork.OrderRepository.GetOrders(userId, pageNum, pageSize,config["url_file"] ?? ""))
                     .ToList();
                 return orders;
             },
@@ -180,8 +180,7 @@ public class OrderServices(
         var orders = await cache.GetOrCreateAsync(MemoryCacheKeys.OrdersKey + "/dashbord" + userId + "/" + pageNum,
             async ct =>
             {
-                var orders = (await unitOfWork.OrderRepository.GetOrders(pageNum, pageSize))
-                    .Select(o => o.ToDto(config["url_file"] ?? ""))
+                var orders = (await unitOfWork.OrderRepository.GetOrders(pageNum, pageSize,config["url_file"] ?? ""))
                     .ToList();
 
                 var orderPages = (int)Math.Ceiling((double)orders.Count / pageSize);
@@ -277,8 +276,7 @@ public class OrderServices(
         var orders = await cache.GetOrCreateAsync(MemoryCacheKeys.OrdersKey + "/my" + delivery + "/" + pageNum,
             async ct =>
             {
-                var orders = (await unitOfWork.OrderRepository.GetOrderBelongToDelivery(deliveryId, pageNum, pageSize))
-                    .Select(o => o.ToDto(config["url_file"] ?? ""))
+                var orders = (await unitOfWork.OrderRepository.GetOrderBelongToDelivery(deliveryId, pageNum, pageSize,config["url_file"] ?? ""))
                     .ToList();
                 return orders;
             },
@@ -305,8 +303,7 @@ public class OrderServices(
             MemoryCacheKeys.OrdersKey + "/not-belong-to" + delivery + "/" + pageNum,
             async ct =>
             {
-                var orders = (await unitOfWork.OrderRepository.GetOrderNoBelongToAnyDelivery(pageNum, pageSize))
-                    .Select(o => o.ToDto(config["url_file"] ?? ""))
+                var orders = (await unitOfWork.OrderRepository.GetOrderNoBelongToAnyDelivery(pageNum, pageSize,config["url_file"] ?? ""))
                     .ToList();
                 return orders;
             },
@@ -538,12 +535,11 @@ public class OrderServices(
             var deliveriesLenght = await unitOfWork.DeliveryRepository.GetDeliveriesPage(20);
             for (int i = 0; i < deliveriesLenght; i++)
             {
-                var deliveryList = await unitOfWork.DeliveryRepository.GetDeliveries(i + 1, 20);
-                if (deliveryList is null) continue;
-                foreach (var delivery in deliveryList)
+                var deliveryTokens = await unitOfWork.DeliveryRepository.GetDeliveries(i + 1, 20);
+                foreach (var token in deliveryTokens)
                 {
-                    if (delivery.DeviceToken is not null)
-                        await messageServe.SendingMessage(message, delivery.DeviceToken!);
+                    if (token is not null)
+                        await messageServe.SendingMessage(message, token);
                 }
             }
         }

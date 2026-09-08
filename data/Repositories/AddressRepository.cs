@@ -1,6 +1,8 @@
 using api.application;
 using api.domain.entity;
+using data.dto.Response;
 using data.Interface;
+using data.mapper;
 using data.util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -80,22 +82,7 @@ public class AddressRepository(
         return await query.FirstOrDefaultAsync();
     }
 
-    /// <summary>
-    /// Retrieves all addresses associated with a specific owner.
-    /// </summary>
-    /// <param name="id">The unique identifier of the owner.</param>
-    /// <returns>A task representing the asynchronous operation, returning a collection of addresses.</returns>
-    public async Task<ICollection<Address>> GetAllAddressByOwnerId(Guid id)
-    {
-        var query = context
-            .Address
-            .AsNoTracking()
-            .Where(x => x.OwnerId == id);
-
-        ClsUtil.logSql<AddressRepository>(logger, query.ToQueryString());
-
-        return await query.ToListAsync();
-    }
+    
 
     /// <summary>
     /// Marks all addresses of a specific owner as not being the current location.

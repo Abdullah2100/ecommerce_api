@@ -1,6 +1,8 @@
 using api.application;
 using api.domain.entity;
+using data.dto.Response;
 using data.Interface;
+using data.mapper;
 using data.util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -115,7 +117,7 @@ public class StoreRepository(
             query.ToQueryString()
         );
 
-        Store? store = await query.FirstOrDefaultAsync();
+        var store = await query.FirstOrDefaultAsync();
 
         if (store is null) return null;
 
@@ -138,16 +140,19 @@ public class StoreRepository(
     /// </summary>
     /// <param name="prefix">The name prefix to search for.</param>
     /// <param name="length">The maximum number of stores to retrieve.</param>
+    /// <param name="url"></param>
+    /// <param name="empty"></param>
     /// <returns>A task representing the asynchronous operation, returning a collection of matching stores.</returns>
-    public async Task<ICollection<Store>> GetStores(string prefix, int length)
+    public async Task<List<StoreDto>> GetStores(string prefix, int length, string url)
     {
         var query = context
             .Stores
-            .AsNoTracking()
             .Include(st => st.user)
             .AsSplitQuery()
+            .AsNoTracking()
             .Where(x => x.Name.StartsWith(prefix))
-            .Take(length);
+            .Take(length)
+            .Select(value => value.ToDto(url));
 
         ClsUtil.logSql<StoreRepository>(
             logger,
@@ -161,15 +166,21 @@ public class StoreRepository(
             var addressQuery = context
                 .Address
                 .AsNoTracking()
-                .Where(ad => ad.OwnerId == store.Id);
+                .Where(ad => ad.OwnerId == store.Id)
+                .Select(value => value.ToDto());
 
             ClsUtil.logSql<StoreRepository>(
                 logger,
                 addressQuery.ToQueryString()
             );
 
-            store.Addresses = await addressQuery.ToListAsync();
+            var address = await addressQuery.FirstOrDefaultAsync();
+            if (address != null)
+                store.Latitude = address.Latitude ;
+            store.Longitude = address?.Longitude ;
+            
         }
+    
 
         return stores;
     }
@@ -179,8 +190,9 @@ public class StoreRepository(
     /// </summary>
     /// <param name="page">The page number to retrieve (1-indexed).</param>
     /// <param name="length">The number of items per page.</param>
+    /// <param name="url"></param>
     /// <returns>A task representing the asynchronous operation, returning a collection of stores.</returns>
-    public async Task<ICollection<Store>> GetStores(int page, int length)
+    public async Task<ICollection<StoreDto>> GetStores(int page, int length, string url)
     {
         var query = context
             .Stores
@@ -189,30 +201,34 @@ public class StoreRepository(
             .AsSplitQuery()
             .AsNoTracking()
             .Skip((page - 1) * length)
-            .Take(length);
+            .Take(length)
+            .Select(value=>value.ToDto(url));
 
         ClsUtil.logSql<StoreRepository>(
             logger,
             query.ToQueryString()
         );
 
-        ICollection<Store> stores = await query.ToListAsync();
+        ICollection<StoreDto> stores = await query.ToListAsync();
 
-        if (stores.Count <= 0) return new List<Store>();
+        if (stores.Count <= 0) return new List<StoreDto>();
 
         foreach (var store in stores)
         {
             var addressQuery = context
                 .Address
                 .AsNoTracking()
-                .Where(ad => ad.OwnerId == store.Id);
+                .Select(value => value.ToDto());
 
             ClsUtil.logSql<StoreRepository>(
                 logger,
                 addressQuery.ToQueryString()
             );
 
-            store.Addresses = await addressQuery.ToListAsync();
+            var address = await addressQuery.FirstOrDefaultAsync();
+            if (address != null)
+                store.Latitude = address.Latitude ;
+            store.Longitude = address?.Longitude ;
         }
 
         return stores;

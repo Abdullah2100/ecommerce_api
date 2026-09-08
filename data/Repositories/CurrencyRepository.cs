@@ -1,6 +1,8 @@
 using api.application;
 using api.domain.entity;
+using data.dto.Response;
 using data.Interface;
+using data.mapper;
 using data.util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -46,24 +48,6 @@ public class CurrencyRepository(
         return element;
     }
 
-    /// <summary>
-    /// Retrieves a specified number of currencies in a random order from the Currencies collection.
-    /// </summary>
-    /// <param name="randomNumber">The number of currencies to retrieve.</param>
-    /// <returns>A task representing the asynchronous operation, returning a collection of random currencies.</returns>
-    public async Task<ICollection<Currency>> GetCurrencies(int randomNumber)
-    {
-        var query = context
-                .Currencies
-                .AsNoTracking()
-                .OrderBy(x => Guid.NewGuid())
-                .Take(randomNumber)
-            ;
-
-        ClsUtil.logSql<CurrencyRepository>(logger, query.ToQueryString());
-
-        return await query.ToListAsync();
-    }
 
     /// <summary>
     /// Gets the total number of currencies in the Currencies collection.
@@ -86,12 +70,13 @@ public class CurrencyRepository(
     /// <param name="pageNum">The page number to retrieve (1-indexed).</param>
     /// <param name="pageSize">The number of items per page.</param>
     /// <returns>A task representing the asynchronous operation, returning a collection of currencies.</returns>
-    public async Task<ICollection<Currency>> GetAll(int pageNum, int pageSize)
+    public async Task<ICollection<CurrencyDto>> GetAll(int pageNum, int pageSize)
     {
         var query = context.Payments
                 .AsNoTracking()
                 .Skip((pageNum - 1) * pageSize)
                 .Take(pageSize)
+                .Select(value=>value.ToPaymentDto())
             ;
         ClsUtil.logSql<CurrencyRepository>(logger, query.ToQueryString());
 
@@ -129,7 +114,7 @@ public class CurrencyRepository(
     /// </summary>
     /// <param name="symbol">The currency symbol (e.g., "$", "€") to check.</param>
     /// <returns>A task representing the asynchronous operation, returning true if it exists; otherwise, false.</returns>
-    public async Task<bool> isExist(string symbol)
+    public async Task<bool> IsExist(string symbol)
     {
         var query =  context.Payments
             .AsNoTracking()

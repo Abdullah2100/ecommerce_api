@@ -2,7 +2,7 @@ using api.application;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
-using business.mapper;
+using data.mapper;
 using api.util;
 using data.dto.Request;
 using data.util;
@@ -178,7 +178,6 @@ public class SubCategoryServices(
             {
                 var subCategories = (await unitOfWork.SubCategoryRepository
                         .GetSubCategories(storeId, page, length))
-                    .Select(su => su.ToDto())
                     .ToList();
                 return subCategories;
             },
@@ -210,7 +209,6 @@ public class SubCategoryServices(
             {
                 var subcategories = (await unitOfWork.SubCategoryRepository
                         .GetSubCategories(page, length))
-                    .Select(ba => ba.ToDto())
                     .ToList();
                 return subcategories;
             },

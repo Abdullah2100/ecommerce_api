@@ -55,26 +55,6 @@ public class ProductVariantRepository(
         }
     }
 
-    /// <summary>
-    /// Deletes all product variants associated with a specific product ID.
-    /// </summary>
-    /// <param name="productId">The unique identifier of the product whose variants should be removed.</param>
-    public async Task DeleteProductVariantByProductId(Guid productId)
-    {
-        var query = context
-        .ProductVariants
-        .AsNoTracking()
-        .Where(p => p.ProductId == productId);
-
-        ClsUtil.logSql<ProductVariantRepository>(
-            logger,
-            query.ToQueryString()
-        );
-
-        var result = await query.ToListAsync();
-        if (result.Count == 0) return;
-        context.ProductVariants.RemoveRange(result);
-    }
 
     /// <summary>
     /// Deletes specific product variants that match the provided criteria from a DTO collection and product ID.

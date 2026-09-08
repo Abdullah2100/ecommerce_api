@@ -1,6 +1,8 @@
 using api.application;
 using api.domain.entity;
+using data.dto.Response;
 using data.Interface;
+using data.mapper;
 using data.util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -19,30 +21,6 @@ public class VariantRepository(
     ILogger<VariantRepository> logger
 ) : IVariantRepository
 {
-    /// <summary>
-    /// Retrieves a paginated collection of variants.
-    /// </summary>
-    /// <param name="page">The one-based page number to retrieve.</param>
-    /// <param name="length">The maximum number of variants to return.</param>
-    /// <returns>
-    /// A task representing the asynchronous operation. The task result
-    /// contains the requested page of variants.
-    /// </returns>
-    public async Task<ICollection<Variant>> GetAllAsync(int page, int length)
-    {
-        var query = context
-            .Variants
-            .AsNoTracking()
-            .Skip((page - 1) * length)
-            .Take(length);
-
-        ClsUtil.logSql<VariantRepository>(
-            logger,
-            query.ToQueryString()
-        );
-
-        return await query.ToListAsync();
-    }
 
     /// <summary>
     /// Adds a variant to the database context.
@@ -112,13 +90,14 @@ public class VariantRepository(
     /// A task representing the asynchronous operation. The task result
     /// contains the requested page of variants.
     /// </returns>
-    public async Task<ICollection<Variant>> GetVariants(int page, int length)
+    public async Task<ICollection<VariantDto>> GetVariants(int page, int length)
     {
         var query = context
             .Variants
             .AsNoTracking()
             .Skip((page - 1) * length)
-            .Take(length);
+            .Take(length)
+            .Select(value=>value.ToDto());
 
         ClsUtil.logSql<VariantRepository>(
             logger,
@@ -152,7 +131,7 @@ public class VariantRepository(
             query.ToQueryString()
         );
 
-        int count = await query.CountAsync();
+        var count = await query.CountAsync();
 
         if (count == 0)
             return 0;

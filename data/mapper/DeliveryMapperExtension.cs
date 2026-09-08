@@ -2,7 +2,7 @@ using api.application;
 using api.domain.entity;
 using data.dto.Response;
 
-namespace business.mapper;
+namespace data.mapper;
 
 public static class DeliveryMapperExtension
 {

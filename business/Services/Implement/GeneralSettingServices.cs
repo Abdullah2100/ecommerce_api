@@ -2,7 +2,7 @@ using api.application;
 using api.application.Services.Interface;
 using api.domain.entity;
 using api.Infrastructure;
-using business.mapper;
+using data.mapper;
 using api.util;
 using data.dto.Request;
 using data.dto.Response;
@@ -123,15 +123,14 @@ public class GeneralSettingServices(IUnitOfWork unitOfWork, ILogger<GeneralSetti
             return new Result(false, "error while delete general setting", null, 500);
         }
 
-        logger.LogInformation("complate deleting generalSetting id:{Id}", id);
+        logger.LogInformation("complete deleting generalSetting id:{Id}", id);
         return new Result(true, null, null, 204);
     }
 
     public async Task<Result> GetGeneralSettings(int pageNum, int pageSize)
     {
         logger.LogInformation("start getting generalSetting by page");
-        var categoriesToDto = (await unitOfWork.GeneralSettingRepository.Getgenralsettings(pageNum, pageSize))
-            .Select(ca => ca.ToDto())
+        var categoriesToDto = (await unitOfWork.GeneralSettingRepository.GeneralSettings(pageNum, pageSize))
             .ToList();
         logger.LogInformation("end getting generalSetting by page");
         return new Result(true, null, categoriesToDto, 200);

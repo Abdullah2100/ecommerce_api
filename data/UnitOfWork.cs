@@ -23,7 +23,7 @@ public class UnitOfWork(
     ILogger<StoreRepository> storeLogger,
     ILogger<SubCategoryRepository> subCategoryLogger,
     ILogger<UserRepository> userLogger,
-    Logger<VariantRepository> variantLogger,
+    ILogger<VariantRepository> variantLogger,
     ILogger<CurrencyRepository> currencyLogger,
     ILogger<PaymentTypeRepository> paymentTypeLogger,
     ILogger<UserRefreshTokenRepository> userRefreshmentLogger,

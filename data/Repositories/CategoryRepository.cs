@@ -1,6 +1,8 @@
 using api.application;
 using api.domain.entity;
+using data.dto.Response;
 using data.Interface;
+using data.mapper;
 using data.util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -48,16 +50,17 @@ public class CategoryRepository(
     /// </summary>
     /// <param name="page">The page number (1-indexed).</param>
     /// <param name="length">The number of items per page.</param>
+    /// <param name="url"></param>
     /// <returns>A task representing the asynchronous operation, returning a collection of categories.</returns>
-    public async Task<ICollection<Category>> GetCategories(int page, int length)
+    public async Task<ICollection<CategoryDto>> GetCategories(int page, int length,string url)
     {
         var query = context
                 .Categories
                 .AsNoTracking()
                 .Skip((page - 1) * length)
                 .Take(length)
-                .OrderDescending()
-            ;
+                .Select(ca => ca.ToDto(url))
+                .OrderDescending();
         ClsUtil.logSql<CategoryRepository>(logger, query.ToQueryString());
 
         return await query.ToListAsync();
@@ -82,14 +85,16 @@ public class CategoryRepository(
     /// Retrieves a specified number of categories in a random order.
     /// </summary>
     /// <param name="randomNumber">The number of categories to retrieve.</param>
+    /// <param name="url"></param>
     /// <returns>A task representing the asynchronous operation, returning a collection of categories.</returns>
-    public async Task<ICollection<Category>> GetCategories(int randomNumber)
+    public async Task<ICollection<CategoryDto>> GetCategories(int randomNumber, string url)
     {
         var query = context
                 .Categories
                 .AsNoTracking()
-                .OrderBy(x => Guid.NewGuid())
                 .Take(randomNumber)
+                .Select(ba => ba.ToDto(url)) 
+                .OrderBy(x => Guid.NewGuid())
             ;
         ClsUtil.logSql<CategoryRepository>(logger, query.ToQueryString());
 

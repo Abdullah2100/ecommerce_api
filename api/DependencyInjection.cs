@@ -9,7 +9,6 @@ using api.Infrastructure;
 using api.OpenApi.Transformers;
 using api.Settings;
 using Asp.Versioning;
-using business;
 using business.Services.Interface;
 using data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

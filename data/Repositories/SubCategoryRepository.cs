@@ -1,6 +1,8 @@
 using api.application;
 using api.domain.entity;
+using data.dto.Response;
 using data.Interface;
+using data.mapper;
 using data.util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -36,7 +38,7 @@ public class SubCategoryRepository(
     /// <param name="pageNumber">The page number to retrieve (1-indexed).</param>
     /// <param name="pageSize">The number of items per page.</param>
     /// <returns>A task representing the asynchronous operation, returning a collection of subcategories.</returns>
-    public async Task<ICollection<SubCategory>> GetSubCategories(
+    public async Task<ICollection<SubCategoryDto>> GetSubCategories(
         Guid storeId,
         int pageNumber,
         int pageSize
@@ -47,8 +49,9 @@ public class SubCategoryRepository(
             .AsNoTracking()
             .Where(su => su.StoreId == storeId)
             .Skip((pageNumber - 1) * pageSize)
-            .OrderDescending()
-            .Take(pageSize);
+            .Take(pageSize)
+            .Select(value => value.ToDto())
+            .OrderDescending();
 
         ClsUtil.logSql<SubCategoryRepository>(
             logger,
@@ -64,7 +67,7 @@ public class SubCategoryRepository(
     /// <param name="pageNumber">The page number to retrieve (1-indexed).</param>
     /// <param name="pageSize">The number of items per page.</param>
     /// <returns>A task representing the asynchronous operation, returning a collection of subcategories.</returns>
-    public async Task<ICollection<SubCategory>> GetSubCategories(
+    public async Task<ICollection<SubCategoryDto>> GetSubCategories(
         int pageNumber,
         int pageSize
     )
@@ -73,8 +76,9 @@ public class SubCategoryRepository(
             .SubCategories
             .AsNoTracking()
             .Skip((pageNumber - 1) * pageSize)
-            .OrderDescending()
-            .Take(pageSize);
+            .Take(pageSize)
+            .Select(value => value.ToDto())
+            .OrderDescending();
 
         ClsUtil.logSql<SubCategoryRepository>(
             logger,
@@ -176,8 +180,8 @@ public class SubCategoryRepository(
             .SubCategories
             .AsNoTracking()
             .Skip((page - 1) * length)
-            .OrderDescending()
-            .Take(length);
+            .Take(length)
+            .OrderDescending();
 
         ClsUtil.logSql<SubCategoryRepository>(
             logger,
