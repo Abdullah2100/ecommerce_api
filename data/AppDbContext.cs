@@ -1,4 +1,5 @@
 using api.domain.entity;
+using data.Entity;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.application;

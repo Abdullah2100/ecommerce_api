@@ -174,7 +174,7 @@ public class SubCategoryRepository(
     /// <param name="page">The page number to retrieve (1-indexed).</param>
     /// <param name="length">The number of items per page.</param>
     /// <returns>A task representing the asynchronous operation, returning a collection of subcategories.</returns>
-    public async Task<ICollection<SubCategory>> getAllAsync(int page, int length)
+    public async Task<ICollection<SubCategory>> GetAllAsync(int page, int length)
     {
         var query = context
             .SubCategories

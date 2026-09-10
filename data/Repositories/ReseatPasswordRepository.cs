@@ -157,11 +157,6 @@ public class ReseatPasswordRepository(
         if (otpHolder is null) return null;
 
         // Check if the OTP is still valid based on the expiration timestamp
-        if (otpHolder.CreatedAt > DateTime.Now)
-        {
-            return otpHolder;
-        }
-
-        return null;
+        return otpHolder.CreatedAt > DateTime.Now ? otpHolder : null;
     }
 }

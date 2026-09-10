@@ -7,6 +7,7 @@ using business.Services.Interface;
 using data;
 using data.dto.Request;
 using data.dto.Response;
+using data.Entity;
 using data.util;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;

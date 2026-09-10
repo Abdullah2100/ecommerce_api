@@ -74,6 +74,7 @@ public class DeliveryRepository(
         var query = context
             .Deliveries
             .Include(de => de.User)
+            .Include(de=>de.Address)
             .AsSplitQuery()
             .AsNoTracking()
             .Where(de => de.Id == id);
@@ -83,12 +84,6 @@ public class DeliveryRepository(
         if (!await query.AnyAsync()) return null;
 
         var delivery = await query.FirstOrDefaultAsync();
-        var addressSql = context.Address
-            .AsNoTracking()
-            .Where(ad => ad.OwnerId == (delivery!.Id));
-        
-        ClsUtil.logSql<DeliveryRepository>(logger, addressSql.ToQueryString());
-        delivery?.Address = await addressSql.FirstOrDefaultAsync();
 
         return delivery;
     }
@@ -103,6 +98,7 @@ public class DeliveryRepository(
         var query = (context
             .Deliveries
             .Include(de => de.User)
+            .Include(de=>de.Address)
             .AsSplitQuery()
             .AsNoTracking()
             .Where(de => de.UserId == userId));
@@ -111,13 +107,6 @@ public class DeliveryRepository(
         ClsUtil.logSql<DeliveryRepository>(logger, query.ToQueryString());
 
         var delivery = await query.FirstOrDefaultAsync();
-        var addressSql = context.Address
-            .AsNoTracking()
-            .Where(ad => ad.OwnerId == delivery!.Id);
-        
-        ClsUtil.logSql<DeliveryRepository>(logger, addressSql.ToQueryString());
-        delivery?.Address = await addressSql.FirstOrDefaultAsync();
-
         return delivery;
     }
 
@@ -134,6 +123,7 @@ public class DeliveryRepository(
         var query = context
             .Deliveries
             .Include(de => de.User)
+            .Include(de=>de.Address)
             .AsSplitQuery()
             .AsNoTracking()
             .Where(d=>d.BelongTo==belongToId)
@@ -143,15 +133,6 @@ public class DeliveryRepository(
         if (!await query.AnyAsync()) return new List<DeliveryDto>();
 
         var deliveries = await query.ToListAsync();
-        foreach (var delivery in deliveries)
-        {
-            var addressSql = context.Address
-                .AsNoTracking()
-                .Where(ad => ad.Id == delivery.Id);
-            
-            ClsUtil.logSql<DeliveryRepository>(logger, addressSql.ToQueryString());
-            delivery?.Address = await addressSql.Select(value=>value.ToDeliveryDto()).FirstOrDefaultAsync();
-        }
 
         return deliveries;
     }
@@ -232,8 +213,7 @@ public class DeliveryRepository(
             .Deliveries
             .AsNoTracking()
             .Where(de => de.UserId == userId);
-        if (!await query.AnyAsync()) return false;
-
+        
         return await query.AnyAsync();
     }
 }

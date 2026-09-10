@@ -40,6 +40,9 @@ public class OrderRepository(
             .Include(o => o.PaymentType)
             .Include(o => o.User)
             .Include(o => o.Items)
+            .ThenInclude(oi => oi.Product)
+            .Include(o => o.Items)
+            .ThenInclude(oi => oi.Store)
             .AsSplitQuery()
             .AsNoTracking()
             .Where(o => o.UserId == userId)
@@ -54,26 +57,7 @@ public class OrderRepository(
         );
 
         var orders = await query.ToListAsync();
-
-        foreach (var order in orders)
-        {
-            var itemQuery = context.OrderItems
-                .Include(oi => oi.Order)
-                .Include(oi => oi.Product)
-                .Include(oi => oi.Store)
-                .AsSplitQuery()
-                .Where(oi => oi.OrderId == order.Id)
-                .Select(value => value.ToOrderItemDto(url));
-
-            ClsUtil.logSql<OrderRepository>(
-                logger,
-                itemQuery.ToQueryString()
-            );
-            if (await itemQuery.AnyAsync())
-
-                order.OrderItems = await itemQuery.ToListAsync();
-        }
-
+        
         return orders;
     }
 
@@ -87,10 +71,12 @@ public class OrderRepository(
     /// <returns>A task representing the asynchronous operation, returning a collection of orders.</returns>
     public async Task<ICollection<OrderDto>> GetOrders(int page, int length, string url)
     {
-        var query = context.Orders
-            .Include(o => o.PaymentType)
+        var query =   context.Orders.Include(o => o.PaymentType)
             .Include(o => o.User)
             .Include(o => o.Items)
+            .ThenInclude(oi => oi.Product)
+            .Include(o => o.Items)
+            .ThenInclude(oi => oi.Store)
             .AsSplitQuery()
             .AsNoTracking()
             .Skip((page - 1) * length)
@@ -104,58 +90,11 @@ public class OrderRepository(
         );
 
         var orders = await query.ToListAsync();
-
-        foreach (var order in orders)
-        {
-            var itemQuery = context.OrderItems
-                .Include(oi => oi.Order)
-                .Include(oi => oi.Product)
-                .Include(oi => oi.Store)
-                .AsSplitQuery()
-                .AsNoTracking()
-                .Where(oi => oi.OrderId == order.Id)
-                //  /*  .Select(it => new OrderItem
-                //       {
-                //      Id = it.Id,
-                //       OrderId = it.OrderId,
-                //      ProductId = it.ProductId,
-                //  //  //      Price = it.Price,
-                //         Quantity = it.Quantity,
-                //      StoreId = it.StoreId,
-                //      Order = it.Order,
-                //      Store = new Store
-                //      {
-                //          Id = it.Store.Id,
-                //          Name = it.Store.Name,
-                //          WallpaperImage = "",
-                //          SmallImage = "",
-                //          IsBlock = it.Store.IsBlock,
-                //          UserId = it.Store.UserId,
-                //          Addresses = context
-                //          .Address
-                //          .AsNoTracking()
-                //          .Where(ad => ad.OwnerId == it.Store.Id)
-                //          .ToList()
-                //  },
-                //        Product = it.Product,
-                //  OrderProductsVariants = it.OrderProductsVariants,
-                //   Status = it.Status
-                //  })
-                //      */
-                .Select(value => value.ToOrderItemDto(url));
-
-            ClsUtil.logSql<OrderRepository>(
-                logger,
-                itemQuery.ToQueryString()
-            );
-
-            order.OrderItems = await itemQuery.ToListAsync();
-        }
-
+        
         return orders;
     }
 
-   
+
     /// <summary>
     /// Retrieves a specific order by its identifier.
     /// </summary>
@@ -163,10 +102,12 @@ public class OrderRepository(
     /// <returns>A task representing the asynchronous operation, returning the order or null if not found.</returns>
     public async Task<Order?> GetOrder(Guid id)
     {
-        var query = context.Orders
-            .Include(o => o.PaymentType)
+        var query = context.Orders.Include(o => o.PaymentType)
             .Include(o => o.User)
             .Include(o => o.Items)
+            .ThenInclude(oi => oi.Product)
+            .Include(o => o.Items)
+            .ThenInclude(oi => oi.Store)
             .AsSplitQuery()
             .AsNoTracking()
             .FirstOrDefaultAsync(o => o.Id == id);
@@ -174,23 +115,6 @@ public class OrderRepository(
         // Note: FirstOrDefaultAsync is terminal; we cannot call ToQueryString after it.
         // For single-entity lookups, logging is done via the IQueryable before execution.
         var order = await query;
-
-        if (order is null) return null;
-
-        var itemQuery = context.OrderItems
-            .Include(oi => oi.Order)
-            .Include(oi => oi.Product)
-            .Include(oi => oi.Store)
-            .AsSplitQuery()
-            .AsNoTracking()
-            .Where(oi => oi.OrderId == order.Id);
-
-        ClsUtil.logSql<OrderRepository>(
-            logger,
-            itemQuery.ToQueryString()
-        );
-
-        order.Items = await itemQuery.ToListAsync();
 
         return order;
     }
@@ -203,10 +127,12 @@ public class OrderRepository(
     /// <returns>A task representing the asynchronous operation, returning the order if it matches both IDs.</returns>
     public async Task<Order?> GetOrder(Guid id, Guid userId)
     {
-        var query = context.Orders
-            .Include(o => o.PaymentType)
+        var query = context.Orders.Include(o => o.PaymentType)
             .Include(o => o.User)
             .Include(o => o.Items)
+            .ThenInclude(oi => oi.Product)
+            .Include(o => o.Items)
+            .ThenInclude(oi => oi.Store)
             .AsSplitQuery()
             .AsNoTracking()
             .Where(o => o.Id == id && o.UserId == userId);
@@ -219,21 +145,6 @@ public class OrderRepository(
         );
 
         var order = await query.SingleAsync();
-
-        var itemQuery = context.OrderItems
-            .Include(oi => oi.Order)
-            .Include(oi => oi.Product)
-            .Include(oi => oi.Store)
-            .AsSplitQuery()
-            .AsNoTracking()
-            .Where(oi => oi.OrderId == order.Id);
-
-        ClsUtil.logSql<OrderRepository>(
-            logger,
-            itemQuery.ToQueryString()
-        );
-
-        order.Items = await itemQuery.ToListAsync();
 
         return order;
     }
@@ -353,10 +264,12 @@ public class OrderRepository(
     /// <returns>A task representing the asynchronous operation, returning a collection of unassigned orders.</returns>
     public async Task<ICollection<OrderDto>> GetOrderNoBelongToAnyDelivery(int pageNum, int pageSize, string url)
     {
-        var query = context.Orders
-            .Include(o => o.PaymentType)
-            .Include(o => o.Items)
+        var query = context.Orders.Include(o => o.PaymentType)
             .Include(o => o.User)
+            .Include(o => o.Items)
+            .ThenInclude(oi => oi.Product)
+            .Include(o => o.Items)
+            .ThenInclude(oi => oi.Store)
             .AsSplitQuery()
             .AsNoTracking()
             .Where(o => o.DeliveryId == null)
@@ -372,53 +285,6 @@ public class OrderRepository(
 
         var orders = await query.ToListAsync();
 
-        foreach (var order in orders)
-        {
-            var itemQuery = context.OrderItems
-                .Include(it => it.Order)
-                .Include(it => it.OrderProductsVariants)
-                .Include(oi => oi.Product)
-                .Include(oi => oi.Store)
-                .AsSplitQuery()
-                .AsNoTracking()
-                .Where(oi => oi.OrderId == order.Id)
-                .Select(value => value.ToOrderItemDto(url));
-            //       .Select(it => new OrderItem
-            //      {
-            //         Id = it.Id,
-            //        OrderId = it.OrderId,
-            //       ProductId = it.ProductId,
-            //      Price = it.Price,
-            //     Quantity = it.Quantity,
-            //    StoreId = it.StoreId,
-            //            Order = it.Order,
-            //           Store = new Store
-            //          {
-            //            Id = it.Store.Id,
-            //           Name = it.Store.Name,
-            //              WallpaperImage = "",
-            //              SmallImage = "",
-//                        IsBlock = it.Store.IsBlock,
-            //                       UserId = it.Store.UserId,
-            //                      Addresses = context
-            //                         .Address
-            //                        .AsNoTracking()
-            //                       .Where(ad => ad.OwnerId == it.Store.Id)
-            //                       .ToList()
-            //              },
-            //            Product = it.Product,
-            //           OrderProductsVariants = it.OrderProductsVariants,
-            //         Status = it.Status
-            //    });
-
-            ClsUtil.logSql<OrderRepository>(
-                logger,
-                itemQuery.ToQueryString()
-            );
-
-            order.OrderItems = await itemQuery.ToListAsync();
-        }
-
         return orders;
     }
 
@@ -430,18 +296,21 @@ public class OrderRepository(
     /// <param name="pageSize">The number of items per page.</param>
     /// <param name="url"></param>
     /// <returns>A task representing the asynchronous operation, returning a collection of assigned orders.</returns>
-    public async Task<ICollection<OrderDto>> GetOrderBelongToDelivery(Guid deliveryId, int pageNum, int pageSize,string url )
+    public async Task<ICollection<OrderDto>> GetOrderBelongToDelivery(Guid deliveryId, int pageNum, int pageSize,
+        string url)
     {
-        var query = context.Orders
-            .Include(o => o.PaymentType)
+        var query = context.Orders.Include(o => o.PaymentType)
             .Include(o => o.User)
             .Include(o => o.Items)
+            .ThenInclude(oi => oi.Product)
+            .Include(o => o.Items)
+            .ThenInclude(oi => oi.Store)
             .AsSplitQuery()
             .AsNoTracking()
             .Where(o => o.DeliveryId == deliveryId)
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
-            .Select(value=>value.ToDto(url))
+            .Select(value => value.ToDto(url))
             .OrderDescending();
 
         ClsUtil.logSql<OrderRepository>(
@@ -450,53 +319,7 @@ public class OrderRepository(
         );
 
         var orders = await query.ToListAsync();
-
-        foreach (var order in orders)
-        {
-            var itemQuery = context.OrderItems
-                .Include(oi => oi.Order)
-                .Include(oi => oi.Product)
-                .Include(oi => oi.Store)
-                .AsSplitQuery()
-                .AsNoTracking()
-                .Where(oi => oi.OrderId == order.Id)
-                .Select(value => value.ToOrderItemDto(url));
-             /*   .Select(it => new OrderItem
-                {
-                    Id = it.Id,
-                    OrderId = it.OrderId,
-                    ProductId = it.ProductId,
-                    Price = it.Price,
-                    Quantity = it.Quantity,
-                    StoreId = it.StoreId,
-                    Order = it.Order,
-                    Store = new Store
-                    {
-                        Id = it.Store.Id,
-                        Name = it.Store.Name,
-                        WallpaperImage = "",
-                        SmallImage = "",
-                        IsBlock = it.Store.IsBlock,
-                        UserId = it.Store.UserId,
-                        Addresses = context
-                            .Address
-                            .AsNoTracking()
-                            .Where(ad => ad.OwnerId == it.Store.Id)
-                            .ToList()
-                    },
-                    Product = it.Product,
-                    OrderProductsVariants = it.OrderProductsVariants,
-                    Status = it.Status
-                });*/
-
-            ClsUtil.logSql<OrderRepository>(
-                logger,
-                itemQuery.ToQueryString()
-            );
-
-            order.OrderItems = await itemQuery.ToListAsync();
-        }
-
+        
         return orders;
     }
 
@@ -547,7 +370,7 @@ public class OrderRepository(
     /// <param name="entity">The order entity to add.</param>
     public async Task Add(Order entity)
     {
-    await    context.Orders.AddAsync(entity);
+        await context.Orders.AddAsync(entity);
     }
 
     /// <summary>

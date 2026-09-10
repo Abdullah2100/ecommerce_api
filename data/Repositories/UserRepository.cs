@@ -202,17 +202,18 @@ public class UserRepository(
     /// A task representing the asynchronous operation. The task result
     /// contains the requested page of users.
     /// </returns>
-    public async Task<ICollection<UserInfoDto>> GetUsers(int page, int length,string url)
+    public async Task<ICollection<UserInfoDto>> GetUsers(int page, int length, string url)
     {
         var query = dbContext
             .Users
             .Include(u => u.Store)
+            .Include(s=>s.Addresses)
             .AsSplitQuery()
             .AsNoTracking()
             .Skip((page - 1) * length)
             .Take(length)
-            .Select(value=>value.ToUserInfoDto(url))
-            .OrderDescending() ;
+            .Select(value => value.ToUserInfoDto(url))
+            .OrderDescending();
 
         ClsUtil.logSql<UserRepository>(
             logger,
@@ -221,21 +222,6 @@ public class UserRepository(
 
         ICollection<UserInfoDto>? users = await query.ToListAsync();
 
-        foreach (var user in users)
-        {
-            var addressQuery = dbContext
-                .Address
-                .AsNoTracking()
-                .Where(u => u.OwnerId == user.Id)
-                .Select(value=>value.ToDto());
-
-            ClsUtil.logSql<UserRepository>(
-                logger,
-                addressQuery.ToQueryString()
-            );
-
-            user.Address = await addressQuery.ToListAsync();
-        }
 
         return users;
     }
@@ -256,45 +242,25 @@ public class UserRepository(
     /// </returns>
     public async Task<User?> GetUser(string username, string password)
     {
-        try
-        {
-            var query = dbContext
-                .Users
-                .Include(u => u.Store)
-                .AsSplitQuery()
-                .AsNoTracking()
-                .Where(u =>
-                    (u.Name == username || u.Email == username) &&
-                    u.Password == password);
+        var query = dbContext
+            .Users
+            .Include(u => u.Addresses)
+            .Include(u => u.Store)
+            .AsSplitQuery()
+            .AsNoTracking()
+            .Where(u =>
+                (u.Name == username || u.Email == username) &&
+                u.Password == password);
 
-            ClsUtil.logSql<UserRepository>(
-                logger,
-                query.ToQueryString()
-            );
+        ClsUtil.logSql<UserRepository>(
+            logger,
+            query.ToQueryString()
+        );
 
-            var user = await query.FirstOrDefaultAsync();
+        var user = await query.FirstOrDefaultAsync();
 
-            if (user == null) return null;
 
-            var addressQuery = dbContext
-                .Address
-                .AsNoTracking()
-                .Where(u => u.OwnerId == user.Id);
-
-            ClsUtil.logSql<UserRepository>(
-                logger,
-                addressQuery.ToQueryString()
-            );
-
-            user.Addresses = await addressQuery.ToListAsync();
-
-            return user;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"this the exception error from get user {ex.Message}");
-            return null;
-        }
+        return user;
     }
 
     /// <summary>
@@ -377,7 +343,7 @@ public class UserRepository(
     /// <param name="entity">The user entity to add.</param>
     public async Task Add(User entity)
     {
-     await   dbContext.Users.AddAsync(entity);
+        await dbContext.Users.AddAsync(entity);
     }
 
     /// <summary>

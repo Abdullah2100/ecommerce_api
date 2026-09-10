@@ -62,8 +62,8 @@ public class UserRefreshTokenRepository(
         );
 
         await query.ExecuteUpdateAsync(value => value
-            .SetProperty(value => value.ExpireAt, data.ExpireAt)
-            .SetProperty(value => value.Refresh, data.Refresh));
+            .SetProperty(valueData => valueData.ExpireAt, data.ExpireAt)
+            .SetProperty(valueData => valueData.Refresh, data.Refresh));
     }
 
     /// <summary>

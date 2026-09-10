@@ -1,6 +1,7 @@
 using api.application;
 using api.domain.entity;
 using data.dto.Response;
+using data.Entity;
 using data.Interface;
 using data.mapper;
 using data.util;
@@ -71,6 +72,7 @@ public class StoreRepository(
         var query = context
             .Stores
             .Include(st => st.user)
+            .Include(st=>st.Addresses)
             .AsSplitQuery()
             .AsNoTracking()
             .Where(st => st.Id == id);
@@ -81,20 +83,7 @@ public class StoreRepository(
         );
 
         var store = await query.FirstOrDefaultAsync();
-
-        if (store is null) return null;
-
-        var addressQuery = context
-            .Address
-            .AsNoTracking()
-            .Where(ad => ad.OwnerId == store.Id);
-
-        ClsUtil.logSql<StoreRepository>(
-            logger,
-            addressQuery.ToQueryString()
-        );
-
-        store.Addresses = await addressQuery.ToListAsync();
+        
         return store;
     }
 
@@ -108,6 +97,7 @@ public class StoreRepository(
         var query = context
             .Stores
             .Include(st => st.user)
+            .Include(st=>st.Addresses)
             .AsSplitQuery()
             .AsNoTracking()
             .Where(st => st.UserId == id);
@@ -119,19 +109,7 @@ public class StoreRepository(
 
         var store = await query.FirstOrDefaultAsync();
 
-        if (store is null) return null;
-
-        var addressQuery = context
-            .Address
-            .AsNoTracking()
-            .Where(ad => ad.OwnerId == store.Id);
-
-        ClsUtil.logSql<StoreRepository>(
-            logger,
-            addressQuery.ToQueryString()
-        );
-
-        store.Addresses = await addressQuery.ToListAsync();
+        
         return store;
     }
 

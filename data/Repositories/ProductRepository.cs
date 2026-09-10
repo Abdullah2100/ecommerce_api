@@ -311,13 +311,12 @@ public class ProductRepository(
     /// </returns>
     public async Task<List<ProductDto>> GetProducts(int page, int length, string url)
     {
-        try
-        {
             var query = context.Products
                 .Include(pro => pro.Store)
                 .Include(pro => pro.SubCategory)
                 .Include(pro => pro.ProductImages)
                 .Include(pro => pro.ProductVariants)
+                .ThenInclude(pv=>pv.Variant)
                 .AsSplitQuery()
                 .AsNoTracking()
                 .Skip((page - 1) * length)
@@ -335,35 +334,7 @@ public class ProductRepository(
             if (products.Count == 0)
                 return new List<ProductDto>();
 
-            for (var i = 0; i < products.Count; i++)
-            {
-                var variantQuery = context.ProductVariants
-                        .Include(pr => pr.Variant)
-                        .AsSplitQuery()
-                        .AsNoTracking()
-                        .Where(p => p.ProductId == products[i].Id)
-                    ;
-                //.Select(value=>value.ToProductVariantDto());
-
-                ClsUtil.logSql<ProductRepository>(
-                    logger,
-                    variantQuery.ToQueryString()
-                );
-
-                if (await variantQuery.AnyAsync())
-                    products[i].ProductVariants = await variantQuery
-                        ?.GroupBy(pv => pv.VariantId, (key, g)
-                            => g.Select(pvH => pvH.ToProductVariantDto()).ToList()
-                        ).ToListAsync() ?? new List<List<ProductVariantDto>>();
-            }
-
             return products;
-        }
-        catch (System.Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-            return new List<ProductDto>();
-        }
     }
 
     /// <summary>
