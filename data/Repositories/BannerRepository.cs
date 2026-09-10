@@ -21,9 +21,9 @@ public class BannerRepository(
     /// Tracks a new banner entity to be added to the database.
     /// </summary>
     /// <param name="entity">The banner entity to add.</param>
-    public void Add(Banner entity)
+    public async Task Add(Banner entity)
     {
-        context
+        await context
             .Banner
             .AddAsync(entity);
     }
@@ -106,7 +106,7 @@ public class BannerRepository(
             .Banner
             .FindAsync(id);
 
-        return  query;
+        return query;
     }
 
     /// <summary>
@@ -134,7 +134,7 @@ public class BannerRepository(
     /// <param name="pageSize">The number of items per page.</param>
     /// <param name="url"></param>
     /// <returns>A task representing the asynchronous operation, returning a collection of banners.</returns>
-    public async Task<ICollection<BannerDto>> GetBannersByStoreId(Guid id, int pageNumber, int pageSize,string url)
+    public async Task<ICollection<BannerDto>> GetBannersByStoreId(Guid id, int pageNumber, int pageSize, string url)
     {
         var query = context.Banner
             .AsNoTracking()
@@ -156,7 +156,7 @@ public class BannerRepository(
     /// <param name="pageSize">The number of items per page.</param>
     /// <param name="url"></param>
     /// <returns>A task representing the asynchronous operation, returning a collection of banners.</returns>
-    public async Task<ICollection<BannerDto>> GetBanners( int pageNumber, int pageSize, string url)
+    public async Task<ICollection<BannerDto>> GetBanners(int pageNumber, int pageSize, string url)
     {
         var query = context.Banner
             .AsNoTracking()
@@ -193,11 +193,11 @@ public class BannerRepository(
     /// </summary>
     /// <param name="randomLength">The number of banners to retrieve.</param>
     /// <returns>A task representing the asynchronous operation, returning a collection of banners.</returns>
-    public async Task<ICollection<BannerDto>> GetNotActiveBanners(int randomLength,string url)
+    public async Task<ICollection<BannerDto>> GetNotActiveBanners(int randomLength, string url)
     {
         var query = context.Banner
                 .AsNoTracking()
-                .Where(ba => (ba.CreatedAt-DateTime.UtcNow).Days > 2)
+                .Where(ba => (ba.CreatedAt - DateTime.UtcNow).Days > 2)
                 .Take(randomLength)
                 .Select(ba => ba.ToDto(url))
                 .OrderBy(ba => ba.Id)

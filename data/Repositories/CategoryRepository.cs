@@ -21,9 +21,9 @@ public class CategoryRepository(
     /// Tracks a new category entity to be added to the database.
     /// </summary>
     /// <param name="entity">The category entity to add.</param>
-    public void Add(Category entity)
+    public async Task Add(Category entity)
     {
-        context.Categories.Add(entity);
+     await   context.Categories.AddAsync(entity);
     }
 
     /// <summary>

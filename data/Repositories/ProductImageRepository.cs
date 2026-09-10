@@ -106,9 +106,9 @@ public class ProductImageRepository(
     /// Adds a new <see cref="ProductImage"/> entity to the database context.
     /// </summary>
     /// <param name="entity">The product image entity to add.</param>
-    public void Add(ProductImage entity)
+    public async Task Add(ProductImage entity)
     {
-        context.Add(entity);
+     await   context.AddAsync(entity);
     }
 
     /// <summary>

@@ -24,9 +24,9 @@ public class StoreRepository(
     /// Adds a new store to the database context.
     /// </summary>
     /// <param name="entity">The store entity to add.</param>
-    public void Add(Store entity)
+    public async Task Add(Store entity)
     {
-        context.Stores.Add(entity);
+     await   context.Stores.AddAsync(entity);
     }
 
     /// <summary>

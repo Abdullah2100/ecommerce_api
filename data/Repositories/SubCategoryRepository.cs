@@ -195,9 +195,9 @@ public class SubCategoryRepository(
     /// Adds a new subcategory to the database context.
     /// </summary>
     /// <param name="entity">The subcategory entity to add.</param>
-    public void Add(SubCategory entity)
+    public async Task Add(SubCategory entity)
     {
-        context.SubCategories.Add(entity);
+    await    context.SubCategories.AddAsync(entity);
     }
 
     /// <summary>

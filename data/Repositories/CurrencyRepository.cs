@@ -21,7 +21,7 @@ public class CurrencyRepository(
     /// Tracks a new currency entity to be added to the database.
     /// </summary>
     /// <param name="entity">The currency entity to add.</param>
-    public void Add(Currency entity)
+    public async Task Add(Currency entity)
     {
         context.Add(entity);
     }

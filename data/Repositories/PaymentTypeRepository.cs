@@ -24,9 +24,9 @@ public class PaymentTypeRepository(
     /// Adds a new payment type to the database context.
     /// </summary>
     /// <param name="entity">The payment type entity to add.</param>
-    public void Add(PaymentType entity)
+    public async Task Add(PaymentType entity)
     {
-        context.PaymentTypes.Add(entity);
+      await  context.PaymentTypes.AddAsync(entity);
     }
 
     /// <summary>

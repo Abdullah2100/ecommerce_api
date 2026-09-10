@@ -1,7 +1,6 @@
 using data.Interface;
-using data.Interface;
 
-namespace api.Infrastructure;
+namespace data;
 
 public interface IUnitOfWork : IDisposable
 {

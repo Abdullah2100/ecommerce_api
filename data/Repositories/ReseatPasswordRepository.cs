@@ -44,9 +44,9 @@ public class ReseatPasswordRepository(
     /// Adds a new password reset OTP to the database context.
     /// </summary>
     /// <param name="entity">The OTP entity to add.</param>
-    public void Add(ReseatPasswordOtp entity)
+    public async Task Add(ReseatPasswordOtp entity)
     {
-        context.ReseatPasswords.Add(entity);
+     await   context.ReseatPasswords.AddAsync(entity);
     }
 
     /// <summary>

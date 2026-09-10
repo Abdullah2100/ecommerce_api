@@ -53,9 +53,9 @@ public class GeneralSettingRepository(
     /// Tracks a new general setting entity to be added to the database.
     /// </summary>
     /// <param name="entity">The general setting entity to add.</param>
-    public void Add(GeneralSetting entity)
+    public async Task Add(GeneralSetting entity)
     {
-        context.GeneralSettings.Add(entity);
+       await context.GeneralSettings.AddAsync(entity);
     }
 
     /// <summary>

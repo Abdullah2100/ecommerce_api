@@ -545,9 +545,9 @@ public class OrderRepository(
     /// Tracks a new order entity to be added to the database.
     /// </summary>
     /// <param name="entity">The order entity to add.</param>
-    public void Add(Order entity)
+    public async Task Add(Order entity)
     {
-        context.Orders.Add(entity);
+    await    context.Orders.AddAsync(entity);
     }
 
     /// <summary>

@@ -60,9 +60,9 @@ public class ProductRepository(
     /// The changes are not persisted to the database until the DbContext
     /// is saved, typically through <c>SaveChangesAsync()</c>.
     /// </remarks>
-    public void Add(Product entity)
+    public async Task Add(Product entity)
     {
-        context.Products.Add(entity);
+      await  context.Products.AddAsync(entity);
     }
 
     /// <summary>

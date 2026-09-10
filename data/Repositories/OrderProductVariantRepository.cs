@@ -24,14 +24,6 @@ public class OrderProductVariantRepository(AppDbContext context) : IOrderProduct
     /// </remarks>
     public void Add(ICollection<OrderProductsVariant> entities)
     {
-        foreach (var entity in entities)
-        {
-            context.OrdersProductsVariant.Add(new OrderProductsVariant()
-            {
-                Id = ClsUtil.GenerateGuid(),
-                OrderItemId = entity.OrderItemId,
-                ProductVariantId = entity.ProductVariantId,
-            });
-        }
+        context.OrdersProductsVariant.AddRange(entities);
     }
 }

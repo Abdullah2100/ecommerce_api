@@ -21,9 +21,9 @@ public class AddressRepository(
     /// Adds a new address to the database context.
     /// </summary>
     /// <param name="entity">The address entity to add.</param>
-    public void Add(Address entity)
+    public async Task Add(Address entity)
     {
-        context.Address.Add(entity);
+       await context.Address.AddAsync(entity);
     }
 
     /// <summary>
@@ -82,7 +82,6 @@ public class AddressRepository(
         return await query.FirstOrDefaultAsync();
     }
 
-    
 
     /// <summary>
     /// Marks all addresses of a specific owner as not being the current location.
@@ -90,19 +89,13 @@ public class AddressRepository(
     /// <param name="ownerId">The unique identifier of the owner.</param>
     public async Task MakeAddressNotCurrentToId(Guid ownerId)
     {
-        var query = context.Address
-            .Where(ad => ad.OwnerId == ownerId);
+        var query = context.Address.Where(ad => ad.OwnerId == ownerId);
 
         ClsUtil.logSql<AddressRepository>(logger, query.ToQueryString());
 
-        var address = await query.ToListAsync();
+        if (!await query.AnyAsync()) return;
 
-        foreach (var currentAddress in address)
-        {
-            currentAddress.IsCurrent = false;
-        }
-
-        context.UpdateRange(address);
+        await query.ExecuteUpdateAsync(value => value.SetProperty(a => a.IsCurrent, false));
     }
 
     /// <summary>

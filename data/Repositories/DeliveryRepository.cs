@@ -23,9 +23,9 @@ public class DeliveryRepository(
     /// Adds a new delivery record to the database.
     /// </summary>
     /// <param name="entity">The delivery entity containing information to be stored.</param>
-    public void Add(Delivery entity)
+    public async Task Add(Delivery entity)
     {
-        context.Deliveries.Add(new Delivery
+     await   context.Deliveries.AddAsync(new Delivery
         {
             DeviceToken = entity.DeviceToken,
             Id = entity.Id,

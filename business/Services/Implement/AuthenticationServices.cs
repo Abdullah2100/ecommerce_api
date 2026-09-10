@@ -1,9 +1,9 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using api.domain.entity;
-using api.Infrastructure;
 using api.Settings;
 using business.Services.Interface;
+using data;
 using data.dto.Response;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;

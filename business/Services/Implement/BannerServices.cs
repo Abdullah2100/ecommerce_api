@@ -1,10 +1,10 @@
 using api.application;
 using api.application.Services.Interface;
 using api.domain.entity;
-using api.Infrastructure;
 using data.mapper;
 using api.util;
 using business.Services.Interface;
+using data;
 using data.dto.Request;
 using data.util;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -59,7 +59,7 @@ public class BannerServices(
             StoreId = user!.Store!.Id,
         };
 
-        unitOfWork.BannerRepository.Add(banner);
+       await unitOfWork.BannerRepository.Add(banner);
         var result = await unitOfWork.SaveChanges();
 
         if (result == 0)

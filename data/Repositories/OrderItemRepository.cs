@@ -124,9 +124,9 @@ public class OrderItemRepository(
     /// <remarks>
     /// The changes are not saved to the database until the DbContext is persisted.
     /// </remarks>
-    public void Add(OrderItem entity)
+    public async Task Add(OrderItem entity)
     {
-        context.OrderItems.Add(entity);
+   await     context.OrderItems.AddAsync(entity);
     }
 
     /// <summary>

@@ -51,7 +51,7 @@ public class ProductVariantRepository(
             if (productVariants.ElementAt(i)?.Id is not null)
                 await Task.Run(() => Update(productVariants.ElementAt(i)));
             else
-                await Task.Run(() => Add(productVariants.ElementAt(i)));
+                await  Add(productVariants.ElementAt(i));
         }
     }
 
@@ -94,9 +94,9 @@ public class ProductVariantRepository(
     /// Tracks a new product variant entity for insertion into the database context.
     /// </summary>
     /// The product variant entity to add.</param>
-    public void Add(ProductVariant entity)
+    public async Task Add(ProductVariant entity)
     {
-        context.ProductVariants.Add(entity);
+        await context.ProductVariants.AddAsync(entity);
     }
 
     /// <summary>

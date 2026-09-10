@@ -27,9 +27,9 @@ public class VariantRepository(
     /// The changes are not persisted until the context is saved.
     /// </summary>
     /// <param name="entity">The variant entity to add.</param>
-    public void Add(Variant entity)
+    public async Task Add(Variant entity)
     {
-        context.Variants.AddAsync(entity);
+      await   context.Variants.AddAsync(entity);
     }
 
     /// <summary>

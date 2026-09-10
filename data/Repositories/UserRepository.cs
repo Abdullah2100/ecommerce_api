@@ -375,9 +375,9 @@ public class UserRepository(
     /// The changes are not persisted until the context is saved.
     /// </summary>
     /// <param name="entity">The user entity to add.</param>
-    public void Add(User entity)
+    public async Task Add(User entity)
     {
-        dbContext.Users.Add(entity);
+     await   dbContext.Users.AddAsync(entity);
     }
 
     /// <summary>
