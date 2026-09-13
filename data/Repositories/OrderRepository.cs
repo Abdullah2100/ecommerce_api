@@ -46,10 +46,10 @@ public class OrderRepository(
             .AsSplitQuery()
             .AsNoTracking()
             .Where(o => o.UserId == userId)
+            .OrderDescending()
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
-            .Select(value => value.ToDto(url))
-            .OrderDescending();
+            .Select(value => value.ToDto(url));
 
         ClsUtil.logSql<OrderRepository>(
             logger,
@@ -79,10 +79,10 @@ public class OrderRepository(
             .ThenInclude(oi => oi.Store)
             .AsSplitQuery()
             .AsNoTracking()
+            .OrderDescending()
             .Skip((page - 1) * length)
             .Take(length)
-            .Select(value => value.ToDto(url))
-            .OrderDescending();
+            .Select(value => value.ToDto(url));
 
         ClsUtil.logSql<OrderRepository>(
             logger,
@@ -273,10 +273,10 @@ public class OrderRepository(
             .AsSplitQuery()
             .AsNoTracking()
             .Where(o => o.DeliveryId == null)
+            .OrderDescending()
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
-            .Select(value => value.ToDto(url))
-            .OrderDescending();
+            .Select(value => value.ToDto(url));
 
         ClsUtil.logSql<OrderRepository>(
             logger,
@@ -308,10 +308,11 @@ public class OrderRepository(
             .AsSplitQuery()
             .AsNoTracking()
             .Where(o => o.DeliveryId == deliveryId)
+            .OrderDescending()
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
             .Select(value => value.ToDto(url))
-            .OrderDescending();
+            ;
 
         ClsUtil.logSql<OrderRepository>(
             logger,

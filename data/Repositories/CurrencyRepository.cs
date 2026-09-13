@@ -23,7 +23,7 @@ public class CurrencyRepository(
     /// <param name="entity">The currency entity to add.</param>
     public async Task Add(Currency entity)
     {
-        context.Add(entity);
+       await context.AddAsync(entity);
     }
 
     /// <summary>

@@ -57,10 +57,11 @@ public class CategoryRepository(
         var query = context
                 .Categories
                 .AsNoTracking()
+                .OrderDescending()
                 .Skip((page - 1) * length)
                 .Take(length)
                 .Select(ca => ca.ToDto(url))
-                .OrderDescending();
+            ;
         ClsUtil.logSql<CategoryRepository>(logger, query.ToQueryString());
 
         return await query.ToListAsync();
@@ -92,9 +93,9 @@ public class CategoryRepository(
         var query = context
                 .Categories
                 .AsNoTracking()
+                .OrderBy(x => Guid.NewGuid())
                 .Take(randomNumber)
                 .Select(ba => ba.ToDto(url)) 
-                .OrderBy(x => Guid.NewGuid())
             ;
         ClsUtil.logSql<CategoryRepository>(logger, query.ToQueryString());
 

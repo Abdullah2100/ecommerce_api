@@ -48,10 +48,10 @@ public class SubCategoryRepository(
             .SubCategories
             .AsNoTracking()
             .Where(su => su.StoreId == storeId)
+            .OrderDescending()
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .Select(value => value.ToDto())
-            .OrderDescending();
+            .Select(value => value.ToDto());
 
         ClsUtil.logSql<SubCategoryRepository>(
             logger,
@@ -75,10 +75,10 @@ public class SubCategoryRepository(
         var query = context
             .SubCategories
             .AsNoTracking()
+            .OrderDescending()
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .Select(value => value.ToDto())
-            .OrderDescending();
+            .Select(value => value.ToDto());
 
         ClsUtil.logSql<SubCategoryRepository>(
             logger,
@@ -179,9 +179,9 @@ public class SubCategoryRepository(
         var query = context
             .SubCategories
             .AsNoTracking()
+            .OrderDescending()
             .Skip((page - 1) * length)
-            .Take(length)
-            .OrderDescending();
+            .Take(length);
 
         ClsUtil.logSql<SubCategoryRepository>(
             logger,

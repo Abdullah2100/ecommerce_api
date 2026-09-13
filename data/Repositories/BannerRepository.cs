@@ -139,10 +139,10 @@ public class BannerRepository(
         var query = context.Banner
             .AsNoTracking()
             .Where(ba => ba.StoreId == id)
+            .OrderByDescending(ba => ba.CreatedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .Select(ba => ba.ToDto(url))
-            .OrderByDescending(ba => ba.CreatedAt);
+            .Select(ba => ba.ToDto(url));
 
         ClsUtil.logSql<BannerRepository>(logger, query.ToQueryString());
 
@@ -160,10 +160,10 @@ public class BannerRepository(
     {
         var query = context.Banner
             .AsNoTracking()
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
             .OrderByDescending(ba => ba.CreatedAt)
-            .Select(ba => ba.ToDto(url));
+            .Select(ba => ba.ToDto(url))
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize);
 
         ClsUtil.logSql<BannerRepository>(logger, query.ToQueryString());
 
@@ -180,9 +180,10 @@ public class BannerRepository(
     {
         var query = context.Banner
             .AsNoTracking()
+            .OrderBy(ba => ba.Id)
             .Take(randomLength)
-            .Select(ba => ba.ToDto(url))
-            .OrderBy(ba => ba.Id);
+            .Select(ba => ba.ToDto(url));
+
         ClsUtil.logSql<BannerRepository>(logger, query.ToQueryString());
 
         return await query.ToListAsync();
@@ -198,9 +199,9 @@ public class BannerRepository(
         var query = context.Banner
                 .AsNoTracking()
                 .Where(ba => (ba.CreatedAt - DateTime.UtcNow).Days > 2)
+                .OrderBy(ba => ba.Id)
                 .Take(randomLength)
                 .Select(ba => ba.ToDto(url))
-                .OrderBy(ba => ba.Id)
             ;
         ClsUtil.logSql<BannerRepository>(logger, query.ToQueryString());
 

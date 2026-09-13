@@ -210,10 +210,11 @@ public class UserRepository(
             .Include(s=>s.Addresses)
             .AsSplitQuery()
             .AsNoTracking()
+            .OrderDescending()
             .Skip((page - 1) * length)
             .Take(length)
             .Select(value => value.ToUserInfoDto(url))
-            .OrderDescending();
+            ;
 
         ClsUtil.logSql<UserRepository>(
             logger,

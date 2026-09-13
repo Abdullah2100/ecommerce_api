@@ -48,10 +48,10 @@ public class OrderItemRepository(
             .AsSplitQuery()
             .AsNoTracking()
             .Where(o => o.StoreId == storeId && ((int)o.Order.Status) > 1)
+            .OrderDescending()
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
-            .Select(value=>value.ToOrderItemDto(url))
-            .OrderDescending();
+            .Select(value=>value.ToOrderItemDto(url));
 
         ClsUtil.logSql<OrderItemRepository>(
             logger,
