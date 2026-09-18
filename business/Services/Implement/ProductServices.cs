@@ -6,6 +6,7 @@ using api.util;
 using business.Services.Interface;
 using data;
 using data.Dto.Request;
+using data.Entity;
 using data.util;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -195,11 +196,11 @@ public class ProductServices(
             Symbol = productDto.Symbol,
         };
 
-        unitOfWork.ProductRepository.Add(product);
+       await unitOfWork.ProductRepository.Add(product);
         unitOfWork.ProductImageRepository.AddProductImage(images);
 
         if (productVariants is not null)
-            await unitOfWork.ProductVariantRepository.SaveProductVariants(productVariants);
+            await unitOfWork.ProductVariantRepository.SaveProductVariants(productVariants,true);
 
         var result = await unitOfWork.SaveChanges();
 
@@ -305,7 +306,7 @@ public class ProductServices(
         }
 
         if (productVariants is not null)
-            await unitOfWork.ProductVariantRepository.SaveProductVariants(productVariants);
+            await unitOfWork.ProductVariantRepository.SaveProductVariants(productVariants,false);
 
         if (savedImage is not null)
             await Task.Run(() => unitOfWork.ProductImageRepository.AddProductImage(savedImage));

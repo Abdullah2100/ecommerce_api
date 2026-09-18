@@ -46,9 +46,9 @@ public class DeliveryRepository(
         {
             DeviceToken = entity.DeviceToken,
             Id = entity.Id,
-            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now,
             UserId = entity.UserId,
-            Thumbnail = entity.Thumbnail,
+            Thumbnail = entity.Thumbnail
         });
     }
 
@@ -71,21 +71,7 @@ public class DeliveryRepository(
     /// <returns>A task representing the asynchronous operation, returning the delivery if found; otherwise, null.</returns>
     public async Task<Delivery?> GetDelivery(Guid id)
     {
-        var query = context
-            .Deliveries
-            .Include(de => de.User)
-            .Include(de=>de.Address)
-            .AsSplitQuery()
-            .AsNoTracking()
-            .Where(de => de.Id == id);
-
-        ClsUtil.logSql<DeliveryRepository>(logger, query.ToQueryString());
-
-        if (!await query.AnyAsync()) return null;
-
-        var delivery = await query.FirstOrDefaultAsync();
-
-        return delivery;
+       return await context.Deliveries.FindAsync(id);
     }
 
     /// <summary>
@@ -100,7 +86,6 @@ public class DeliveryRepository(
             .Include(de => de.User)
             .Include(de=>de.Address)
             .AsSplitQuery()
-            .AsNoTracking()
             .Where(de => de.UserId == userId));
 
         if (!await query.AnyAsync()) return null;

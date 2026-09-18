@@ -105,8 +105,8 @@ public class StoreServices(
             OwnerId = id
         };
 
-        unitOfWork.StoreRepository.Add(storeData);
-        unitOfWork.AddressRepository.Add(address);
+     await   unitOfWork.StoreRepository.Add(storeData);
+     await   unitOfWork.AddressRepository.Add(address);
 
         var result = await unitOfWork.SaveChanges();
 
@@ -117,8 +117,9 @@ public class StoreServices(
             return new Result(false, "error while adding store", null, 500);
         }
 
-        storeData = await unitOfWork.StoreRepository.GetStore(id)!;
-        storeData!.Addresses = new List<Address> { address };
+        storeData = await unitOfWork.StoreRepository.GetStore(id);
+        
+        storeData?.Addresses = new List<Address> { address };
 
         var storeToDto = storeData?.ToDto(config["url_file"] ?? "");
 
@@ -165,11 +166,11 @@ public class StoreServices(
             DeleteStoreImage(null, user!.Store?.SmallImage,rootPath);
         }
 
-        user!.Store!.SmallImage = smallImage ?? user!.Store!.SmallImage;
-        user!.Store!.WallpaperImage = wallpaper ?? user!.Store!.WallpaperImage;
-        user!.Store!.Name = storeDto.Name ?? user!.Store!.Name;
-        user!.Store!.UpdatedAt = DateTime.Now;
-
+        user?.Store?.SmallImage = smallImage ?? user!.Store!.SmallImage;
+        user?.Store?.WallpaperImage = wallpaper ?? user!.Store!.WallpaperImage;
+        user?.Store?.Name = storeDto.Name ?? user!.Store!.Name;
+        user?.Store?.UpdatedAt = DateTime.Now;
+        
         unitOfWork.StoreRepository.Update(user!.Store!);
 
         if ((storeDto.Longitude is null && storeDto.Latitude is not null) ||
@@ -216,7 +217,7 @@ public class StoreServices(
 
     public async Task<Result> GetStoreByStoreId(Guid id)
     {
-        var store = await unitOfWork.StoreRepository.GetStore(id);
+        var store = await unitOfWork.StoreRepository.GetStore(id,false);
 
         if (store is null)
             return new Result(false, "store not found", null, 404);

@@ -144,7 +144,6 @@ public class ReseatPasswordRepository(
     public async Task<ReseatPasswordOtp?> GetOtp(string otp, string email, bool state)
     {
         var query = context.ReseatPasswords
-            .AsNoTracking()
             .Where(f => f.Otp == otp && f.Email == email && f.IsValidated == state);
 
         ClsUtil.logSql<ReseatPasswordRepository>(

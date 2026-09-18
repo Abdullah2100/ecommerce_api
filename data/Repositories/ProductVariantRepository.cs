@@ -1,6 +1,7 @@
 using api.application;
 using api.domain.entity;
 using data.dto.Request;
+using data.Entity;
 using data.Interface;
 using data.util;
 using Microsoft.EntityFrameworkCore;
@@ -43,16 +44,14 @@ public class ProductVariantRepository(
     /// Processes a collection of product variants to either update existing ones or add new ones.
     /// </summary>
     /// <param name="productVariants">The collection of product variants to be saved.</param>
+    /// <param name="isCreated"></param>
     /// <returns>A task that represents the asynchronous save operation.</returns>
-    public async Task SaveProductVariants(ICollection<ProductVariant> productVariants)
+    public async Task SaveProductVariants(ICollection<ProductVariant> productVariants, bool isCreated)
     {
-        for (var i = 0; i < productVariants.Count; i++)
-        {
-            if (productVariants.ElementAt(i)?.Id is not null)
-                await Task.Run(() => Update(productVariants.ElementAt(i)));
-            else
-                await  Add(productVariants.ElementAt(i));
-        }
+        if (!isCreated)
+            context.ProductVariants.UpdateRange(productVariants);
+        else
+            await context.ProductVariants.AddRangeAsync(productVariants);
     }
 
 
@@ -71,8 +70,7 @@ public class ProductVariantRepository(
                     .AsNoTracking()
                     .Where(pv =>
                         pv.ProductId == productId && pv.VariantId == productVariants.ElementAt(i).VariantId &&
-                        pv.Name == productVariants.ElementAt(i).Name
-                    );
+                        pv.Name == productVariants.ElementAt(i).Name);
 
                 ClsUtil.logSql<ProductVariantRepository>(
                     logger,

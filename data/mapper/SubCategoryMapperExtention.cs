@@ -6,18 +6,18 @@ namespace data.mapper;
 
 public static class SubCategoryMapperExtensions
 {
-    public static SubCategoryDto ToDto(this SubCategory subCategory)
+    public static SubCategoryDto ToDto(this SubCategory? subCategory)
     {
-        if (subCategory == null)
-            throw new ArgumentNullException(nameof(subCategory));
+        if (subCategory != null)
+            return new SubCategoryDto
+            {
+                Id = subCategory.Id,
+                Name = subCategory.Name,
+                CategoryId = subCategory.CategoryId,
+                StoreId = subCategory.StoreId
+            };
+        throw new ArgumentNullException(nameof(subCategory));
 
-        return new SubCategoryDto
-        {
-            Id = subCategory.Id,
-            Name = subCategory.Name,
-            CategoryId = subCategory.CategoryId,
-            StoreId = subCategory.StoreId
-        };
     }
 
 
@@ -25,11 +25,10 @@ public static class SubCategoryMapperExtensions
     {
         public bool IsEmpty()
         {
-            if (dto == null)
-                throw new ArgumentNullException(nameof(dto));
-
-            return string.IsNullOrWhiteSpace(dto.Name) &&
-                   dto.CategoryId == null;
+            return dto == null
+                ? throw new ArgumentNullException(nameof(dto))
+                : string.IsNullOrWhiteSpace(dto.Name) &&
+                  dto.CategoryId == null;
         }
     }
 }

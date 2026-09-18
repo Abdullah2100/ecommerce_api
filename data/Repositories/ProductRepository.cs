@@ -81,7 +81,7 @@ public class ProductRepository(
             UpdatedAt = entity.UpdatedAt,
             Thumbnail = entity.Thumbnail,
             Symbol = entity.Symbol,
-            StoreId = entity.StoreId
+            StoreId = entity.StoreId,
         };
 
         context.Products.Update(product);
@@ -156,7 +156,6 @@ public class ProductRepository(
             .Include(pro => pro.ProductImages)
             .Include(pro => pro.ProductVariants)
             .AsSplitQuery()
-            .AsNoTracking()
             .Where(p => p.Id == id && p.StoreId == storeId);
 
         ClsUtil.logSql<ProductRepository>(
@@ -251,9 +250,9 @@ public class ProductRepository(
             .AsSplitQuery()
             .AsNoTracking()
             .Where(p => p.StoreId == storeId && p.SubcategoryId == subCategoryId)
-            .OrderDescending()
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
+            .OrderDescending()
             .Select(value => value.ToDto(url));
 
         ClsUtil.logSql<ProductRepository>(
@@ -286,9 +285,9 @@ public class ProductRepository(
             .AsSplitQuery()
             .AsNoTracking()
             .Where(p => p.StoreId == storeId)
-            .OrderDescending()
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
+            .OrderDescending()
             .Select(value => value.ToDto(url));
 
         ClsUtil.logSql<ProductRepository>(
@@ -319,9 +318,9 @@ public class ProductRepository(
                 .ThenInclude(pv=>pv.Variant)
                 .AsSplitQuery()
                 .AsNoTracking()
-                .OrderDescending()
                 .Skip((page - 1) * length)
                 .Take(length)
+                .OrderDescending()
                 .Select(value => value.ToDto(url));
 
             ClsUtil.logSql<ProductRepository>(
@@ -382,9 +381,9 @@ public class ProductRepository(
             .AsSplitQuery()
             .AsNoTracking()
             .Where(p => p.SubCategory.CategoryId == categoryId)
-            .OrderDescending()
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
+            .OrderDescending()
             .Select(value => value.ToDto(url));
 
         ClsUtil.logSql<ProductRepository>(

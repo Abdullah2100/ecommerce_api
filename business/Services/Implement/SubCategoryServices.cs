@@ -23,9 +23,9 @@ public class SubCategoryServices(
         CreateSubCategoryDto subCategoryDto
     )
     {
-        logger.LogInformation("start creat subCateogry");
+        logger.LogInformation("start creat subCategory");
 
-        var store = await unitOfWork.StoreRepository.GetStore(storeId);
+        var store = await unitOfWork.StoreRepository.GetStore(storeId, false);
 
         if (store is not null)
         {
@@ -53,13 +53,13 @@ public class SubCategoryServices(
             CreatedAt = DateTime.Now,
         };
 
-        unitOfWork.SubCategoryRepository.Add(subCategory);
+        await unitOfWork.SubCategoryRepository.Add(subCategory);
 
         var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
-            logger.LogError("errore while creating subCatogry");
+            logger.LogError("error while creating subCategory");
             return new Result(false, "error while adding new subcategory", null, 500);
         }
 
@@ -67,7 +67,7 @@ public class SubCategoryServices(
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.StoreSubCategoriesKey);
 
-        logger.LogInformation("start creat subCateogry");
+        logger.LogInformation("start creat subCategory");
 
         return new Result(true, null, subCategoryToDto, 201);
     }
@@ -82,7 +82,7 @@ public class SubCategoryServices(
         if (subCategoryDto.IsEmpty())
             return new Result(false, "No Change Found At Data", null, 400);
 
-        var store = await unitOfWork.StoreRepository.GetStore(storeId);
+        var store = await unitOfWork.StoreRepository.GetStore(storeId, false);
 
         if (store is not null)
         {
@@ -115,22 +115,22 @@ public class SubCategoryServices(
 
         if (result == 0)
         {
-            logger.LogError("errore while updating subCatogry");
+            logger.LogError("error while updating subCategory");
             return new Result(false, "error while update subcategory", null, 404);
         }
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.StoreSubCategoriesKey);
 
-        logger.LogInformation("end updating subCateogry");
+        logger.LogInformation("end updating subCategory");
 
         return new Result(true, null, null, 204);
     }
 
     public async Task<Result> DeleteSubCategory(Guid id, Guid storeId)
     {
-        logger.LogInformation("start delete subCateogry");
+        logger.LogInformation("start delete subCategory");
 
-        var store = await unitOfWork.StoreRepository.GetStore(storeId);
+        var store = await unitOfWork.StoreRepository.GetStore(storeId, false);
 
         if (store is not null)
         {
@@ -142,17 +142,17 @@ public class SubCategoryServices(
 
         if (subCategory is null)
         {
-            logger.LogError("not found  subCateogry by {subCateogryId}", subCategory?.Id);
+            logger.LogError("not found  subCategory by {subCategoryId}", subCategory?.Id);
             return new Result(false, "SubCategory Not Found", null, 404);
         }
 
         if (subCategory.StoreId != storeId)
         {
-            logger.LogError("subCateogry {subCateogryId} is not belong to {storeId}", subCategory?.Id, storeId);
+            logger.LogError("subCategory {subCategoryId} is not belong to {storeId}", subCategory?.Id, storeId);
             return new Result(false, "the SubCategory does not belong to this store", null, 403);
         }
 
-        unitOfWork.SubCategoryRepository.Delete(id);
+        await unitOfWork.SubCategoryRepository.Delete(id);
         var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
@@ -163,14 +163,14 @@ public class SubCategoryServices(
 
         await cache.RemoveByTagAsync(MemoryCacheKeys.StoreSubCategoriesKey);
 
-        logger.LogInformation("end delete subCateogry");
+        logger.LogInformation("end delete subCategory");
 
         return new Result(true, null, null, 204);
     }
 
     public async Task<Result> GetSubCategories(Guid storeId, int page, int length)
     {
-        logger.LogInformation("start getting subCateogry page by page by storeId");
+        logger.LogInformation("start getting subCategory page by page by storeId");
 
         var subCategories = await cache.GetOrCreateAsync(
             MemoryCacheKeys.StoreSubCategoriesKey + '/' + storeId + '/' + page,
@@ -183,7 +183,7 @@ public class SubCategoryServices(
             },
             tags: [MemoryCacheKeys.StoreSubCategoriesKey]);
 
-        logger.LogInformation("end getting subCateogry page by page by storeId");
+        logger.LogInformation("end getting subCategory page by page by storeId");
         return new Result(true, null, subCategories, 200);
     }
 
@@ -192,7 +192,7 @@ public class SubCategoryServices(
         int page,
         int length)
     {
-        logger.LogInformation("start getting subCateogry page by page by adminId");
+        logger.LogInformation("start getting subCategory page by page by adminId");
 
         var user = await unitOfWork.UserRepository.GetUser(adminId);
         var validationResult = user.IsValidateFunc(isAdmin: true);
@@ -214,7 +214,7 @@ public class SubCategoryServices(
             },
             tags: [MemoryCacheKeys.StoreSubCategoriesKey]);
 
-        logger.LogInformation("end getting subCateogry page by page by adminId");
+        logger.LogInformation("end getting subCategory page by page by adminId");
         return new Result(true, null, subcategories, 200);
     }
 }

@@ -5,7 +5,7 @@ using data.Entity;
 
 namespace data.mapper;
 
-public static class StoreMapperExtention
+public static class StoreMapperExtension
 {
     extension(Store store)
     {

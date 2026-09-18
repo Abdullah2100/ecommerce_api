@@ -6,7 +6,6 @@ namespace data.Interface;
 public interface IBannerRepository : IRepository<Banner>
 {
     Task<Banner?> GetBanner(Guid id);
-    Task<Banner?> GetBanner(Guid id, Guid storeId);
 
     Task<ICollection<BannerDto>> GetBannersByStoreId(Guid id, int pageNumber, int pageSize, string url);
     Task<ICollection<BannerDto>> GetBanners( int pageNumber, int pageSize, string url);

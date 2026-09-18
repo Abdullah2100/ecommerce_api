@@ -26,7 +26,7 @@ public class PaymentTypeRepository(
     /// <param name="entity">The payment type entity to add.</param>
     public async Task Add(PaymentType entity)
     {
-      await  context.PaymentTypes.AddAsync(entity);
+        await context.PaymentTypes.AddAsync(entity);
     }
 
     /// <summary>
@@ -45,16 +45,7 @@ public class PaymentTypeRepository(
     /// <returns>A task representing the asynchronous operation, returning the payment type if found; otherwise, <c>null</c>.</returns>
     public async Task<PaymentType?> GetPaymentTypeGetPayment(Guid id)
     {
-        var query = context.PaymentTypes
-            .AsNoTracking()
-            .Where(x => x.Id == id);
-
-        ClsUtil.logSql<PaymentTypeRepository>(
-            logger,
-            query.ToQueryString()
-        );
-
-        return await query.FirstOrDefaultAsync();
+        return await context.PaymentTypes.FindAsync(id);
     }
 
     /// <summary>
@@ -64,13 +55,13 @@ public class PaymentTypeRepository(
     /// <param name="pageSie">The number of items per page.</param>
     /// <param name="url"></param>
     /// <returns>A task representing the asynchronous operation, returning a collection of payment types.</returns>
-    public async Task<ICollection<PaymentTypeDto>> GetPaymentTypes(int pageNum, int pageSie,string url)
+    public async Task<ICollection<PaymentTypeDto>> GetPaymentTypes(int pageNum, int pageSie, string url)
     {
         var query = context.PaymentTypes
             .AsNoTracking()
             .Take(pageSie)
             .Skip((pageNum - 1) * pageSie)
-            .Select(value=>value.ToDto(url));
+            .Select(value => value.ToDto(url));
 
         ClsUtil.logSql<PaymentTypeRepository>(
             logger,
@@ -100,5 +91,4 @@ public class PaymentTypeRepository(
 
         return await query.AnyAsync();
     }
-
 }

@@ -27,7 +27,7 @@ public class StoreRepository(
     /// <param name="entity">The store entity to add.</param>
     public async Task Add(Store entity)
     {
-     await   context.Stores.AddAsync(entity);
+        await context.Stores.AddAsync(entity);
     }
 
     /// <summary>
@@ -66,15 +66,15 @@ public class StoreRepository(
     /// Retrieves a specific store by its identifier, including user info and associated addresses.
     /// </summary>
     /// <param name="id">The unique identifier of the store.</param>
+    /// <param name="isTracking"></param>
     /// <returns>A task representing the asynchronous operation, returning the store or <c>null</c> if not found.</returns>
-    public async Task<Store?> GetStore(Guid id)
+    public async Task<Store?> GetStore(Guid id, bool isTracking = true)
     {
         var query = context
             .Stores
             .Include(st => st.user)
-            .Include(st=>st.Addresses)
+            .Include(st => st.Addresses)
             .AsSplitQuery()
-            .AsNoTracking()
             .Where(st => st.Id == id);
 
         ClsUtil.logSql<StoreRepository>(
@@ -82,8 +82,11 @@ public class StoreRepository(
             query.ToQueryString()
         );
 
+        if (!isTracking)
+            query = query.AsNoTracking();
+
         var store = await query.FirstOrDefaultAsync();
-        
+
         return store;
     }
 
@@ -97,7 +100,7 @@ public class StoreRepository(
         var query = context
             .Stores
             .Include(st => st.user)
-            .Include(st=>st.Addresses)
+            .Include(st => st.Addresses)
             .AsSplitQuery()
             .AsNoTracking()
             .Where(st => st.UserId == id);
@@ -109,7 +112,7 @@ public class StoreRepository(
 
         var store = await query.FirstOrDefaultAsync();
 
-        
+
         return store;
     }
 
@@ -154,11 +157,10 @@ public class StoreRepository(
 
             var address = await addressQuery.FirstOrDefaultAsync();
             if (address != null)
-                store.Latitude = address.Latitude ;
-            store.Longitude = address?.Longitude ;
-            
+                store.Latitude = address.Latitude;
+            store.Longitude = address?.Longitude;
         }
-    
+
 
         return stores;
     }
@@ -180,7 +182,7 @@ public class StoreRepository(
             .AsNoTracking()
             .Skip((page - 1) * length)
             .Take(length)
-            .Select(value=>value.ToDto(url));
+            .Select(value => value.ToDto(url));
 
         ClsUtil.logSql<StoreRepository>(
             logger,
@@ -205,8 +207,8 @@ public class StoreRepository(
 
             var address = await addressQuery.FirstOrDefaultAsync();
             if (address != null)
-                store.Latitude = address.Latitude ;
-            store.Longitude = address?.Longitude ;
+                store.Latitude = address.Latitude;
+            store.Longitude = address?.Longitude;
         }
 
         return stores;
@@ -267,51 +269,6 @@ public class StoreRepository(
             .Stores
             .AsNoTracking()
             .Where(st => st.Name == name && st.Id != id);
-
-        ClsUtil.logSql<StoreRepository>(
-            logger,
-            query.ToQueryString()
-        );
-
-        return await query.AnyAsync();
-    }
-
-    /// <summary>
-    /// Checks if a store exists with the specified unique identifier.
-    /// </summary>
-    /// <param name="id">The unique identifier to check.</param>
-    /// <returns>A task representing the asynchronous operation, returning <c>true</c> if it exists.</returns>
-    public async Task<bool> IsExist(Guid id)
-    {
-        var query = context
-            .Stores
-            .AsNoTracking()
-            .Where(st => st.Id == id);
-
-        ClsUtil.logSql<StoreRepository>(
-            logger,
-            query.ToQueryString()
-        );
-
-        return await query.AnyAsync();
-    }
-
-    /// <summary>
-    /// Checks if a store exists and contains a specific subcategory.
-    /// </summary>
-    /// <param name="id">The unique identifier of the store.</param>
-    /// <param name="subCategoryId">The unique identifier of the subcategory.</param>
-    /// <returns>A task representing the asynchronous operation, returning <c>true</c> if the store contains the subcategory.</returns>
-    public async Task<bool> IsExist(Guid id, Guid subCategoryId)
-    {
-        var query = context
-            .Stores
-            .Include(st => st.SubCategories)
-            .AsSplitQuery()
-            .AsNoTracking()
-            .Where(st =>
-                st.Id == id &&
-                st.SubCategories.Any(sc => sc.Id == subCategoryId) != false);
 
         ClsUtil.logSql<StoreRepository>(
             logger,

@@ -42,9 +42,7 @@ public class CurrencyRepository(
     /// <returns>A task representing the asynchronous operation, returning the currency or null if not found.</returns>
     public async Task<Currency?> GetCurrencies(Guid id)
     {
-        var element = await context.Payments
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == id);
+        var element = await context.Payments.FindAsync(id);
         return element;
     }
 

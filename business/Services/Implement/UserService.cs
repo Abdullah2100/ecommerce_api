@@ -49,13 +49,13 @@ public class UserService(
         if (isExistByPhone)
         {
             logger.LogError("phone already exist");
-            return new Result(false, "phone already exist", null,409);
+            return new Result(false, "phone already exist", null, 409);
         }
 
         if (signupDto.Role == 0 && await unitOfWork.UserRepository.IsExist(false))
         {
             logger.LogError("you cannot create a user with exist role");
-            return new Result(false, "you cannot create a user with exist role", null,  403);
+            return new Result(false, "you cannot create a user with exist role", null, 403);
         }
 
         var userId = ClsUtil.GenerateGuid();
@@ -82,7 +82,8 @@ public class UserService(
             return new Result(false, "there are error in create new user", null, 500);
         }
 
-        var tokenData = await authenticationService.GenerateToken(id: userId, email: signupDto.Email, [EnUserType.User]);
+        var tokenData =
+            await authenticationService.GenerateToken(id: userId, email: signupDto.Email, [EnUserType.User]);
 
         logger.LogInformation("end user signup");
         return new Result(true, null, tokenData, 200);
@@ -113,7 +114,7 @@ public class UserService(
 
         var userRefreshTokenHolder = await unitOfWork.UserRefreshTokenRepository.GetByUserId(user!.Id);
 
-        var role = userRefreshTokenHolder!.Role switch
+        var role = userRefreshTokenHolder?.Role switch
         {
             "Admin" => EnUserType.Admin,
             "Delivery" => EnUserType.Delivery,
@@ -159,7 +160,7 @@ public class UserService(
         var users = await cache.GetOrCreateAsync(MemoryCacheKeys.UsersKey + "/" + id + "/" + page,
             async ct =>
             {
-                var users = (await unitOfWork.UserRepository.GetUsers(page, 25,config["url_file"] ?? ""))
+                var users = (await unitOfWork.UserRepository.GetUsers(page, 25, config["url_file"] ?? ""))
                     .ToList();
                 return users;
             },
@@ -205,7 +206,8 @@ public class UserService(
 
         if (validationResult is not null)
         {
-            logger.LogError("could not change {userId} status to {statns}", userId, (user?.IsBlocked == true ? "block" : "unblock"));
+            logger.LogError("could not change {userId} status to {statns}", userId,
+                (user?.IsBlocked == true ? "block" : "unblock"));
             return new Result(false, $"unable to {(user?.IsBlocked == true ? "block" : "unblock")}  user", null, 403);
         }
 
@@ -214,7 +216,7 @@ public class UserService(
         if (user is { IsBlocked: true, IsUser: false })
         {
             logger.LogError("could not blockk admin user");
-            return new Result(false, "you could not block admin user ", null,403);
+            return new Result(false, "you could not block admin user ", null, 403);
         }
 
         unitOfWork.UserRepository.Update(user);
@@ -222,7 +224,8 @@ public class UserService(
 
         if (result == 0)
         {
-            logger.LogError("error whiel change {userId} status to {statns}", userId, (user?.IsBlocked == true ? "block" : "unblock"));
+            logger.LogError("error whiel change {userId} status to {statns}", userId,
+                (user?.IsBlocked == true ? "block" : "unblock"));
             return new Result(false, "error while change user Blocking status", null, 500);
         }
 
@@ -231,7 +234,8 @@ public class UserService(
         return new Result(true, null, null, 204);
     }
 
-    public async Task<Result> UpdateUser(UpdateUserInfoDto userDto, Guid id,string rootPath, bool isUpdateWillBeTop = false)
+    public async Task<Result> UpdateUser(UpdateUserInfoDto userDto, Guid id, string rootPath,
+        bool isUpdateWillBeTop = false)
     {
         logger.LogInformation("start update user info");
 
@@ -269,14 +273,14 @@ public class UserService(
             if (user?.Password != ClsUtil.HashingText(userDto.Password))
             {
                 logger.LogError("envalid previuse password for {userId}", user?.Id);
-                return new Result(false, "Enter Valid Previous Password", null,  409 );
+                return new Result(false, "Enter Valid Previous Password", null, 409);
             }
         }
 
         string? profile = null;
         if (userDto.Thumbnail != null)
         {
-            profile = await fileServices.SaveFile(userDto.Thumbnail, EnImageType.Profile,rootPath);
+            profile = await fileServices.SaveFile(userDto.Thumbnail, EnImageType.Profile, rootPath);
         }
 
         user?.Thumbnail = profile ?? user.Thumbnail;
@@ -370,7 +374,8 @@ public class UserService(
         if ((addressDto.Longitude is null && addressDto.Latitude is not null) ||
             (addressDto.Longitude is not null && addressDto.Latitude is null))
         {
-            return new Result(false, "when update address you must change both longitude and latitude not one of them only ", null, 400);
+            return new Result(false,
+                "when update address you must change both longitude and latitude not one of them only ", null, 400);
         }
 
         var address = await unitOfWork.AddressRepository.GetAddress(addressDto.Id);
@@ -473,8 +478,8 @@ public class UserService(
         }
 
         address.IsCurrent = true;
-        
-      await  unitOfWork.AddressRepository.MakeAddressNotCurrentToId(user!.Id);
+
+        await unitOfWork.AddressRepository.MakeAddressNotCurrentToId(user!.Id);
         unitOfWork.AddressRepository.Update(address);
         var result = await unitOfWork.SaveChanges();
 
@@ -493,12 +498,13 @@ public class UserService(
     {
         logger.LogInformation("start generate otp for {email}", forgetPasswordDto.Email);
 
-        var user = await unitOfWork.UserRepository.GetUser(forgetPasswordDto.Email);
+        var user = await unitOfWork.UserRepository.GetUser(forgetPasswordDto.Email, false);
         var validationResult = user.IsValidateFunc(false);
 
         if (validationResult is not null)
         {
-            logger.LogError("user not valid for forget password {email} validationError {status}", forgetPasswordDto.Email, validationResult.Item2);
+            logger.LogError("user not valid for forget password {email} validationError {status}",
+                forgetPasswordDto.Email, validationResult.Item2);
             return new Result(false, validationResult.Item1, null, validationResult.Item2);
         }
 
@@ -511,13 +517,13 @@ public class UserService(
             do
             {
                 otp = ClsUtil.GenerateGuid().ToString().Substring(0, 6).Replace("-", "");
-                
+
                 await unitOfWork.PasswordRepository.DeleteAllEmailOtp(user.Email, otp);
                 isOtpExist = await unitOfWork.PasswordRepository.IsExist(otp, user!.Email);
             } while (isOtpExist);
         }
 
-        unitOfWork.PasswordRepository.Add(new ReseatPasswordOtp
+        await unitOfWork.PasswordRepository.Add(new ReseatPasswordOtp
         {
             Email = forgetPasswordDto.Email,
             CreatedAt = DateTime.Now.AddHours(1),
@@ -602,7 +608,8 @@ public class UserService(
 
         if (validationResult is not null)
         {
-            logger.LogError("recreate password failed for {email} validationError {status}", otp.Email, validationResult.Item2);
+            logger.LogError("recreate password failed for {email} validationError {status}", otp.Email,
+                validationResult.Item2);
             return new Result(false, validationResult.Item1, null, validationResult.Item2);
         }
 

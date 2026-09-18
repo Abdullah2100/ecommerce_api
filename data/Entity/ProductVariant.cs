@@ -1,7 +1,7 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using api.domain.entity;
 
-namespace api.domain.entity;
+namespace data.Entity;
+
 
 // ==========================================================
 // ProductVariant Entity Class

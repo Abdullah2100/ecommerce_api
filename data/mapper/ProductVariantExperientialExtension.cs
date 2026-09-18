@@ -1,5 +1,6 @@
 using api.domain.entity;
 using data.dto.Response;
+using data.Entity;
 
 namespace data.mapper;
 

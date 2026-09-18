@@ -48,9 +48,9 @@ public class SubCategoryRepository(
             .SubCategories
             .AsNoTracking()
             .Where(su => su.StoreId == storeId)
-            .OrderDescending()
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
+            .OrderDescending()
             .Select(value => value.ToDto());
 
         ClsUtil.logSql<SubCategoryRepository>(
@@ -75,9 +75,9 @@ public class SubCategoryRepository(
         var query = context
             .SubCategories
             .AsNoTracking()
-            .OrderDescending()
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
+            .OrderDescending()
             .Select(value => value.ToDto());
 
         ClsUtil.logSql<SubCategoryRepository>(
@@ -107,7 +107,7 @@ public class SubCategoryRepository(
 
         return await query.CountAsync();
     }
-
+    
     /// <summary>
     /// Checks if a subcategory exists with the specified unique identifier.
     /// </summary>
@@ -179,8 +179,8 @@ public class SubCategoryRepository(
         var query = context
             .SubCategories
             .AsNoTracking()
-            .OrderDescending()
             .Skip((page - 1) * length)
+            .OrderDescending()
             .Take(length);
 
         ClsUtil.logSql<SubCategoryRepository>(

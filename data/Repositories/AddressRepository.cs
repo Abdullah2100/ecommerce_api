@@ -107,13 +107,14 @@ public class AddressRepository(
     {
         var query = context
             .Address
-            .AsNoTracking()
             .Where(x => x.Id == id);
 
         ClsUtil.logSql<AddressRepository>(logger, query.ToQueryString());
 
 
         if (!query.Any()) throw new ArgumentNullException();
-        context.Remove(query);
+        var entity = query.FirstOrDefault();
+        if (entity == null) throw new ArgumentNullException();
+        context.Address.Remove(entity);
     }
 }

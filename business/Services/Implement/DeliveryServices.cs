@@ -29,7 +29,7 @@ public class DeliveryServices(
     IAuthenticationService authenticationService,
     HybridCache cache,
     ILogger<DeliveryServices> logger
-    )
+)
     : IDeliveryServices
 {
     public async Task<Result> Login(LoginDto loginDto)
@@ -86,7 +86,7 @@ public class DeliveryServices(
         return new Result(true, null, tokenData, 200);
     }
 
-    public async Task<Result> CreateDelivery(Guid userId, CreateDeliveryDto deliveryDto,string rootPath)
+    public async Task<Result> CreateDelivery(Guid userId, CreateDeliveryDto deliveryDto, string rootPath)
     {
         logger.LogInformation("start creating delivery");
 
@@ -109,7 +109,7 @@ public class DeliveryServices(
         string? thumbnail = null;
         if (deliveryDto.Thumbnail is not null)
         {
-            thumbnail = await fileServices.SaveFile(deliveryDto.Thumbnail, EnImageType.Delivery,rootPath);
+            thumbnail = await fileServices.SaveFile(deliveryDto.Thumbnail, EnImageType.Delivery, rootPath);
         }
 
         var addressId = ClsUtil.GenerateGuid();
@@ -132,13 +132,13 @@ public class DeliveryServices(
             BelongTo = user?.Store?.Id ?? userId
         };
 
-        unitOfWork.DeliveryRepository.Add(delivery);
+        await unitOfWork.DeliveryRepository.Add(delivery);
         var result = await unitOfWork.SaveChanges();
 
         if (result == 0)
         {
             if (thumbnail != null)
-                fileServices.DeleteFile(thumbnail,rootPath);
+                fileServices.DeleteFile(thumbnail, rootPath);
             logger.LogError("error from create delivery in db");
             return new Result(false, "error while adding delivery", null, 500);
         }
@@ -231,7 +231,7 @@ public class DeliveryServices(
 
                 id = user!.Store!.Id!;
             }
-            break;
+                break;
             case EnBelongToType.Admin:
             {
                 var validationResult = user.IsValidateFunc();
@@ -243,14 +243,16 @@ public class DeliveryServices(
 
                 id = user!.Id;
             }
-            break;
+                break;
         }
 
         var deliveriesDto = await cache.GetOrCreateAsync(
             MemoryCacheKeys.DeliveriesKey + "/belong_to" + belongToId + '/' + pageNumber,
             async ct =>
             {
-                var deliveriesDto = await unitOfWork.DeliveryRepository.GetDeliveriesByBelongTo(id, pageNumber, pageSize,config["url_file"] ?? "");
+                var deliveriesDto =
+                    await unitOfWork.DeliveryRepository.GetDeliveriesByBelongTo(id, pageNumber, pageSize,
+                        config["url_file"] ?? "");
 
                 if (deliveriesDto == null) return null;
                 foreach (var delivery in deliveriesDto)
@@ -266,7 +268,7 @@ public class DeliveryServices(
         return new Result(true, null, deliveriesDto, 200);
     }
 
-    public async Task<Result> UpdateDelivery(UpdateDeliveryDto deliveryDto, Guid id,string rootPath)
+    public async Task<Result> UpdateDelivery(UpdateDeliveryDto deliveryDto, Guid id, string rootPath)
     {
         logger.LogInformation("start update delivery info  function");
 
@@ -311,17 +313,17 @@ public class DeliveryServices(
         {
             var previous = delivery?.Thumbnail;
             if (previous is not null)
-                fileServices.DeleteFile(previous,rootPath);
+                fileServices.DeleteFile(previous, rootPath);
 
             string? newThumbNail = null;
-            newThumbNail = await fileServices.SaveFile(deliveryDto.Thumbnail, EnImageType.Delivery,rootPath);
+            newThumbNail = await fileServices.SaveFile(deliveryDto.Thumbnail, EnImageType.Delivery, rootPath);
             delivery?.Thumbnail = newThumbNail;
             unitOfWork.DeliveryRepository.Update(delivery!);
         }
 
         if (userUpdateData.IsUpdateAnyFeild() is true)
         {
-            await userServices.UpdateUser(userUpdateData, delivery!.UserId, rootPath,true);
+            await userServices.UpdateUser(userUpdateData, delivery!.UserId, rootPath, true);
         }
 
         var result = await unitOfWork.SaveChanges();

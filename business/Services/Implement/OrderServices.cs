@@ -83,7 +83,7 @@ public class OrderServices(
             Symbol = orderDto.Symbol
         };
 
-        unitOfWork.OrderRepository.Add(order);
+        await unitOfWork.OrderRepository.Add(order);
 
         foreach (var item in orderDto.Items)
         {
@@ -106,7 +106,7 @@ public class OrderServices(
                 StoreId = item.StoreId,
                 Price = item.Price,
             };
-            unitOfWork.OrderItemRepository.Add(orderItem);
+            await unitOfWork.OrderItemRepository.Add(orderItem);
 
             if (orderProductsVariants is not null)
                 unitOfWork.OrderProductVariantRepository.Add(orderProductsVariants);
@@ -152,7 +152,8 @@ public class OrderServices(
 
         var orders = await cache.GetOrCreateAsync(MemoryCacheKeys.OrdersKey + "/" + userId + "/" + pageNum, async ct =>
             {
-                var orders = (await unitOfWork.OrderRepository.GetOrders(userId, pageNum, pageSize,config["url_file"] ?? ""))
+                var orders =
+                    (await unitOfWork.OrderRepository.GetOrders(userId, pageNum, pageSize, config["url_file"] ?? ""))
                     .ToList();
                 return orders;
             },
@@ -179,7 +180,7 @@ public class OrderServices(
         var orders = await cache.GetOrCreateAsync(MemoryCacheKeys.OrdersKey + "/dashbord" + userId + "/" + pageNum,
             async ct =>
             {
-                var orders = (await unitOfWork.OrderRepository.GetOrders(pageNum, pageSize,config["url_file"] ?? ""))
+                var orders = (await unitOfWork.OrderRepository.GetOrders(pageNum, pageSize, config["url_file"] ?? ""))
                     .ToList();
 
                 var orderPages = (int)Math.Ceiling((double)orders.Count / pageSize);
@@ -256,7 +257,6 @@ public class OrderServices(
     }
 
 
-
     // for delivery 
     public async Task<Result> GetOrdersByDeliveryId(Guid deliveryId, int pageNum, int pageSize)
     {
@@ -275,7 +275,9 @@ public class OrderServices(
         var orders = await cache.GetOrCreateAsync(MemoryCacheKeys.OrdersKey + "/my" + delivery + "/" + pageNum,
             async ct =>
             {
-                var orders = (await unitOfWork.OrderRepository.GetOrderBelongToDelivery(deliveryId, pageNum, pageSize,config["url_file"] ?? ""))
+                var orders =
+                    (await unitOfWork.OrderRepository.GetOrderBelongToDelivery(deliveryId, pageNum, pageSize,
+                        config["url_file"] ?? ""))
                     .ToList();
                 return orders;
             },
@@ -302,7 +304,9 @@ public class OrderServices(
             MemoryCacheKeys.OrdersKey + "/not-belong-to" + delivery + "/" + pageNum,
             async ct =>
             {
-                var orders = (await unitOfWork.OrderRepository.GetOrderNoBelongToAnyDelivery(pageNum, pageSize,config["url_file"] ?? ""))
+                var orders =
+                    (await unitOfWork.OrderRepository.GetOrderNoBelongToAnyDelivery(pageNum, pageSize,
+                        config["url_file"] ?? ""))
                     .ToList();
                 return orders;
             },
@@ -483,8 +487,8 @@ public class OrderServices(
             Console.WriteLine($"Error from notification service: {e.Message}");
         }
     }
-    
-    
+
+
     private async Task SendNotificationToDelivery(Order order, int status)
     {
         try
@@ -502,21 +506,21 @@ public class OrderServices(
             switch (status)
             {
                 case 0:
-                    {
-                        await messageServe.SendingMessage(deliveryMessage, delivery?.DeviceToken ?? "");
-                    }
+                {
+                    await messageServe.SendingMessage(deliveryMessage, delivery?.DeviceToken ?? "");
+                }
                     break;
 
                 case 1:
-                    {
-                        await SendNotificationToDeliveries(deliveryMessage, messageServe);
-                    }
+                {
+                    await SendNotificationToDeliveries(deliveryMessage, messageServe);
+                }
                     break;
 
                 case 5:
-                    {
-                        await messageServe.SendingMessage(deliveryMessage, delivery?.DeviceToken ?? "");
-                    }
+                {
+                    await messageServe.SendingMessage(deliveryMessage, delivery?.DeviceToken ?? "");
+                }
                     break;
             }
         }

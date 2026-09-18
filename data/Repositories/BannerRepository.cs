@@ -77,7 +77,6 @@ public class BannerRepository(
     {
         var query = context
             .Banner
-            .AsNoTracking()
             .Where(ba => ba.Id == id);
         ClsUtil.logSql<BannerRepository>(logger, query.ToQueryString());
 
@@ -107,23 +106,6 @@ public class BannerRepository(
             .FindAsync(id);
 
         return query;
-    }
-
-    /// <summary>
-    /// Retrieves a banner by its identifier and store identifier without tracking changes.
-    /// </summary>
-    /// <param name="id">The unique identifier of the banner.</param>
-    /// <param name="storeId">The unique identifier of the store owner.</param>
-    /// <returns>A task representing the asynchronous operation, returning the banner or null if not found.</returns>
-    public async Task<Banner?> GetBanner(Guid id, Guid storeId)
-    {
-        var query = context
-            .Banner
-            .AsNoTracking()
-            .Where(ba => ba.Id == id && ba.StoreId == storeId);
-        ClsUtil.logSql<BannerRepository>(logger, query.ToQueryString());
-
-        return await query.FirstOrDefaultAsync();
     }
 
     /// <summary>
@@ -180,8 +162,8 @@ public class BannerRepository(
     {
         var query = context.Banner
             .AsNoTracking()
-            .OrderBy(ba => ba.Id)
             .Take(randomLength)
+            .OrderBy(ba => ba.Id)
             .Select(ba => ba.ToDto(url));
 
         ClsUtil.logSql<BannerRepository>(logger, query.ToQueryString());
@@ -199,8 +181,8 @@ public class BannerRepository(
         var query = context.Banner
                 .AsNoTracking()
                 .Where(ba => (ba.CreatedAt - DateTime.UtcNow).Days > 2)
-                .OrderBy(ba => ba.Id)
                 .Take(randomLength)
+                .OrderBy(ba => ba.Id)
                 .Select(ba => ba.ToDto(url))
             ;
         ClsUtil.logSql<BannerRepository>(logger, query.ToQueryString());

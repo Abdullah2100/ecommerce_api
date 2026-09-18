@@ -69,17 +69,18 @@ public class UserRepository(
     /// The user's associated store and addresses are also loaded.
     /// </summary>
     /// <param name="email">The email address of the user.</param>
+    /// <param name="isTracking"></param>
     /// <returns>
     /// A task representing the asynchronous operation. The task result
     /// contains the user if found; otherwise, <c>null</c>.
     /// </returns>
-    public async Task<User?> GetUser(string email)
+    public async Task<User?> GetUser(string email, bool isTracking = true)
     {
         var query = dbContext
             .Users
+            .Include(u => u.Addresses)
             .Include(u => u.Store)
             .AsSplitQuery()
-            .AsNoTracking()
             .Where(u => u.Email == email);
 
         ClsUtil.logSql<UserRepository>(
@@ -87,21 +88,10 @@ public class UserRepository(
             query.ToQueryString()
         );
 
+        if (!isTracking)
+            query = query.AsNoTracking();
+
         var user = await query.FirstOrDefaultAsync();
-
-        if (user == null) return null;
-
-        var addressQuery = dbContext
-            .Address
-            .AsNoTracking()
-            .Where(u => u.OwnerId == user.Id);
-
-        ClsUtil.logSql<UserRepository>(
-            logger,
-            addressQuery.ToQueryString()
-        );
-
-        user.Addresses = await addressQuery.ToListAsync();
 
         return user;
     }
@@ -198,6 +188,7 @@ public class UserRepository(
     /// </summary>
     /// <param name="page">The one-based page number to retrieve.</param>
     /// <param name="length">The maximum number of users to return.</param>
+    /// <param name="url"></param>
     /// <returns>
     /// A task representing the asynchronous operation. The task result
     /// contains the requested page of users.
@@ -205,15 +196,15 @@ public class UserRepository(
     public async Task<ICollection<UserInfoDto>> GetUsers(int page, int length, string url)
     {
         var query = dbContext
-            .Users
-            .Include(u => u.Store)
-            .Include(s=>s.Addresses)
-            .AsSplitQuery()
-            .AsNoTracking()
-            .OrderDescending()
-            .Skip((page - 1) * length)
-            .Take(length)
-            .Select(value => value.ToUserInfoDto(url))
+                .Users
+                .Include(u => u.Store)
+                .Include(s => s.Addresses)
+                .AsSplitQuery()
+                .AsNoTracking()
+                .Skip((page - 1) * length)
+                .Take(length)
+                .OrderDescending()
+                .Select(value => value.ToUserInfoDto(url))
             ;
 
         ClsUtil.logSql<UserRepository>(
@@ -233,22 +224,22 @@ public class UserRepository(
     /// The user's associated store and addresses are also loaded.
     /// </summary>
     /// <param name="username">
-    /// The username or email address used to identify the user.
+    ///     The username or email address used to identify the user.
     /// </param>
     /// <param name="password">The password associated with the user account.</param>
+    /// <param name="isTracking"></param>
     /// <returns>
     /// A task representing the asynchronous operation. The task result
     /// contains the authenticated user if the credentials match;
     /// otherwise, <c>null</c>.
     /// </returns>
-    public async Task<User?> GetUser(string username, string password)
+    public async Task<User?> GetUser(string username, string password, bool isTracking = true)
     {
         var query = dbContext
             .Users
             .Include(u => u.Addresses)
             .Include(u => u.Store)
             .AsSplitQuery()
-            .AsNoTracking()
             .Where(u =>
                 (u.Name == username || u.Email == username) &&
                 u.Password == password);
@@ -257,6 +248,9 @@ public class UserRepository(
             logger,
             query.ToQueryString()
         );
+
+        if (!isTracking)
+            query = query.AsNoTracking();
 
         var user = await query.FirstOrDefaultAsync();
 

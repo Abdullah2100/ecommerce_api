@@ -48,9 +48,9 @@ public class OrderItemRepository(
             .AsSplitQuery()
             .AsNoTracking()
             .Where(o => o.StoreId == storeId && ((int)o.Order.Status) > 1)
-            .OrderDescending()
             .Skip((pageNum - 1) * pageSize)
             .Take(pageSize)
+            .OrderDescending()
             .Select(value=>value.ToOrderItemDto(url));
 
         ClsUtil.logSql<OrderItemRepository>(
@@ -100,21 +100,7 @@ public class OrderItemRepository(
     /// </returns>
     public async Task<OrderItem?> GetOrderItem(Guid id)
     {
-        var query = context.OrderItems
-            .Include(oi => oi.Product)
-            .Include(oi => oi.OrderProductsVariants)
-            .Include(oi => oi.Store)
-            .Include(oi => oi.Order)
-            .AsSplitQuery()
-            .AsNoTracking()
-            .Where(o => o.Id == id);
-
-        ClsUtil.logSql<OrderItemRepository>(
-            logger,
-            query.ToQueryString()
-        );
-
-        return await query.FirstOrDefaultAsync();
+        return await context.OrderItems.FindAsync( id);
     }
 
     /// <summary>
